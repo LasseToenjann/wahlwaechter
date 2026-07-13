@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAHLWÄCHTER – Duell der Algorithmen</title>
+<meta name="description" content="Forensik-Strategiespiel zum Thema KI &amp; Demokratie: Enttarne KI-Desinformation vor der Wahl 2032 – solo oder im Online-Duell.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ================= START ================= -->
+  <section class="screen active" id="screen-start">
+    <div class="start-wrap">
+      <div class="agency-badge">BUNDESZENTRALE FÜR DIGITALE WAHLINTEGRITÄT · PRÜFSTELLE 7</div>
+      <h1 class="game-title">WAHL<span>WÄCHTER</span></h1>
+      <p class="subtitle">Duell der Algorithmen · Ein Spiel zum Thema <strong>KI meets Democracy</strong></p>
+      <p class="tagline">Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk <strong>HYDRA</strong> die Netze mit Fälschungen, die niemand mehr auf den ersten Blick erkennt. Du leitest die Prüfstelle. Ermittle. Entscheide. Schütze die Wahl – ohne die Freiheit zu opfern.</p>
+
+      <div class="name-row">
+        <label for="player-name">Dein Analyst:innen-Name</label>
+        <input id="player-name" type="text" maxlength="16" placeholder="z.&nbsp;B. Agent Nova" autocomplete="off">
+      </div>
+
+      <div class="menu-buttons">
+        <button class="btn btn-primary btn-big" id="btn-solo">🛡️ Solo-Kampagne <small>3 Wochen gegen HYDRA</small></button>
+        <button class="btn btn-accent btn-big" id="btn-duel">⚔️ Online-Duell <small>1 vs 1 mit Raum-Code</small></button>
+        <div class="menu-row">
+          <button class="btn btn-ghost" id="btn-board">🏆 Rangliste</button>
+          <button class="btn btn-ghost" id="btn-howto">📖 Anleitung</button>
+        </div>
+      </div>
+      <p class="footnote">Alle Inhalte fiktiv · Projektkurs „KI meets Democracy“</p>
+    </div>
+  </section>
+
+  <!-- ================= ANLEITUNG ================= -->
+  <section class="screen" id="screen-howto">
+    <div class="panel narrow">
+      <h2>📖 Anleitung</h2>
+      <div class="howto-block">
+        <h3>🕵️ Ermitteln statt raten</h3>
+        <p>Jeder gemeldete Beitrag sieht an der Oberfläche glaubwürdig aus – egal ob echt oder KI-Fälschung. Die Wahrheit findest du nur mit den vier <strong>Prüfwerkzeugen</strong>: Medienforensik&nbsp;🔬, Quellen-Check&nbsp;📡, Account-Analyse&nbsp;🤖 und Fakten-Abgleich&nbsp;🧭.</p>
+      </div>
+      <div class="howto-block">
+        <h3>⚡ Prüf-Energie</h3>
+        <p>Jede Prüfung kostet <strong>1 Energie</strong> aus deinem Wochen-Budget – und das reicht <em>nicht</em> für alles. Haushalte klug: Einzelne Indizien können täuschen, erst die Kombination trägt. Wer mit wenig Energie richtig liegt, kassiert den <strong>Spürnasen-Bonus</strong>.</p>
+      </div>
+      <div class="howto-block">
+        <h3>⚖️ Das Urteil</h3>
+        <p>Vor Ablauf des Timers entscheidest du: <strong>✅ Freigeben</strong> (echt/legitim) oder <strong>🚫 Kennzeichnen</strong> (KI-Desinformation). Achtung: Auch Satire, harte Wahlwerbung und unbequeme Wahrheiten sind <em>legitim</em> – Übersperren ist Zensur und kostet Demokratie-Index!</p>
+      </div>
+      <div class="howto-block">
+        <h3>🏛️ Der Demokratie-Index</h3>
+        <p>Startet bei 100. Durchgelassene Fakes (−12), zensierte echte Beiträge (−6) und skrupellose Behörden-Upgrades senken ihn. Am Ende gilt: <strong>Endpunktzahl = Punkte × (0,5 + Index/200)</strong>. Fällt der Index auf 0, ist die Wahl verloren.</p>
+      </div>
+      <div class="howto-block">
+        <h3>⚔️ Online-Duell</h3>
+        <p>Beide spielen zeitgleich <strong>dieselben Fälle</strong> (Live-Punktestand sichtbar). Danach der <strong>Showdown</strong>: Jede:r baut verdeckt einen eigenen KI-Fake aus Bausteinen und schleust ihn in den Feed des Gegners – wer den fremden Fake schneller findet, gewinnt den Showdown.</p>
+      </div>
+      <button class="btn btn-primary" data-goto="screen-start">Zurück</button>
+    </div>
+  </section>
+
+  <!-- ================= DUELL-LOBBY ================= -->
+  <section class="screen" id="screen-lobby">
+    <div class="panel narrow">
+      <h2>⚔️ Online-Duell</h2>
+      <p class="muted">Verbindet zwei Browser direkt (Peer-to-Peer). Eine Person erstellt das Duell, die andere tritt mit dem Raum-Code bei.</p>
+
+      <div id="lobby-choice">
+        <button class="btn btn-primary btn-big" id="btn-create-room">🎲 Duell erstellen <small>erzeugt einen Raum-Code</small></button>
+        <div class="join-row">
+          <input id="join-code" type="text" maxlength="5" placeholder="CODE" autocomplete="off">
+          <button class="btn btn-accent" id="btn-join-room">Beitreten</button>
+        </div>
+      </div>
+
+      <div id="lobby-wait" class="hidden">
+        <div class="room-code-box">
+          <span class="muted">Raum-Code:</span>
+          <div class="room-code" id="room-code-display">·····</div>
+          <p class="muted small">Gib diesen Code deinem Gegner. Verbindung läuft über einen kostenlosen Vermittlungsserver, danach direkt Browser-zu-Browser.</p>
+        </div>
+        <div class="lobby-status" id="lobby-status">Warte auf Gegner<span class="dots"></span></div>
+      </div>
+
+      <div id="lobby-error" class="lobby-error hidden"></div>
+      <button class="btn btn-ghost" id="btn-lobby-back">Abbrechen</button>
+    </div>
+  </section>
+
+  <!-- ================= WOCHEN-INTRO ================= -->
+  <section class="screen" id="screen-week">
+    <div class="panel narrow center">
+      <div class="week-kicker" id="week-kicker">LAGEBERICHT</div>
+      <h2 id="week-title">Woche 1</h2>
+      <p id="week-intro" class="week-intro"></p>
+      <div class="week-stats" id="week-stats"></div>
+      <button class="btn btn-primary btn-big" id="btn-week-start">Schicht beginnen ▶</button>
+    </div>
+  </section>
+
+  <!-- ================= FALL-ANSICHT ================= -->
+  <section class="screen" id="screen-case">
+    <div class="hud">
+      <div class="hud-item"><span class="hud-label" id="hud-week">W1</span><span class="hud-value" id="hud-case">Fall 1/6</span></div>
+      <div class="hud-item"><span class="hud-label">Punkte</span><span class="hud-value" id="hud-score">0</span></div>
+      <div class="hud-item"><span class="hud-label">⚡ Energie</span><span class="hud-value" id="hud-energy">14</span></div>
+      <div class="hud-item"><span class="hud-label">🏛️ Index</span><span class="hud-value" id="hud-index">100</span></div>
+      <div class="hud-item hud-opponent hidden" id="hud-opponent"><span class="hud-label" id="opp-name">Gegner</span><span class="hud-value" id="opp-score">0</span></div>
+    </div>
+    <div class="timerbar"><div class="timerbar-fill" id="timerbar-fill"></div><span class="timerbar-text" id="timer-text">45</span></div>
+
+    <div class="case-layout">
+      <article class="dossier" id="dossier">
+        <header class="dossier-head">
+          <span class="medium-badge" id="dossier-medium">📰 Artikel</span>
+          <span class="dossier-source" id="dossier-source">Nachrichtenportal</span>
+        </header>
+        <div class="dossier-author">
+          <div class="avatar" id="dossier-avatar">A</div>
+          <div>
+            <div class="author-name" id="dossier-author">Autor</div>
+            <div class="author-handle" id="dossier-handle">@handle</div>
+          </div>
+          <div class="dossier-reach" id="dossier-reach">–</div>
+        </div>
+        <h3 class="dossier-title" id="dossier-title">Titel</h3>
+        <p class="dossier-text" id="dossier-text">Text</p>
+      </article>
+
+      <aside class="toolbox">
+        <div class="toolbox-head">PRÜFWERKZEUGE <span class="muted small">(1 ⚡ pro Prüfung)</span></div>
+        <div id="tool-buttons"></div>
+        <div class="evidence-log" id="evidence-log"></div>
+        <div class="verdict-row">
+          <button class="btn btn-approve" id="btn-approve">✅ FREIGEBEN<small>echt / legitim</small></button>
+          <button class="btn btn-flag" id="btn-flag">🚫 KENNZEICHNEN<small>KI-Desinformation</small></button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= AUFLÖSUNG (Overlay) ================= -->
+  <div class="overlay hidden" id="overlay-reveal">
+    <div class="overlay-card" id="reveal-card">
+      <div class="reveal-verdict" id="reveal-verdict">RICHTIG</div>
+      <div class="reveal-truth" id="reveal-truth">Der Beitrag war: ECHT</div>
+      <div class="reveal-points" id="reveal-points"></div>
+      <p class="reveal-text" id="reveal-text"></p>
+      <button class="btn btn-primary" id="btn-reveal-next">Weiter ▶</button>
+    </div>
+  </div>
+
+  <!-- ================= DILEMMA ================= -->
+  <section class="screen" id="screen-dilemma">
+    <div class="panel">
+      <div class="week-kicker">ENTSCHEIDUNG DER BEHÖRDENLEITUNG</div>
+      <h2>⚖️ Das Ministerium bietet Aufrüstung an</h2>
+      <p class="muted">Wähle <strong>eine</strong> Option – jede hat einen Preis. Auch Verzicht ist eine Entscheidung.</p>
+      <div class="dilemma-grid" id="dilemma-grid"></div>
+    </div>
+  </section>
+
+  <!-- ================= DILEMMA-DEBRIEF (Overlay) ================= -->
+  <div class="overlay hidden" id="overlay-dilemma">
+    <div class="overlay-card">
+      <div class="reveal-verdict neutral" id="dilemma-chosen-name">Gewählt</div>
+      <div class="reveal-points" id="dilemma-effects"></div>
+      <p class="reveal-text" id="dilemma-debrief"></p>
+      <button class="btn btn-primary" id="btn-dilemma-next">Weiter ▶</button>
+    </div>
+  </div>
+
+  <!-- ================= SHOWDOWN: FAKE BAUEN ================= -->
+  <section class="screen" id="screen-build">
+    <div class="hud">
+      <div class="hud-item"><span class="hud-label">SHOWDOWN</span><span class="hud-value">Fake-Werkstatt</span></div>
+      <div class="hud-item"><span class="hud-label">⏱️ Zeit</span><span class="hud-value" id="build-timer">75</span></div>
+    </div>
+    <div class="panel">
+      <h2>🧪 Baue deinen KI-Fake</h2>
+      <p class="muted">Er wird in den Feed deines Gegners geschleust. Wähle <strong>1 Thema, 1 Format und genau 2 Tarnungen</strong>. Jede Tarnung löscht eine Beweisspur – aber zwei Kanäle bleiben immer offen. Wähle klug, welche Spuren du verwischst!</p>
+      <div class="build-section"><h3>1 · Thema</h3><div class="build-grid" id="build-themes"></div></div>
+      <div class="build-section"><h3>2 · Format</h3><div class="build-grid" id="build-formats"></div></div>
+      <div class="build-section"><h3>3 · Tarnung <span class="muted small" id="cloak-counter">(0/2 gewählt)</span></h3><div class="build-grid" id="build-cloaks"></div></div>
+      <button class="btn btn-accent btn-big" id="btn-build-done" disabled>Fake einschleusen 🚀</button>
+    </div>
+  </section>
+
+  <!-- ================= WARTEN (Overlay) ================= -->
+  <div class="overlay hidden" id="overlay-wait">
+    <div class="overlay-card center">
+      <div class="spinner"></div>
+      <p id="wait-text">Warte auf Gegner…</p>
+    </div>
+  </div>
+
+  <!-- ================= BOSS-FEED / SHOWDOWN-JAGD ================= -->
+  <section class="screen" id="screen-hunt">
+    <div class="hud">
+      <div class="hud-item"><span class="hud-label" id="hunt-kicker">FINALE</span><span class="hud-value">Finde den Fake</span></div>
+      <div class="hud-item"><span class="hud-label">⚡ Energie</span><span class="hud-value" id="hunt-energy">6</span></div>
+      <div class="hud-item"><span class="hud-label">Punkte</span><span class="hud-value" id="hunt-score">0</span></div>
+    </div>
+    <div class="timerbar"><div class="timerbar-fill" id="hunt-timerbar-fill"></div><span class="timerbar-text" id="hunt-timer-text">90</span></div>
+    <div class="panel">
+      <p class="muted" id="hunt-intro">Einer dieser vier Beiträge ist der maßgeschneiderte Fake. Du hast <strong>eine einzige</strong> Markierung. Prüfe mit Bedacht – die Energie ist knapp.</p>
+      <div class="hunt-feed" id="hunt-feed"></div>
+    </div>
+  </section>
+
+  <!-- ================= ERGEBNIS ================= -->
+  <section class="screen" id="screen-result">
+    <div class="panel narrow center">
+      <div class="week-kicker" id="result-kicker">ABSCHLUSSBERICHT</div>
+      <h2 id="result-headline">Die Wahl ist gelaufen</h2>
+      <p id="result-story" class="week-intro"></p>
+      <div class="result-score" id="result-final">0</div>
+      <div class="result-rank" id="result-rank">🏅 Rang</div>
+      <div class="result-breakdown" id="result-breakdown"></div>
+      <div class="menu-row">
+        <button class="btn btn-primary" id="btn-result-board">🏆 Rangliste</button>
+        <button class="btn btn-ghost" id="btn-result-menu">Hauptmenü</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DUELL-ERGEBNIS ================= -->
+  <section class="screen" id="screen-duel-result">
+    <div class="panel narrow center">
+      <div class="week-kicker">DUELL BEENDET</div>
+      <h2 id="duel-verdict">Sieg!</h2>
+      <div class="duel-compare" id="duel-compare"></div>
+      <div class="result-breakdown" id="duel-breakdown"></div>
+      <div class="menu-row">
+        <button class="btn btn-primary" id="btn-duel-board">🏆 Rangliste</button>
+        <button class="btn btn-ghost" id="btn-duel-menu">Hauptmenü</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RANGLISTE ================= -->
+  <section class="screen" id="screen-board">
+    <div class="panel narrow">
+      <h2>🏆 Rangliste <span class="muted small">(dieses Gerät)</span></h2>
+      <div id="board-list"></div>
+      <div class="menu-row">
+        <button class="btn btn-ghost" id="btn-board-clear">Liste leeren</button>
+        <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Verbindungs-Banner -->
+  <div class="net-banner hidden" id="net-banner"></div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/rng.js"></script>
+<script src="js/data.js"></script>
+<script src="js/net.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
