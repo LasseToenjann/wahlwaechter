@@ -2,9 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>WAHLWÄCHTER – Duell der Algorithmen</title>
-<meta name="description" content="Forensik-Strategiespiel zum Thema KI &amp; Demokratie: Enttarne KI-Desinformation vor der Wahl 2032 – solo oder im Online-Duell.">
+<meta name="description" content="Forensik-Strategiespiel zum Thema KI &amp; Demokratie: Enttarne KI-Desinformation vor der Wahl 2032 – solo, im Online-Duell oder im Turnier.">
+<meta name="theme-color" content="#070b14">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -26,14 +27,38 @@
       </div>
 
       <div class="menu-buttons">
-        <button class="btn btn-primary btn-big" id="btn-solo">🛡️ Solo-Kampagne <small>3 Wochen gegen HYDRA</small></button>
+        <button class="btn btn-primary btn-big" id="btn-solo">🛡️ Solo-Kampagne <small>Klassisch oder Endlos</small></button>
         <button class="btn btn-accent btn-big" id="btn-duel">⚔️ Online-Duell <small>1 vs 1 mit Raum-Code</small></button>
+        <button class="btn btn-tournament btn-big" id="btn-tournament">🏟️ Turnier <small>K.-o.-Runde für den ganzen Kurs</small></button>
         <div class="menu-row">
           <button class="btn btn-ghost" id="btn-board">🏆 Rangliste</button>
           <button class="btn btn-ghost" id="btn-howto">📖 Anleitung</button>
         </div>
       </div>
-      <p class="footnote">Alle Inhalte fiktiv · Projektkurs „KI meets Democracy“</p>
+      <p class="footnote">Alle Spielinhalte sind fiktiv und nach realen, belegten Fällen gestaltet (Quellen in jeder Auflösung) · Projektkurs „KI meets Democracy“</p>
+    </div>
+  </section>
+
+  <!-- ================= SOLO: MODUSWAHL ================= -->
+  <section class="screen" id="screen-solomode">
+    <div class="panel narrow center">
+      <div class="week-kicker">SOLO-KAMPAGNE</div>
+      <h2>Wähle deinen Modus</h2>
+      <div class="mode-grid">
+        <button class="mode-card" id="btn-mode-classic">
+          <span class="mode-icon">🛡️</span>
+          <h3>Klassisch</h3>
+          <p>Die Kampagne: 3 Wochen gegen HYDRA, Dilemma-Upgrades, Boss-Finale. Ergebnis mit Demokratie-Multiplikator.</p>
+          <span class="mode-meta">⏱️ ca. 15–20 Min · 🏆 Rangliste „Klassisch“</span>
+        </button>
+        <button class="mode-card" id="btn-mode-endless">
+          <span class="mode-icon">♾️</span>
+          <h3>Endlos</h3>
+          <p>Schicht um Schicht wird HYDRA schneller und subtiler: weniger Zeit, weniger Energie, härtere Fälle. Wie lange hält dein Demokratie-Index?</p>
+          <span class="mode-meta">⏱️ bis zum Zusammenbruch · 🏆 Rangliste „Endlos“</span>
+        </button>
+      </div>
+      <button class="btn btn-ghost" data-goto="screen-start">Zurück</button>
     </div>
   </section>
 
@@ -47,7 +72,7 @@
       </div>
       <div class="howto-block">
         <h3>⚡ Prüf-Energie</h3>
-        <p>Jede Prüfung kostet <strong>1 Energie</strong> aus deinem Wochen-Budget – und das reicht <em>nicht</em> für alles. Haushalte klug: Einzelne Indizien können täuschen, erst die Kombination trägt. Wer mit wenig Energie richtig liegt, kassiert den <strong>Spürnasen-Bonus</strong>.</p>
+        <p>Jede Prüfung kostet <strong>1 Energie</strong> aus deinem Budget – und das reicht <em>nicht</em> für alles. Haushalte klug: Einzelne Indizien können täuschen, erst die Kombination trägt. Wer mit wenig Energie richtig liegt, kassiert den <strong>Spürnasen-Bonus</strong>.</p>
       </div>
       <div class="howto-block">
         <h3>⚖️ Das Urteil</h3>
@@ -55,11 +80,19 @@
       </div>
       <div class="howto-block">
         <h3>🏛️ Der Demokratie-Index</h3>
-        <p>Startet bei 100. Durchgelassene Fakes (−12), zensierte echte Beiträge (−6) und skrupellose Behörden-Upgrades senken ihn. Am Ende gilt: <strong>Endpunktzahl = Punkte × (0,5 + Index/200)</strong>. Fällt der Index auf 0, ist die Wahl verloren.</p>
+        <p>Startet bei 100. Durchgelassene Fakes (−12), zensierte echte Beiträge (−6) und skrupellose Behörden-Upgrades senken ihn. Klassisch gilt am Ende: <strong>Endpunktzahl = Punkte × (0,5 + Index/200)</strong>. Fällt der Index auf 0, ist Schluss.</p>
       </div>
       <div class="howto-block">
-        <h3>⚔️ Online-Duell</h3>
-        <p>Beide spielen zeitgleich <strong>dieselben Fälle</strong> (Live-Punktestand sichtbar). Danach der <strong>Showdown</strong>: Jede:r baut verdeckt einen eigenen KI-Fake aus Bausteinen und schleust ihn in den Feed des Gegners – wer den fremden Fake schneller findet, gewinnt den Showdown.</p>
+        <h3>♾️ Endlosmodus</h3>
+        <p>Schichten à 5 Fälle, jede Schicht härter (weniger Zeit &amp; Energie, subtilere Fälle). Eine <strong>fehlerfreie Schicht</strong> gibt +4 Index zurück. Spiel läuft, bis der Index auf 0 fällt – zählt Rohpunkte für die Endlos-Rangliste.</p>
+      </div>
+      <div class="howto-block">
+        <h3>⚔️ Online-Duell &amp; 🏟️ Turnier</h3>
+        <p>Im Duell spielen beide zeitgleich <strong>dieselben Fälle</strong> (Live-Punktestand), danach der <strong>Showdown</strong>: Jede:r baut verdeckt einen eigenen KI-Fake für den Feed des Gegners. Das Turnier organisiert eine K.-o.-Runde für bis zu 16 Personen – die Partien spielt ihr als Online-Duell (Raum-Code) oder nacheinander an einem Gerät.</p>
+      </div>
+      <div class="howto-block">
+        <h3>📚 Fiktion &amp; Wirklichkeit</h3>
+        <p>Alle Beiträge, Parteien, Personen und Medien im Spiel sind <strong>frei erfunden</strong> – aber jeder Fall bildet eine <strong>reale, dokumentierte</strong> Technik oder ein echtes Ereignis nach. Die Auflösung nennt jeweils das reale Vorbild samt Quelle. So bleibt das Spiel fair gegenüber echten Personen und trotzdem nah an der Wirklichkeit.</p>
       </div>
       <button class="btn btn-primary" data-goto="screen-start">Zurück</button>
     </div>
@@ -68,28 +101,76 @@
   <!-- ================= DUELL-LOBBY ================= -->
   <section class="screen" id="screen-lobby">
     <div class="panel narrow">
+      <div class="week-kicker">MEHRSPIELER · PEER-TO-PEER</div>
       <h2>⚔️ Online-Duell</h2>
-      <p class="muted">Verbindet zwei Browser direkt (Peer-to-Peer). Eine Person erstellt das Duell, die andere tritt mit dem Raum-Code bei.</p>
 
       <div id="lobby-choice">
-        <button class="btn btn-primary btn-big" id="btn-create-room">🎲 Duell erstellen <small>erzeugt einen Raum-Code</small></button>
-        <div class="join-row">
-          <input id="join-code" type="text" maxlength="5" placeholder="CODE" autocomplete="off">
-          <button class="btn btn-accent" id="btn-join-room">Beitreten</button>
+        <div class="lobby-cards">
+          <div class="lobby-card">
+            <h3>🎲 Duell erstellen</h3>
+            <p class="muted small">Du bekommst einen 5-stelligen Raum-Code und sagst ihn deinem Gegner an.</p>
+            <button class="btn btn-primary btn-big" id="btn-create-room">Raum erstellen</button>
+          </div>
+          <div class="lobby-card">
+            <h3>🔑 Duell beitreten</h3>
+            <p class="muted small">Gib den Code ein, den dir dein Gegner ansagt.</p>
+            <div class="join-row">
+              <input id="join-code" type="text" maxlength="5" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
+              <button class="btn btn-accent" id="btn-join-room">Beitreten&nbsp;▶</button>
+            </div>
+          </div>
         </div>
+        <p class="muted small lobby-hint">💡 Beide Geräte brauchen Internet und müssen diese Website geöffnet haben. Funktioniert über jedes Netz – auch iPad&nbsp;↔&nbsp;Handy.</p>
       </div>
 
       <div id="lobby-wait" class="hidden">
         <div class="room-code-box">
-          <span class="muted">Raum-Code:</span>
+          <span class="muted">Raum-Code</span>
           <div class="room-code" id="room-code-display">·····</div>
-          <p class="muted small">Gib diesen Code deinem Gegner. Verbindung läuft über einen kostenlosen Vermittlungsserver, danach direkt Browser-zu-Browser.</p>
+          <button class="btn btn-ghost btn-copy" id="btn-copy-code">📋 Code kopieren</button>
         </div>
-        <div class="lobby-status" id="lobby-status">Warte auf Gegner<span class="dots"></span></div>
+        <ul class="conn-steps" id="conn-steps">
+          <li id="step-server">Vermittlungsserver…</li>
+          <li id="step-room">Raum öffnen…</li>
+          <li id="step-peer">Auf Gegner warten…</li>
+        </ul>
+        <div class="lobby-status" id="lobby-status">Verbinde<span class="dots"></span></div>
       </div>
 
       <div id="lobby-error" class="lobby-error hidden"></div>
       <button class="btn btn-ghost" id="btn-lobby-back">Abbrechen</button>
+    </div>
+  </section>
+
+  <!-- ================= TURNIER: SETUP ================= -->
+  <section class="screen" id="screen-tournament-setup">
+    <div class="panel narrow">
+      <div class="week-kicker">TURNIER · K.-O.-SYSTEM</div>
+      <h2>🏟️ Turnier erstellen</h2>
+      <p class="muted">Für 2–16 Spieler:innen (Freilose werden automatisch vergeben). Die Partien spielt ihr als <strong>Online-Duell</strong> (Raum-Code) oder nacheinander an einem Gerät – der Sieger wird hier eingetragen.</p>
+      <div class="t-add-row">
+        <input id="t-name-input" type="text" maxlength="16" placeholder="Name eingeben…" autocomplete="off">
+        <button class="btn btn-primary" id="btn-t-add">+ Hinzufügen</button>
+      </div>
+      <div class="t-name-list" id="t-name-list"></div>
+      <div class="menu-row">
+        <button class="btn btn-accent btn-big" id="btn-t-start" disabled>🎲 Auslosen &amp; starten</button>
+      </div>
+      <button class="btn btn-ghost" data-goto="screen-start">Zurück</button>
+    </div>
+  </section>
+
+  <!-- ================= TURNIER: BRACKET ================= -->
+  <section class="screen" id="screen-tournament">
+    <div class="panel">
+      <div class="week-kicker">TURNIER · K.-O.-SYSTEM</div>
+      <h2 id="t-headline">🏟️ Turnierbaum</h2>
+      <p class="muted small">Tippe nach jeder Partie auf den Namen des Siegers. 💡 Partie spielen: Beide öffnen das Online-Duell, eine:r erstellt den Raum, Code ansagen – Ergebnis hier eintragen.</p>
+      <div class="bracket-scroll"><div class="bracket" id="bracket"></div></div>
+      <div class="menu-row">
+        <button class="btn btn-ghost" id="btn-t-reset">Neues Turnier</button>
+        <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
+      </div>
     </div>
   </section>
 
@@ -113,12 +194,13 @@
       <div class="hud-item"><span class="hud-label">🏛️ Index</span><span class="hud-value" id="hud-index">100</span></div>
       <div class="hud-item hud-opponent hidden" id="hud-opponent"><span class="hud-label" id="opp-name">Gegner</span><span class="hud-value" id="opp-score">0</span></div>
     </div>
-    <div class="timerbar"><div class="timerbar-fill" id="timerbar-fill"></div><span class="timerbar-text" id="timer-text">45</span></div>
+    <div class="timerbar sticky"><div class="timerbar-fill" id="timerbar-fill"></div><span class="timerbar-text" id="timer-text">45</span></div>
 
     <div class="case-layout">
       <article class="dossier" id="dossier">
         <header class="dossier-head">
           <span class="medium-badge" id="dossier-medium">📰 Artikel</span>
+          <span class="fiction-badge" title="Alle Inhalte sind erfunden – nach realen, dokumentierten Fällen gestaltet">FIKTIVES SZENARIO</span>
           <span class="dossier-source" id="dossier-source">Nachrichtenportal</span>
         </header>
         <div class="dossier-author">
@@ -152,6 +234,7 @@
       <div class="reveal-truth" id="reveal-truth">Der Beitrag war: ECHT</div>
       <div class="reveal-points" id="reveal-points"></div>
       <p class="reveal-text" id="reveal-text"></p>
+      <div class="real-ref hidden" id="reveal-realref"></div>
       <button class="btn btn-primary" id="btn-reveal-next">Weiter ▶</button>
     </div>
   </div>
@@ -207,7 +290,7 @@
       <div class="hud-item"><span class="hud-label">⚡ Energie</span><span class="hud-value" id="hunt-energy">6</span></div>
       <div class="hud-item"><span class="hud-label">Punkte</span><span class="hud-value" id="hunt-score">0</span></div>
     </div>
-    <div class="timerbar"><div class="timerbar-fill" id="hunt-timerbar-fill"></div><span class="timerbar-text" id="hunt-timer-text">90</span></div>
+    <div class="timerbar sticky"><div class="timerbar-fill" id="hunt-timerbar-fill"></div><span class="timerbar-text" id="hunt-timer-text">90</span></div>
     <div class="panel">
       <p class="muted" id="hunt-intro">Einer dieser vier Beiträge ist der maßgeschneiderte Fake. Du hast <strong>eine einzige</strong> Markierung. Prüfe mit Bedacht – die Energie ist knapp.</p>
       <div class="hunt-feed" id="hunt-feed"></div>
@@ -223,6 +306,7 @@
       <div class="result-score" id="result-final">0</div>
       <div class="result-rank" id="result-rank">🏅 Rang</div>
       <div class="result-breakdown" id="result-breakdown"></div>
+      <div class="board-sync" id="result-sync"></div>
       <div class="menu-row">
         <button class="btn btn-primary" id="btn-result-board">🏆 Rangliste</button>
         <button class="btn btn-ghost" id="btn-result-menu">Hauptmenü</button>
@@ -237,6 +321,7 @@
       <h2 id="duel-verdict">Sieg!</h2>
       <div class="duel-compare" id="duel-compare"></div>
       <div class="result-breakdown" id="duel-breakdown"></div>
+      <div class="board-sync" id="duel-sync"></div>
       <div class="menu-row">
         <button class="btn btn-primary" id="btn-duel-board">🏆 Rangliste</button>
         <button class="btn btn-ghost" id="btn-duel-menu">Hauptmenü</button>
@@ -247,10 +332,17 @@
   <!-- ================= RANGLISTE ================= -->
   <section class="screen" id="screen-board">
     <div class="panel narrow">
-      <h2>🏆 Rangliste <span class="muted small">(dieses Gerät)</span></h2>
+      <h2>🏆 Rangliste</h2>
+      <div class="board-filters" id="board-filters">
+        <button class="chip active" data-filter="alle">Alle</button>
+        <button class="chip" data-filter="klassisch">🛡️ Klassisch</button>
+        <button class="chip" data-filter="endlos">♾️ Endlos</button>
+        <button class="chip" data-filter="duell">⚔️ Duell</button>
+      </div>
+      <div class="board-sync" id="board-sync">Lade globale Rangliste…</div>
       <div id="board-list"></div>
       <div class="menu-row">
-        <button class="btn btn-ghost" id="btn-board-clear">Liste leeren</button>
+        <button class="btn btn-ghost" id="btn-board-refresh">🔄 Aktualisieren</button>
         <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
       </div>
     </div>
@@ -260,10 +352,11 @@
   <div class="net-banner hidden" id="net-banner"></div>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/vendor/peerjs.min.js"></script>
 <script src="js/rng.js"></script>
 <script src="js/data.js"></script>
 <script src="js/net.js"></script>
+<script src="js/tournament.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>
