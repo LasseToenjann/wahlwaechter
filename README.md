@@ -1,5 +1,7 @@
 # 🛡️ WAHLWÄCHTER – Duell der Algorithmen
 
+**▶️ Spielen: https://lassetoenjann.github.io/wahlwaechter/**
+
 Ein Browser-Spiel zum Thema **„KI meets Democracy“** (Projektkurs).
 Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk **HYDRA** die sozialen Medien mit Fälschungen, die niemand mehr auf den ersten Blick erkennt. Du leitest die Prüfstelle für digitale Wahlintegrität: Ermittle mit echten Methoden der Medienforensik, entscheide unter Zeitdruck – und opfere dabei nicht die Freiheit, die du schützen sollst.
 
@@ -8,11 +10,14 @@ Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk **HYDRA** die sozialen Medi
 ## Features
 
 - 🕵️ **Forensik-Gameplay:** 30 Fall-Dossiers, bei denen die Oberfläche nichts verrät – nur die Kombination von Beweisen (Medienforensik, Quellen-Check, Account-Analyse, Fakten-Abgleich) trägt
-- ⚡ **Prüf-Energie:** knappes Wochen-Budget, strategisches Haushalten
+- 📚 **Fiktiv, aber belegt:** Alle Inhalte sind erfunden (FIKTIV-Badge), jeder Fall nennt in der Auflösung sein **reales, dokumentiertes Vorbild** samt Quelle
+- ⚡ **Prüf-Energie:** knappes Budget, strategisches Haushalten
 - ⚖️ **Dilemma-Upgrades:** KI-Ethik als Spielmechanik (Überwachung vs. Grundrechte)
 - 🏛️ **Demokratie-Index:** wirkt als Punkte-Multiplikator – wer die Demokratie beschädigt, kann nicht gewinnen
-- 🛡️ **Solo-Kampagne** mit Boss-Finale und lokaler Top-10-Rangliste
-- ⚔️ **Online-Duell 1vs1** per Raum-Code (WebRTC/PeerJS, ohne eigenen Server): gleiche Fälle, Live-Punktestand, und im **Showdown** baut jede:r einen eigenen Fake für den Feed des Gegners
+- 🛡️ **Solo klassisch** (3 Wochen + Boss-Finale) oder **♾️ Endlos** (Schichten mit steigender Schwierigkeit)
+- ⚔️ **Online-Duell 1vs1** per Raum-Code (WebRTC/PeerJS + TURN-Relay, ohne eigenen Server): gleiche Fälle, Live-Punktestand, und im **Showdown** baut jede:r einen eigenen Fake für den Feed des Gegners
+- 🏟️ **Turniermodus:** K.-o.-Baum für 2–16 Spieler:innen mit Freilosen, Ergebnis-Eintrag per Tipp
+- 🌐 **Globale Rangliste** (kostenloser Online-Speicher) mit Modus-Filtern und Offline-Fallback
 
 ## Lokal starten
 
