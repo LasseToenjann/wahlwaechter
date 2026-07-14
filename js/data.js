@@ -469,6 +469,55 @@ const DATA = {
   ],
 
   /* =======================================================================
+     REALE VORBILDER & QUELLEN
+     Alle Fälle des Spiels sind FIKTIV (erfundene Parteien, Personen, Medien),
+     bilden aber dokumentierte, reale Techniken und Ereignisse nach.
+     Diese Verweise werden in der Auflösung jedes Falls angezeigt.
+     ======================================================================= */
+  realRefs: {
+    w1_deepfake_kaya: "2024 hielt ein KI-geklonter „Joe Biden“-Anruf Wähler in New Hampshire von der Vorwahl ab; der Urheber wurde zu 6 Mio. $ Strafe verurteilt (FCC). Kontext-Schnitte echter Reden („Cheapfakes“) sind laut Faktencheckern noch häufiger als echte Deepfakes.",
+    w1_fakezeitung_wahllokal: "Falsche Angaben zu Wahlzeiten/-orten sind ein dokumentiertes Muster von Wahlunterdrückung – z. B. „Wähle per SMS“-Anzeigen im US-Wahlkampf 2016 (Ermittlungen gegen den Urheber 2021).",
+    w1_botpfleger: "Koordinierte Fake-Berufsprofile: Der US-Senatsbericht zur russischen „Internet Research Agency“ (2018) und Metas Quartalsberichte zu „Coordinated Inauthentic Behavior“ dokumentieren tausende solcher Kampagnen.",
+    w1_targeting_zweitstimme: "Demobilisierung per Microtargeting ist real: Der Cambridge-Analytica-Skandal (2018) und die „Deterrence“-Kategorien der Trump-Kampagne 2016 (Channel-4-Recherche 2020) zielten gezielt auf Nichtwählen.",
+    w1_kiartikel_studie: "NewsGuard zählt inzwischen über 1.000 KI-generierte Pseudo-Nachrichtenseiten, die erfundene Experten und Studien zitieren (newsguardtech.com, laufend aktualisiert).",
+    w1_echt_warnung: "Reale Praxis: Die Bundeswahlleiterin informiert und warnt öffentlich vor Falschinformationen zur Wahlorganisation (bundeswahlleiterin.de).",
+    w1_echt_erstwaehlerin: "Verifikations-Grundregel (u. a. dpa-Faktencheck, Correctiv): Ein junges Konto allein ist kein Fake-Beweis – entscheidend sind Verhaltensmuster und Umfeld.",
+    w1_satire_stoerfisch: "Satire ist grundrechtlich geschützt (Art. 5 GG); Vorbild: „Der Postillon“. Problematisch wird nur die Weiterverbreitung ohne Satire-Kontext.",
+    w1_echt_dienstwagen: "Der Vorwurf „Fake News!“ gegen wahre Berichte ist eine dokumentierte Diskreditierungsstrategie (Forschung u. a. des Reuters Institute / Oxford).",
+    w1_echt_podium: "Reale Praxis: Kommunale Wahlforen und Podiumsdiskussionen lassen sich über offizielle Stadtkalender und Lokalpresse in Sekunden verifizieren.",
+    w2_audioleak: "Zwei Tage vor der Slowakei-Wahl 2023 kursierte ein KI-gefälschtes „Telefonmitschnitt“-Audio des Kandidaten Michal Šimečka – mitten in der Nachrichtensperrfrist, kaum noch korrigierbar (u. a. AFP-Faktencheck).",
+    w2_dokument: "Gefälschte Dokumente in „Leaks“: Den „Macron Leaks“ im französischen Wahlkampf 2017 wurden nachweislich Fälschungen beigemischt (Untersuchungen von Mounk/CNRS u. a.).",
+    w2_lokalnetz: "„Pink Slime“: Forscher (Columbia/Tow Center) dokumentierten über 1.200 automatisierte Pseudo-Lokalzeitungen in den USA; KI hat die Produktion massiv verbilligt.",
+    w2_kontextfake: "Laut AFP, dpa und Correctiv ist echtes Material im falschen Kontext die häufigste Desinformationsform überhaupt – Gegenmittel: Bilderrückwärtssuche.",
+    w2_altaccount: "Der Handel mit „gealterten“ Social-Media-Konten ist ein realer Schwarzmarkt; Briefwahl-Betrugslegenden kursierten massiv zur US-Wahl 2020 und zur Bundestagswahl 2021 (alle gerichtlich/behördlich widerlegt).",
+    w2_echt_zweitaccount: "Standard-Verifikationsmethode: Querverweis vom verifizierten Hauptprofil (siehe Verification Handbook, European Journalism Centre).",
+    w2_echt_wahlwerbung: "Zugespitzte Wahlwerbung ist legal; die EU-Verordnung über politische Werbung (ab 2025) verlangt vor allem Transparenz über Absender und Finanzierung.",
+    w2_echt_tippfehler: "Die reflexhafte „Das ist ein Bot!“-Beschuldigung gegen echte Menschen ist ein erforschtes Phänomen – und selbst ein Werkzeug zur Diskreditierung.",
+    w2_echt_studie: "Reale Vorbilder: Studien des Oxford Internet Institute und von HateAid zu koordinierten Kampagnen gegen Politikerinnen.",
+    w3_perfekter_deepfake: "2024 überwies ein Konzern-Mitarbeiter in Hongkong 25 Mio. $ nach einer komplett deepgefakten Videokonferenz. Detektoren erkennen neueste Fakes zunehmend nicht mehr – Alibi- und Kontextprüfung („Kann das überhaupt sein?“) wird zur wichtigsten Methode.",
+    w3_persona: "KI-generierte Journalisten-Personas mit GAN-Gesichtern sind dokumentiert, z. B. „Oliver Taylor“ (Reuters-Recherche 2020) und Graphika-Berichte zu Fake-Redaktionen.",
+    w3_paidgrassroots: "Bezahlte „persönliche“ Posts echter Nutzer sind mehrfach aufgeflogen, u. a. Agentur-Kampagnen, die Influencer für politische Botschaften bezahlten (Meta/Graphika-Berichte zu „CIB“).",
+    w3_klon_seite: "Die russische „Doppelgänger“-Kampagne (seit 2022, vom Auswärtigen Amt 2024 öffentlich gemacht) klonte Spiegel, Bild, FAZ u. a. unter täuschend ähnlichen Domains.",
+    w3_wahlmaschinen: "Erfundene Wahlmaschinen-Manipulation nach der US-Wahl 2020 endete im größten Verleumdungsvergleich der US-Geschichte (Fox News/Dominion: 787,5 Mio. $, 2023). Deutschland wählt auf Papier – BVerfG-Urteil zu Wahlcomputern 2009.",
+    w3_echt_whistleblower: "Echte Enthüllungen beginnen oft anonym: Ibiza-Video (2019) oder die Facebook Files – entscheidend war stets die unabhängige Verifikation der Dokumente durch Redaktionen.",
+    w3_echt_handyvideo: "Bei stark komprimierten echten Videos produzieren Deepfake-Detektoren dokumentiert Fehlalarme (u. a. Deepfake Detection Challenge) – Kompressionsartefakte sind keine KI-Artefakte.",
+    w3_echt_eilmeldung: "Nachrichtenagenturen (dpa, Reuters) kennzeichnen Unbestätigtes ausdrücklich – jede Exklusivmeldung hat anfangs genau eine Quelle. Vorsichtige Sprache ist das Echtheitssignal.",
+    w3_echt_ki_spot: "Gekennzeichnete KI-Wahlwerbung ist real und zulässig: Der EU AI Act und Plattformregeln setzen auf Transparenzpflicht statt Verbot.",
+    w3_echt_umfrage: "Seriosität von Umfragen erkennt man an offener Methodik und Fehlertoleranz (Standards des ADM / Rats der Deutschen Markt- und Sozialforschung) – nie am Ergebnis.",
+  },
+
+  /* =======================================================================
+     ENDLOSMODUS – Schwierigkeitskurve pro „Schicht“ (5 Fälle)
+     ======================================================================= */
+  endless: {
+    casesPerShift: 5,
+    timerForShift: (s) => Math.max(14, 44 - 4 * s),   // 40, 36, 32 … min 14
+    energyForShift: (s) => Math.max(3, 13 - s),        // 12, 11, 10 … min 3
+    perfectShiftIndexBonus: 4,                         // fehlerfreie Schicht: Vertrauen erholt sich
+    poolForShift: (s) => (s <= 1 ? [1] : s === 2 ? [2] : s === 3 ? [3] : [2, 3]),
+  },
+
+  /* =======================================================================
      DILEMMA-UPGRADES (nach Woche 1 und 2: 3 zufällige + Verzicht)
      effects: energyPerWeek, indexNow, timerPlus, freeProbe, damageShield
      ======================================================================= */

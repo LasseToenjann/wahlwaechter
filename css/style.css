@@ -301,12 +301,100 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------- Moduswahl (Solo) ---------- */
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 20px; }
+.mode-card {
+  background: var(--panel2); border: 2px solid var(--line); border-radius: var(--radius);
+  padding: 20px 18px; cursor: pointer; text-align: left; color: var(--text); font-family: inherit; font-size: inherit;
+  transition: transform .1s, border-color .15s; display: flex; flex-direction: column; gap: 6px;
+}
+.mode-card:hover { transform: translateY(-3px); border-color: var(--cyan-dim); }
+.mode-card .mode-icon { font-size: 2.2rem; }
+.mode-card h3 { margin: 0; font-size: 1.25rem; color: #fff; }
+.mode-card p { font-size: .88rem; color: var(--muted); flex: 1; }
+.mode-card .mode-meta { font-size: .76rem; color: var(--amber); }
+
+/* ---------- Lobby (neu) ---------- */
+.lobby-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 14px 0; }
+.lobby-card { background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.lobby-card h3 { margin: 0; }
+.lobby-card .btn-big { margin-bottom: 0; }
+.lobby-hint { text-align: center; margin-bottom: 8px; }
+.btn-copy { padding: 8px 14px; font-size: .85rem; }
+.conn-steps { list-style: none; margin: 14px auto; max-width: 340px; display: flex; flex-direction: column; gap: 6px; }
+.conn-steps li { padding: 8px 12px 8px 34px; position: relative; background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 9px; font-size: .86rem; color: var(--muted); }
+.conn-steps li::before { content: "○"; position: absolute; left: 12px; color: var(--muted); }
+.conn-steps li.done { color: var(--green); border-color: rgba(67,217,139,.35); }
+.conn-steps li.done::before { content: "●"; color: var(--green); }
+
+/* ---------- Turnier ---------- */
+.btn-tournament { background: linear-gradient(180deg, #5b2a86, #45206a); border-color: #8a4dc8; color: #f0e4ff; }
+.btn-tournament small { color: #cdb2ec; }
+.t-add-row { display: flex; gap: 10px; margin: 14px 0 10px; }
+.t-add-row input { flex: 1; }
+.t-name-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; min-height: 34px; }
+.t-name-pill {
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 8px 6px 14px; font-size: .9rem; display: inline-flex; align-items: center; gap: 6px;
+}
+.t-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: .95rem; padding: 4px 8px; }
+.bracket-scroll { overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+.bracket { display: flex; gap: 18px; align-items: stretch; min-width: min-content; padding: 10px 2px; }
+.bracket-round { display: flex; flex-direction: column; justify-content: space-around; gap: 14px; min-width: 190px; }
+.bracket-round-title { text-align: center; font-family: Consolas, monospace; font-size: .72rem; letter-spacing: .14em; color: var(--amber); }
+.bracket-match { background: var(--panel2); border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.bracket-player {
+  display: block; width: 100%; text-align: left; padding: 11px 14px; font-family: inherit; font-size: .92rem;
+  background: transparent; border: none; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--line);
+}
+.bracket-player:last-child { border-bottom: none; }
+.bracket-player:hover:not(:disabled):not(.empty) { background: rgba(55,214,224,.08); }
+.bracket-player:disabled { cursor: default; }
+.bracket-player.empty { color: var(--muted); font-style: italic; }
+.bracket-player.winner { color: var(--amber); font-weight: 700; background: rgba(255,182,72,.08); }
+
+/* ---------- Rangliste: Filter & Sync ---------- */
+.board-filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
+.chip {
+  background: var(--panel2); border: 1px solid var(--line); color: var(--muted);
+  border-radius: 999px; padding: 8px 16px; font-size: .86rem; cursor: pointer; font-family: inherit;
+}
+.chip.active { border-color: var(--cyan-dim); color: var(--cyan); background: rgba(55,214,224,.08); }
+.board-sync { font-size: .8rem; color: var(--muted); margin: 8px 0 10px; min-height: 1.2em; }
+.board-sync.sync-ok { color: var(--green); }
+.board-sync.sync-fail { color: var(--amber); }
+
+/* ---------- Fiktions-Kennzeichnung & reale Vorbilder ---------- */
+.fiction-badge {
+  font-size: .6rem; letter-spacing: .12em; font-weight: 700; color: #7c4a0c;
+  border: 1px solid #d9a441; background: #fdf3df; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+}
+.real-ref {
+  border-left: 3px solid var(--amber); background: rgba(255,182,72,.07);
+  padding: 10px 14px; border-radius: 0 10px 10px 0; font-size: .84rem; margin-bottom: 16px; color: var(--text);
+}
+.real-ref b { color: var(--amber); display: block; margin-bottom: 3px; font-size: .76rem; letter-spacing: .06em; }
+
+/* ---------- Touch & Tablet ---------- */
+button, .btn, .tool-btn, .mini-tool, .chip, .bracket-player, .mode-card, .dilemma-card, .build-card { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.timerbar.sticky { position: sticky; top: 6px; z-index: 20; box-shadow: 0 4px 14px rgba(0,0,0,.45); }
+.mini-tool { min-height: 40px; }
+.tool-btn { min-height: 52px; }
+
+@media (max-width: 1024px) {
+  .verdict-row { position: sticky; bottom: 10px; z-index: 15; }
+  .verdict-row .btn { box-shadow: 0 8px 22px rgba(0,0,0,.55); }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 560px) {
   .panel { padding: 18px 16px; }
   .hud-item { min-width: 60px; padding: 2px 8px; }
   .hud-value { font-size: .95rem; }
-  .verdict-row { flex-direction: column; }
+  .verdict-row { flex-direction: column; gap: 8px; }
+  .verdict-row .btn { padding: 14px 20px; }
   .duel-compare { flex-direction: column; align-items: center; }
   .duel-side { max-width: none; width: 100%; }
+  .dossier-reach { display: none; }
+  .hunt-tools .mini-flag { margin-left: 0; width: 100%; }
 }
