@@ -903,7 +903,7 @@ function resetLobbyUI() {
   $("lobby-wait").classList.add("hidden");
   $("lobby-error").classList.add("hidden");
   ["step-server", "step-room", "step-peer"].forEach(id => $(id).classList.remove("done"));
-  lobbyStep("step-server", false, "Vermittlungsserver…");
+  lobbyStep("step-server", false, "Spielserver…");
   lobbyStep("step-room", false, "Raum öffnen…");
   lobbyStep("step-peer", false, "Auf Gegner warten…");
 }
@@ -911,11 +911,6 @@ function resetLobbyUI() {
 function openLobby() {
   const name = getPlayerName();
   if (!name) return;
-  if (typeof Peer === "undefined") {
-    showScreen("screen-lobby");
-    $("lobby-choice").classList.add("hidden");
-    return lobbyError("Die Netzwerk-Bibliothek konnte nicht geladen werden. Bitte Seite neu laden.");
-  }
   resetLobbyUI();
   $("join-code").value = "";
   showScreen("screen-lobby");
@@ -929,14 +924,14 @@ function wireNet() {
     $("lobby-choice").classList.add("hidden");
     $("lobby-wait").classList.remove("hidden");
     $("lobby-error").classList.add("hidden");
-    lobbyStep("step-server", true, "Vermittlungsserver verbunden ✓");
+    lobbyStep("step-server", true, "Spielserver verbunden ✓");
     lobbyStep("step-room", true, "Raum " + code + " ist offen ✓");
     lobbyStep("step-peer", false, "Warte auf Gegner – sag den Code an!");
     Net.onStatus("Warte auf Gegner");
   };
 
   Net.onConnected = () => {
-    lobbyStep("step-server", true, "Vermittlungsserver verbunden ✓");
+    lobbyStep("step-server", true, "Spielserver verbunden ✓");
     lobbyStep("step-room", true, "Raum gefunden ✓");
     lobbyStep("step-peer", true, "Gegner verbunden ✓");
     if (!Net.isHost) {
