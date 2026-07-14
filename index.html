@@ -101,7 +101,7 @@
   <!-- ================= DUELL-LOBBY ================= -->
   <section class="screen" id="screen-lobby">
     <div class="panel narrow">
-      <div class="week-kicker">MEHRSPIELER · PEER-TO-PEER</div>
+      <div class="week-kicker">MEHRSPIELER · ONLINE</div>
       <h2>⚔️ Online-Duell</h2>
 
       <div id="lobby-choice">
@@ -120,7 +120,7 @@
             </div>
           </div>
         </div>
-        <p class="muted small lobby-hint">💡 Beide Geräte brauchen Internet und müssen diese Website geöffnet haben. Funktioniert über jedes Netz – auch iPad&nbsp;↔&nbsp;Handy.</p>
+        <p class="muted small lobby-hint">💡 Beide Geräte brauchen nur Internet und diese Website – das Duell läuft über den Spielserver und funktioniert in jedem Netz (WLAN, Handynetz, Schulnetz), auch gemischt.</p>
       </div>
 
       <div id="lobby-wait" class="hidden">
@@ -130,7 +130,7 @@
           <button class="btn btn-ghost btn-copy" id="btn-copy-code">📋 Code kopieren</button>
         </div>
         <ul class="conn-steps" id="conn-steps">
-          <li id="step-server">Vermittlungsserver…</li>
+          <li id="step-server">Spielserver…</li>
           <li id="step-room">Raum öffnen…</li>
           <li id="step-peer">Auf Gegner warten…</li>
         </ul>
@@ -352,7 +352,6 @@
   <div class="net-banner hidden" id="net-banner"></div>
 </div>
 
-<script src="js/vendor/peerjs.min.js"></script>
 <script src="js/rng.js"></script>
 <script src="js/data.js"></script>
 <script src="js/net.js"></script>

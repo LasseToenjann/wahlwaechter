@@ -105,7 +105,7 @@ Nach Woche 1 und Woche 2 bietet das Ministerium je **eine von drei zufälligen A
 
 ### 6.2 Online-Duell 1 vs 1
 
-Zwei Spieler:innen verbinden sich **direkt Browser-zu-Browser** (Peer-to-Peer über WebRTC/PeerJS, kein eigener Server nötig): Spieler:in A erstellt ein Duell und erhält einen **Raum-Code**, B tritt damit bei.
+Zwei Spieler:innen verbinden sich über einen **kostenlosen HTTP-Spielserver** (Nachrichten-Postfächer mit Sekundentakt-Abruf – bewusst kein WebRTC, damit es auch in Schul-WLANs und Mobilnetzen zuverlässig funktioniert): Spieler:in A erstellt ein Duell und erhält einen **Raum-Code**, B tritt damit bei.
 
 - **Phase 1 – Wettermitteln:** Beide erhalten (per geteiltem Zufalls-Seed) **exakt dieselben Fälle** (2 Wellen à 5 Fälle) und spielen simultan. Der Punktestand des Gegners ist live sichtbar — Nervenkitzel durch direkten Vergleich.
 - **Phase 2 – Showdown mit Rollentausch:** Jede:r baut **verdeckt in 75 Sekunden einen eigenen KI-Fake** aus Bausteinen (Thema × Format × Tarnmaßnahmen). Jede Tarnung löscht eine Beweisspur, aber das Budget ist knapp — perfekte Tarnung ist unmöglich, irgendeine Spur bleibt. Der gebaute Fake wird in einen Mini-Feed aus echten Beiträgen **beim Gegner** eingeschleust: Wer den gegnerischen Fake schneller findet, gewinnt die Showdown-Punkte.
@@ -124,9 +124,9 @@ Zwei Spieler:innen verbinden sich **direkt Browser-zu-Browser** (Peer-to-Peer ü
 ## 8. Technische Umsetzung (Kurzüberblick)
 
 - **Reines HTML/CSS/JavaScript** — läuft in jedem modernen Browser, keine Installation, kein Build-Schritt
-- **Online-Duell:** WebRTC-Peer-to-Peer via [PeerJS](https://peerjs.com) mit kostenlosem öffentlichem Vermittlungsserver — kein eigenes Backend, keine Kosten, keine Registrierung
+- **Online-Duell:** Nachrichtenaustausch über einen kostenlosen Key-Value-Speicher (HTTP-Polling, „Postfach-Prinzip“) — kein eigenes Backend, keine Registrierung, funktioniert in jedem Netz, in dem die Website lädt
 - **Gleiche Fälle im Duell:** deterministischer Zufallsgenerator (Mulberry32) mit geteiltem Seed
-- **Rangliste:** localStorage (lokal pro Gerät)
+- **Rangliste:** global über denselben Speicher (pro Modus), lokal als Fallback
 - **Hosting:** GitHub Pages (kostenlos, HTTPS)
 
 ## 9. Erweiterungsideen (Ausblick)

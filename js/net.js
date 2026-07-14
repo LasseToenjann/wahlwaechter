@@ -1,179 +1,245 @@
 "use strict";
 /* =========================================================================
-   Netzwerk-Schicht für das Online-Duell.
-   WebRTC-Peer-to-Peer via PeerJS: Der kostenlose öffentliche Broker
-   (0.peerjs.com) vermittelt nur den Verbindungsaufbau – danach läuft
-   alles direkt Browser-zu-Browser (bzw. über ein kostenloses TURN-Relay,
-   wenn Firewalls/Router eine direkte Verbindung verhindern – typisch
-   in Schul-WLANs und Mobilfunknetzen).
+   Netzwerk-Schicht für das Online-Duell – HTTP-Relay statt WebRTC.
 
-   Nachrichten: { type: "hello"|"start"|"progress"|"sabotage"|"huntResult"|"final"|"ping", ... }
+   Warum: WebRTC-Direktverbindungen scheitern in Schul-WLANs und Mobilnetzen
+   regelmäßig an Firewalls/NAT. Dieses System nutzt stattdessen denselben
+   kostenlosen Key-Value-Speicher wie die globale Rangliste (textdb.online):
+
+   Jeder Raum hat zwei "Postfächer" (Host->Gast und Gast->Host). Jede Seite
+   schreibt ausschließlich in ihr eigenes Postfach und liest das des Gegners
+   im Sekundentakt. Reines HTTPS -> funktioniert überall, wo die Website lädt.
+
+   Öffentliche API (unverändert zu vorher):
+     createRoom(), joinRoom(code), send(type, payload), close()
+     Callbacks: onRoomReady, onConnected, onMessage, onDropped, onJoinFailed, onStatus
    ========================================================================= */
 
 const Net = {
-  peer: null,
-  conn: null,
   isHost: false,
-  active: false,        // Duell läuft (Verbindung steht)
-  _heartbeat: null,
+  active: false,        // Gegner verbunden, Duell läuft
 
   // Callbacks – werden von game.js gesetzt
-  onRoomReady: null,    // (code)          Host: Raum offen, Code anzeigen
-  onConnected: null,    // ()              Verbindung steht (beide Seiten)
-  onMessage: null,      // (msg)           eingehende Duell-Nachricht
-  onDropped: null,      // (reason)        Verbindung verloren / fehlgeschlagen
-  onJoinFailed: null,   // (reason)        Beitritt gescheitert (falscher Code etc.)
-  onStatus: null,       // (text)          Fortschritts-Feedback für die Lobby
+  onRoomReady: null,    // (code)   Host: Raum offen, Code anzeigen
+  onConnected: null,    // ()       Gegenstelle gefunden (beide Seiten)
+  onMessage: null,      // (msg)    eingehende Duell-Nachricht
+  onDropped: null,      // (reason) Verbindung verloren
+  onJoinFailed: null,   // (reason) Beitritt gescheitert (falscher Code etc.)
+  onStatus: null,       // (text)   Fortschritts-Feedback für die Lobby
 
-  _peerId(code) { return "wahlwaechter-" + code.toUpperCase(); },
+  _BASE: "https://textdb.online/",
+  _POLL_MS: 1800,       // Lese-Intervall Gegner-Postfach
+  _BEAT_MS: 5000,       // eigenes Lebenszeichen spätestens alle 5 s
+  _STALE_MS: 16000,     // Gegner-Lebenszeichen älter -> Verbindung verloren
+  _ROOM_FRESH_MS: 15 * 60 * 1000,   // Raum gilt max. 15 Min als "offen"
 
-  _newPeer(id) {
-    // Ohne Host-Angabe nutzt PeerJS die kostenlose PeerJS-Cloud als Vermittler.
-    // Zusätzliche STUN/TURN-Server erhöhen die Erfolgsquote hinter strengen
-    // Firewalls massiv (TURN: Open-Relay-Projekt, kostenlos).
-    return new Peer(id, {
-      debug: 1,
-      config: {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          {
-            urls: [
-              "turn:openrelay.metered.ca:80",
-              "turn:openrelay.metered.ca:443",
-              "turn:openrelay.metered.ca:443?transport=tcp",
-            ],
-            username: "openrelayproject",
-            credential: "openrelayproject",
-          },
-        ],
-      },
-    });
-  },
+  _code: null, _gid: null, _partner: null,
+  _seq: 0, _lastSeen: 0,
+  _outbox: [],
+  _pollTimer: null, _beatTimer: null, _inFlight: false,
+  _lastRemoteBeat: null, _lastRemoteChange: 0, _pollFails: 0,
+  _joinDeadline: null,
+
+  _key(side) { return "wahlwaechter_room_" + this._code.toLowerCase() + "_" + side; },
+  _myKey()   { return this._key(this.isHost ? "h" : "g"); },
+  _oppKey()  { return this._key(this.isHost ? "g" : "h"); },
 
   _status(text) { if (this.onStatus) this.onStatus(text); },
 
+  async _read(key) {
+    const res = await fetch(this._BASE + key + "?t=" + Date.now());
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    if (!text.trim()) return null;
+    try { return JSON.parse(text); } catch (e) { return null; }
+  },
+
+  async _write(key, state) {
+    const url = this._BASE + "update/?key=" + key + "&value=" + encodeURIComponent(JSON.stringify(state));
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+    if (j.status !== 1) throw new Error("write rejected");
+  },
+
+  _myState(extra) {
+    return Object.assign({
+      v: 1, beat: Date.now(), bye: false,
+      partner: this._partner, created: this._created,
+      msgs: this._outbox,
+    }, extra || {});
+  },
+
+  async _flush(extra) {
+    try { await this._write(this._myKey(), this._myState(extra)); }
+    catch (e) { /* nächster Beat/Flush versucht es erneut */ }
+  },
+
   /* ---------- Host: Raum erstellen ---------- */
-  createRoom() {
+  async createRoom() {
     this.close();
     this.isHost = true;
-    const code = randomRoomCode();
-    this._status("Verbinde mit Vermittlungsserver…");
-    const peer = this._newPeer(this._peerId(code));
-    this.peer = peer;
-
-    const bootTimer = setTimeout(() => {
-      if (!this.active && peer === this.peer && (!peer.open)) {
-        this.close();
-        if (this.onJoinFailed) this.onJoinFailed("Der Vermittlungsserver antwortet nicht. Internet prüfen (Schul-WLAN blockiert manchmal – Handy-Hotspot probieren) und erneut versuchen.");
-      }
-    }, 15000);
-
-    peer.on("open", () => {
-      clearTimeout(bootTimer);
-      if (this.onRoomReady) this.onRoomReady(code);
-    });
-
-    peer.on("connection", (conn) => {
-      if (this.conn) { conn.close(); return; }  // nur 1 Gegner
-      this._status("Gegner gefunden – baue Direktverbindung auf…");
-      this._wireConnection(conn);
-    });
-
-    peer.on("error", (err) => {
-      clearTimeout(bootTimer);
-      if (err.type === "unavailable-id") {
-        this.createRoom();  // Code-Kollision (extrem selten): neuer Versuch
-      } else if (!this.active) {
-        this.close();
-        if (this.onJoinFailed) this.onJoinFailed(this._errText(err));
-      } else {
-        this._drop(this._errText(err));
-      }
-    });
-
-    peer.on("disconnected", () => {
-      // Verbindung zum Broker weg – bestehende P2P-Verbindung läuft weiter.
-      if (!this.active && peer === this.peer) peer.reconnect();
-    });
+    this._code = randomRoomCode();
+    this._gid = Math.random().toString(36).slice(2, 10);
+    this._created = Date.now();
+    this._status("Verbinde mit Spielserver…");
+    try {
+      // Beide Postfächer frisch anlegen (alte Reste desselben Codes löschen)
+      await this._write(this._key("g"), { v: 1, beat: 0, bye: false, partner: null, created: 0, msgs: [] });
+      await this._flush();
+    } catch (e) {
+      this.close();
+      if (this.onJoinFailed) this.onJoinFailed("Der Spielserver ist nicht erreichbar. Internetverbindung prüfen und erneut versuchen.");
+      return;
+    }
+    if (this.onRoomReady) this.onRoomReady(this._code);
+    this._startLoops();
   },
 
   /* ---------- Gast: Raum beitreten ---------- */
-  joinRoom(code) {
+  async joinRoom(code) {
     this.close();
     this.isHost = false;
-    this._status("Verbinde mit Vermittlungsserver…");
-    const peer = this._newPeer(null); // zufällige eigene ID
-    this.peer = peer;
+    this._code = code;
+    this._gid = Math.random().toString(36).slice(2, 10);
+    this._created = Date.now();
+    this._status("Suche Raum " + code.toUpperCase() + "…");
 
-    let joined = false;
-    const failTimer = setTimeout(() => {
-      if (!joined) {
+    let host;
+    try { host = await this._read(this._oppKey()); }
+    catch (e) {
+      this.close();
+      if (this.onJoinFailed) this.onJoinFailed("Der Spielserver ist nicht erreichbar. Internetverbindung prüfen und erneut versuchen.");
+      return;
+    }
+    if (!host || host.v !== 1 || !host.created || Date.now() - host.created > this._ROOM_FRESH_MS || host.bye) {
+      this.close();
+      if (this.onJoinFailed) this.onJoinFailed("Kein offener Raum mit diesem Code gefunden. Tippfehler? (Der Code ist 5 Zeichen lang und nur ca. 15 Minuten gültig.)");
+      return;
+    }
+    if (host.partner) {
+      this.close();
+      if (this.onJoinFailed) this.onJoinFailed("In diesem Raum spielt schon jemand. Erstellt einen neuen Raum.");
+      return;
+    }
+
+    try { await this._flush(); }
+    catch (e) {
+      this.close();
+      if (this.onJoinFailed) this.onJoinFailed("Der Spielserver ist nicht erreichbar. Bitte erneut versuchen.");
+      return;
+    }
+
+    this._status("Raum gefunden – melde dich an…");
+    if (this.onConnected) this.onConnected();   // game.js sendet jetzt "hello"
+
+    // Wenn der Host nicht binnen 25 s antwortet: abbrechen
+    this._joinDeadline = setTimeout(() => {
+      if (!this.active) {
         this.close();
-        if (this.onJoinFailed) this.onJoinFailed("Keine Verbindung möglich. Code prüfen – oder ist das Duell schon gestartet? (In strengen Netzen hilft oft ein Handy-Hotspot.)");
+        if (this.onJoinFailed) this.onJoinFailed("Der Raum antwortet nicht. Ist das Duell dort schon gestartet? Erstellt einen neuen Raum.");
       }
-    }, 20000);
+    }, 25000);
 
-    peer.on("open", () => {
-      this._status("Suche Raum " + code.toUpperCase() + "…");
-      const conn = peer.connect(this._peerId(code), { reliable: true });
-      conn.on("open", () => { joined = true; clearTimeout(failTimer); });
-      this._wireConnection(conn);
-    });
-
-    peer.on("error", (err) => {
-      clearTimeout(failTimer);
-      if (!joined) {
-        this.close();
-        if (this.onJoinFailed) this.onJoinFailed(this._errText(err));
-      } else {
-        this._drop(this._errText(err));
-      }
-    });
+    this._startLoops();
   },
 
-  _wireConnection(conn) {
-    this.conn = conn;
-    conn.on("open", () => {
-      this.active = true;
-      // Heartbeat hält NAT/Firewall-Zuordnungen während langer Spielphasen offen
-      clearInterval(this._heartbeat);
-      this._heartbeat = setInterval(() => this.send("ping"), 10000);
-      if (this.onConnected) this.onConnected();
-    });
-    conn.on("data", (data) => {
-      if (data && typeof data === "object" && data.type !== "ping" && this.onMessage) this.onMessage(data);
-    });
-    conn.on("close", () => this._drop("Der Gegner hat die Verbindung getrennt."));
-    conn.on("error", () => this._drop("Verbindungsfehler."));
+  /* ---------- Nachrichten senden ---------- */
+  send(type, payload) {
+    if (!this._code) return;
+    const msg = Object.assign({ q: ++this._seq, gid: this._gid, type }, payload || {});
+    this._outbox.push(msg);
+    this._flush();
+  },
+
+  /* ---------- Poll- & Lebenszeichen-Schleifen ---------- */
+  _startLoops() {
+    clearInterval(this._pollTimer);
+    clearInterval(this._beatTimer);
+    this._lastRemoteBeat = null;
+    this._lastRemoteChange = Date.now();
+    this._pollFails = 0;
+    this._pollTimer = setInterval(() => this._poll(), this._POLL_MS);
+    this._beatTimer = setInterval(() => this._flush(), this._BEAT_MS);
+    this._poll();
+  },
+
+  async _poll() {
+    if (this._inFlight || !this._code) return;
+    this._inFlight = true;
+    try {
+      const other = await this._read(this._oppKey());
+      this._pollFails = 0;
+      if (other && other.v === 1) this._handleRemote(other);
+    } catch (e) {
+      if (++this._pollFails >= 6) this._drop("Der Spielserver ist nicht mehr erreichbar.");
+    } finally {
+      this._inFlight = false;
+    }
+  },
+
+  _handleRemote(other) {
+    // Lebenszeichen verfolgen (eigene Uhr, daher nur Änderungen zählen)
+    if (other.beat !== this._lastRemoteBeat) {
+      this._lastRemoteBeat = other.beat;
+      this._lastRemoteChange = Date.now();
+    }
+    if (this.active && other.bye) return this._drop("Der Gegner hat das Duell verlassen.");
+    if (this.active && Date.now() - this._lastRemoteChange > this._STALE_MS) {
+      return this._drop("Der Gegner antwortet nicht mehr.");
+    }
+
+    // Gast: Prüfen, ob der Host einen anderen Partner angenommen hat
+    if (!this.isHost && other.partner && other.partner !== this._gid) {
+      this.close();
+      if (this.onJoinFailed) this.onJoinFailed("In diesem Raum spielt schon jemand anderes.");
+      return;
+    }
+
+    const msgs = Array.isArray(other.msgs) ? other.msgs : [];
+    for (const m of msgs) {
+      if (!m || typeof m.q !== "number" || m.q <= this._lastSeen) continue;
+      // Host nimmt nur Nachrichten des ersten Gasts an
+      if (this.isHost) {
+        if (!this._partner) { this._partner = m.gid; this._flush(); }
+        if (m.gid !== this._partner) continue;
+      }
+      this._lastSeen = m.q;
+      if (!this.active) {
+        this.active = true;
+        clearTimeout(this._joinDeadline);
+        if (this.isHost && this.onConnected) this.onConnected();
+      }
+      if (this.onMessage) this.onMessage(m);
+    }
   },
 
   _drop(reason) {
-    clearInterval(this._heartbeat);
     if (!this.active) return;
+    this._stopLoops();
     this.active = false;
     if (this.onDropped) this.onDropped(reason);
   },
 
-  _errText(err) {
-    switch (err && err.type) {
-      case "peer-unavailable": return "Kein Raum mit diesem Code gefunden. Tippfehler? Oder wurde der Raum geschlossen?";
-      case "network":          return "Keine Verbindung zum Vermittlungsserver. Internet/Firewall prüfen – in Schulnetzen hilft oft ein Handy-Hotspot.";
-      case "browser-incompatible": return "Dieser Browser unterstützt kein WebRTC.";
-      default: return "Netzwerkfehler (" + ((err && err.type) || "unbekannt") + "). Bitte erneut versuchen.";
-    }
-  },
-
-  send(type, payload) {
-    if (this.conn && this.conn.open) {
-      this.conn.send(Object.assign({ type }, payload || {}));
-    }
+  _stopLoops() {
+    clearInterval(this._pollTimer); this._pollTimer = null;
+    clearInterval(this._beatTimer); this._beatTimer = null;
+    clearTimeout(this._joinDeadline); this._joinDeadline = null;
   },
 
   close() {
-    clearInterval(this._heartbeat);
+    this._stopLoops();
+    if (this._code) {
+      // Bestes Bemühen: dem Gegner "tschüss" sagen
+      const key = this._myKey(), state = this._myState({ bye: true });
+      const url = this._BASE + "update/?key=" + key + "&value=" + encodeURIComponent(JSON.stringify(state));
+      try { fetch(url); } catch (e) {}
+    }
     this.active = false;
-    if (this.conn) { try { this.conn.close(); } catch (e) {} this.conn = null; }
-    if (this.peer) { try { this.peer.destroy(); } catch (e) {} this.peer = null; }
+    this._code = null; this._partner = null;
+    this._seq = 0; this._lastSeen = 0;
+    this._outbox = [];
+    this._inFlight = false; this._pollFails = 0;
+    this._lastRemoteBeat = null;
   },
 };

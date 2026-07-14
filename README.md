@@ -15,7 +15,7 @@ Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk **HYDRA** die sozialen Medi
 - ⚖️ **Dilemma-Upgrades:** KI-Ethik als Spielmechanik (Überwachung vs. Grundrechte)
 - 🏛️ **Demokratie-Index:** wirkt als Punkte-Multiplikator – wer die Demokratie beschädigt, kann nicht gewinnen
 - 🛡️ **Solo klassisch** (3 Wochen + Boss-Finale) oder **♾️ Endlos** (Schichten mit steigender Schwierigkeit)
-- ⚔️ **Online-Duell 1vs1** per Raum-Code (WebRTC/PeerJS + TURN-Relay, ohne eigenen Server): gleiche Fälle, Live-Punktestand, und im **Showdown** baut jede:r einen eigenen Fake für den Feed des Gegners
+- ⚔️ **Online-Duell 1vs1** per Raum-Code – läuft über einen kostenlosen HTTP-Spielserver (kein WebRTC, funktioniert daher auch in Schul-WLANs und Mobilnetzen): gleiche Fälle, Live-Punktestand, und im **Showdown** baut jede:r einen eigenen Fake für den Feed des Gegners
 - 🏟️ **Turniermodus:** K.-o.-Baum für 2–16 Spieler:innen mit Freilosen, Ergebnis-Eintrag per Tipp
 - 🌐 **Globale Rangliste** (kostenloser Online-Speicher) mit Modus-Filtern und Offline-Fallback
 
@@ -45,9 +45,9 @@ Für das **Online-Duell** wird eine Internetverbindung benötigt (PeerJS-Vermitt
 | Baustein | Lösung |
 |---|---|
 | Frontend | Vanilla HTML/CSS/JS, keine Frameworks, kein Build |
-| Online-Duell | [PeerJS](https://peerjs.com) (WebRTC-P2P) über den kostenlosen öffentlichen Broker – kein Backend |
+| Online-Duell | HTTP-Relay über [textdb.online](https://textdb.online) (kostenloser Key-Value-Speicher): zwei „Postfächer“ pro Raum, Polling im Sekundentakt. Bewusst kein WebRTC – das scheitert in Schul-WLANs/Mobilnetzen an Firewalls/NAT |
 | Gleiche Fälle im Duell | Deterministischer RNG (Mulberry32) mit geteiltem Seed |
-| Rangliste | `localStorage` (lokal pro Gerät) |
+| Rangliste | Global via textdb.online (pro Modus ein Schlüssel) + `localStorage`-Fallback |
 | Hosting | GitHub Pages (kostenlos, HTTPS) |
 
 ## Dateien
