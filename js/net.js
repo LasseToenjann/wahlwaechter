@@ -30,7 +30,10 @@ const Net = {
   _BASE: "https://textdb.online/",
   _POLL_MS: 1800,       // Lese-Intervall Gegner-Postfach
   _BEAT_MS: 5000,       // eigenes Lebenszeichen spätestens alle 5 s
-  _STALE_MS: 16000,     // Gegner-Lebenszeichen älter -> Verbindung verloren
+  // Großzügig, weil Browser Hintergrund-Tabs auf ~1 Timer/Minute drosseln
+  // (kurz die App wechseln darf das Duell nicht beenden). Absichtliches
+  // Verlassen meldet das "bye"-Signal ohnehin sofort.
+  _STALE_MS: 90000,     // Gegner-Lebenszeichen älter -> Verbindung verloren
   _ROOM_FRESH_MS: 15 * 60 * 1000,   // Raum gilt max. 15 Min als "offen"
 
   _code: null, _gid: null, _partner: null,
@@ -229,12 +232,7 @@ const Net = {
 
   close() {
     this._stopLoops();
-    if (this._code) {
-      // Bestes Bemühen: dem Gegner "tschüss" sagen
-      const key = this._myKey(), state = this._myState({ bye: true });
-      const url = this._BASE + "update/?key=" + key + "&value=" + encodeURIComponent(JSON.stringify(state));
-      try { fetch(url); } catch (e) {}
-    }
+    this._sayBye();
     this.active = false;
     this._code = null; this._partner = null;
     this._seq = 0; this._lastSeen = 0;
@@ -242,4 +240,20 @@ const Net = {
     this._inFlight = false; this._pollFails = 0;
     this._lastRemoteBeat = null;
   },
+
+  _sayBye() {
+    if (!this._code) return;
+    // Bestes Bemühen: dem Gegner "tschüss" sagen (keepalive überlebt das Schließen der Seite)
+    const url = this._BASE + "update/?key=" + this._myKey() +
+      "&value=" + encodeURIComponent(JSON.stringify(this._myState({ bye: true })));
+    try { fetch(url, { keepalive: true }); } catch (e) {}
+  },
 };
+
+/* Seite wird geschlossen/verlassen -> Gegner sofort informieren */
+window.addEventListener("pagehide", () => { if (Net.active) Net._sayBye(); });
+
+/* Tab kommt aus dem Hintergrund zurück -> sofort neu synchronisieren */
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && Net._code) { Net._poll(); Net._flush(); }
+});
