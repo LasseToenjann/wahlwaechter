@@ -197,6 +197,91 @@ const DATA = {
       resolution: "ECHT. Ein ganz normaler zivilgesellschaftlicher Beitrag – demokratische Teilhabe in Reinform. Solche Fälle kosten kluge Prüfer:innen fast keine Energie: Ein einziger Quellen-Check genügt hier."
     },
 
+    {
+      id: "w1_urnenbild", week: 1, isFake: true, category: "KI-generiertes Bild",
+      medium: "bild", source: "Kurznachrichtendienst", author: "WutbürgerNews", handle: "@wutbuerger_news",
+      reach: "312.000 geteilt · Trend #Wahlchaos",
+      title: "„Brennende Wahlurnen in Neustadt!“",
+      text: "Ein dramatisches Foto zeigt brennende Wahlurnen vor einem Rathaus, davor rennende Menschen. „Es geht schon los – und die Medien SCHWEIGEN!“",
+      evidence: {
+        forensik: "Das Feuer wirft keinen Schatten, die Rathausuhr zeigt zwei verschiedene Zeiten und eine rennende Person hat drei Beine – klassische KI-Bildfehler.",
+        quelle:   "Kein Ort, kein Datum, kein Fotografen-Name. Die Bildersuche findet das Motiv nirgendwo sonst – für ein „Großereignis“ unmöglich.",
+        account:  "Der Account postet im Stundentakt Empörungs-Content zu wechselnden Themen, immer mit „…und die Medien schweigen!“",
+        fakten:   "Weder Polizei noch Feuerwehr in Neustadt haben Einsätze gemeldet. Kein einziges Lokalmedium berichtet. Wahlurnen stehen zudem erst am Wahltag in Wahllokalen – nicht vorm Rathaus.",
+      },
+      resolution: "KI-FAKE. Emotionale Schock-Bilder sind der schnellste Weg zu Reichweite. Die Logikfrage entlarvt ihn ohne jede Technik: Warum stünden volle Wahlurnen Tage vor der Wahl auf dem Rathausplatz? Wut ist ein Werkzeug – wer sie fühlt, sollte doppelt prüfen."
+    },
+    {
+      id: "w1_gewinnspiel", week: 1, isFake: true, category: "Phishing-Kampagne",
+      medium: "anzeige", source: "Gesponserte Anzeige", author: "Wahl-Bonus 2032", handle: "Gesponsert",
+      reach: "Zielgruppe: 18–29",
+      title: "„Wählen & gewinnen: 500 € Prämie“",
+      text: "„Die Bundesregierung belohnt Erstwähler! Registriere dich mit Name, Adresse und Ausweisnummer auf wahl-bonus2032.de und sichere dir nach der Stimmabgabe deine 500-€-Prämie.“",
+      evidence: {
+        forensik: "Das „Bundesadler“-Logo ist leicht verzerrt und spiegelverkehrt – ein KI-Nachbau des Originals.",
+        quelle:   "Die Domain wahl-bonus2032.de wurde vor 6 Tagen anonym registriert und hat kein Impressum. Offizielle Stellen nutzen .bund.de-Adressen.",
+        account:  "Das Werbekonto existiert seit einer Woche und schaltet nur diese eine Kampagne.",
+        fakten:   "Es gibt keine staatliche Wahlprämie – Stimmenkauf wäre sogar strafbar (§ 108b StGB). Die Bundeswahlleiterin warnt vor genau solchen Datensammel-Maschen.",
+      },
+      resolution: "KI-FAKE (Phishing). Hier geht es nicht mal um Meinungen, sondern um deine Daten: Name, Adresse und Ausweisnummer sind Gold für Identitätsdiebstahl. Merksatz: Der Staat belohnt Wählen nie mit Geld – und fragt nie per Werbeanzeige nach Ausweisdaten."
+    },
+    {
+      id: "w1_zitatkachel", week: 1, isFake: true, category: "Gefälschtes Zitat-Meme",
+      medium: "bild", source: "Foto-Plattform", author: "PolitikZitate", handle: "@politik_zitate_de",
+      reach: "178.000 geteilt",
+      title: "Zitatkachel: „Steuern rauf für alle unter 30“",
+      text: "Eine professionell gestaltete Kachel mit Foto von Dr. Sandmann und dem Zitat: „Wer unter 30 ist, hat vom Leben noch nichts geleistet – da sind höhere Steuern nur fair.“ Quelle: „Wahlkampfrede, 3. Juli“.",
+      evidence: {
+        forensik: "Foto und Layout sind sauber – Zitatkacheln lassen sich in Sekunden fälschen, Forensik hilft hier kaum.",
+        quelle:   "Die Kachel nennt „Wahlkampfrede, 3. Juli“ – aber keinen Ort und kein überprüfbares Video.",
+        account:  "Der Account verbreitet Kacheln gegen alle Parteien – Hauptsache Empörung, gemischtes Publikum.",
+        fakten:   "Die komplette Rede vom 3. Juli ist online: Das Zitat fällt nie. Kein Medium hat es je gemeldet – bei so einem Satz undenkbar.",
+      },
+      resolution: "KI-FAKE. Das gefälschte Zitat-Meme ist die billigste und häufigste Desinformationsform überhaupt – kein Deepfake nötig, nur ein Bildeditor. Goldene Regel: Ein skandalöses Zitat ohne Video- oder Primärquelle ist erst mal keins."
+    },
+    {
+      id: "w1_echt_wahlhelfer", week: 1, isFake: false, category: "Echter Behörden-Aufruf",
+      medium: "post", source: "Kurznachrichtendienst", author: "Stadt Falkenau", handle: "@stadt_falkenau",
+      reach: "9.400 geteilt",
+      title: "„Wahlhelfer:innen gesucht – 50 € Erfrischungsgeld“",
+      text: "Für den Wahlsonntag suchen wir noch 120 Wahlhelfer:innen! Ab 16 Jahren mit deutscher Staatsbürgerschaft möglich, es gibt 50 € Erfrischungsgeld und vorab eine Schulung. Anmeldung: stadt-falkenau.de/wahlhilfe",
+      evidence: {
+        forensik: "Grafik im bekannten Stadt-Design mit Wappen, identisch zur Website.",
+        quelle:   "Verifiziertes Stadtkonto; der Link führt auf die offizielle Stadt-Domain mit Impressum.",
+        account:  "Langjähriges Behördenkonto mit Bürgerinfos aller Art.",
+        fakten:   "„Erfrischungsgeld“ für Wahlhelfer ist gesetzlich vorgesehen und völlig normal – im Gegensatz zu „Wahlprämien“ für Wähler. Die Lokalzeitung berichtet über den Helfermangel.",
+      },
+      resolution: "ECHT. Nicht verwechseln: Erfrischungsgeld für ehrenamtliche WahlHELFER ist legal und üblich – eine „Prämie“ für die Stimmabgabe wäre Stimmenkauf. Wer vorhin beim Phishing-Gewinnspiel aufgepasst hat, erkennt hier den feinen, aber entscheidenden Unterschied."
+    },
+    {
+      id: "w1_echt_clickbait", week: 1, isFake: false, category: "Clickbait, aber echt",
+      medium: "artikel", source: "Nachrichtenportal", author: "Nachrichten24", handle: "nachrichten24.de",
+      reach: "690.000 Klicks",
+      title: "„Kaya rechnet ab: ‚Dann sollen sie mich doch verklagen‘“",
+      text: "Reißerische Schlagzeile, aber der Artikel dokumentiert sauber ein echtes TV-Interview: Kaya verteidigt ihren Mietendeckel-Plan gegen Verbandskritik und sagt den zitierten Satz wörtlich – das eingebettete Video zeigt die Szene.",
+      evidence: {
+        forensik: "Das eingebettete Interview stammt nachweislich aus der gestrigen Talkshow; Ton und Bild unverändert.",
+        quelle:   "Etabliertes Portal mit Impressum; das Zitat ist mit Video belegt statt nur behauptet.",
+        account:  "Normales Redaktionsverhalten.",
+        fakten:   "Der Sender hat die komplette Sendung in der Mediathek; das Zitat fällt bei Minute 34 im beschriebenen Kontext.",
+      },
+      resolution: "ECHT. Clickbait ist nervig, aber nicht automatisch falsch: Die Schlagzeile übertreibt den Ton, doch Zitat und Kontext stimmen und sind mit Primärquelle belegt. Unterscheide schlechten Stil von Desinformation – gekennzeichnet wird nur Letzteres."
+    },
+    {
+      id: "w1_echt_erklaervideo", week: 1, isFake: false, category: "Echtes Erklärvideo",
+      medium: "video", source: "Video-Plattform", author: "Lina erklärt's", handle: "@lina.erklaert",
+      reach: "89.000 Aufrufe",
+      title: "„Erststimme, Zweitstimme – in 60 Sekunden“",
+      text: "Ein schnell geschnittenes Hochformat-Video: Eine Studentin erklärt mit Sticker-Grafiken den Unterschied zwischen Erst- und Zweitstimme und warum die Zweitstimme über die Sitzverteilung entscheidet. „Quellen in der Beschreibung!“",
+      evidence: {
+        forensik: "Selbst gefilmtes Video mit konsistentem Licht; die Grafiken sind sichtbar selbst gebastelt.",
+        quelle:   "In der Beschreibung verlinkt: Bundeszentrale für politische Bildung und Bundeswahlleiterin.",
+        account:  "Seit 2 Jahren Erklärvideos zu Politik und Alltag, keine Parteinähe erkennbar.",
+        fakten:   "Alle Aussagen decken sich mit den offiziellen Infos – die Zweitstimme ist tatsächlich die „wichtigere“ für die Machtverteilung.",
+      },
+      resolution: "ECHT. Junger Creator, lockerer Ton, Hochformat – nichts davon ist ein Fake-Signal. Entscheidend: korrekte Inhalte und offene Quellen. Solche Formate erreichen Erstwähler besser als jede Broschüre; sie zu sperren wäre ein Eigentor."
+    },
+
     /* ---------------------------- WOCHE 2 ---------------------------- */
     {
       id: "w2_audioleak", week: 2, isFake: true, category: "Deepfake-Audio",
@@ -323,6 +408,91 @@ const DATA = {
         fakten:   "Die Studie ist auf der Instituts-Website abrufbar; zwei Fachleute kommentieren die Methodik in anderen Medien als solide (mit üblichen Einschränkungen).",
       },
       resolution: "ECHT. Meta-Falle: Ein Artikel ÜBER Desinformation ist selbst keine Desinformation. Prüfbare Studie, offene Methodik, unabhängige Einordnung – freigeben. Wer hier sperrt (etwa weil das Ergebnis einer Seite nützt), unterdrückt Forschung."
+    },
+
+    {
+      id: "w2_umfragegrafik", week: 2, isFake: true, category: "Manipulierte Grafik",
+      medium: "bild", source: "Kurznachrichtendienst", author: "Zahlen-Check", handle: "@zahlencheck_de",
+      reach: "203.000 geteilt",
+      title: "„Die WAHREN Umfragezahlen“",
+      text: "Eine Balkengrafik im Design des Instituts Demoskopie Rheintal zeigt die Heimatliste bei 34 % – „Die Zahlen, die das Fernsehen euch nicht zeigt. Original-Institut, ungeschönt!“",
+      evidence: {
+        forensik: "Die Balken passen nicht zu den daneben gedruckten Prozentwerten; die Achse beginnt versteckt bei 15 %. Schriftart weicht minimal vom echten IDR-Design ab.",
+        quelle:   "Die Grafik verlinkt nicht auf das Institut. Auf idr-umfragen.de existiert diese Erhebung nicht.",
+        account:  "Der Account existiert seit 5 Wochen und teilt ausschließlich „unterdrückte Zahlen“ – stets ohne Quelle.",
+        fakten:   "Das IDR dementiert öffentlich und zeigt die echte Umfrage: Heimatliste 21 %. Die gefälschte Grafik nutzt das echte Layout mit erfundenen Werten.",
+      },
+      resolution: "KI-FAKE. Gefälschte Umfragegrafiken kapern die Glaubwürdigkeit echter Institute – Layout kopieren, Zahlen austauschen, fertig. Prüfroutine: Gibt es die Erhebung auf der Instituts-Website? Beginnt die Achse bei null? Passen Balken und Zahlen zusammen?"
+    },
+    {
+      id: "w2_auslandsmedium", week: 2, isFake: true, category: "Erfundener Auslandsbericht",
+      medium: "post", source: "Kurznachrichtendienst", author: "Global Voices DE", handle: "@globalvoices_de",
+      reach: "94.000 geteilt",
+      title: "„Sogar die New York Times berichtet!“",
+      text: "„Während deutsche Medien schweigen, titelt die New York Times: ‚German Election Rigged Before First Vote Cast‘. Übersetzung im Thread. Wacht auf!“",
+      evidence: {
+        forensik: "Der angehängte „Screenshot“ des Artikels nutzt eine falsche Schriftart und das Layout der NYT von vor zehn Jahren.",
+        quelle:   "Auf nytimes.com existiert weder die Schlagzeile noch der angebliche Autor. Die Suche in Pressedatenbanken: kein Treffer.",
+        account:  "Das Konto übersetzt angebliche Auslandsartikel im Tagestakt – keiner davon ist auffindbar.",
+        fakten:   "Kein internationales Medium berichtet dergleichen. Die Masche: Ein prestigeträchtiges Auslandsmedium wird als Kronzeuge erfunden, weil kaum jemand das Original nachschlägt.",
+      },
+      resolution: "KI-FAKE. „Ausländische Medien berichten, unsere schweigen“ ist ein Klassiker – die Fälschung versteckt sich hinter einer Sprachbarriere. Gegenmittel: 30 Sekunden auf der Original-Website suchen. Existiert der Artikel dort nicht, existiert er nicht."
+    },
+    {
+      id: "w2_drohpost", week: 2, isFake: true, category: "Einschüchterungs-Kampagne",
+      medium: "post", source: "Kurznachrichtendienst", author: "WahlWahrheit88", handle: "@wahlwahrheit88",
+      reach: "41.000 geteilt · viele Meldungen",
+      title: "„Wir kennen eure Gesichter“",
+      text: "Ein Post zeigt KI-generierte „Fahndungsplakate“ mit Gesichtern angeblicher Wahlhelfer aus Falkenau: „Diese Leute zählen eure Stimmen. Wir beobachten jedes Wahllokal. Betrug wird Konsequenzen haben.“",
+      evidence: {
+        forensik: "Die „Fotos“ zeigen typische GAN-Artefakte: asymmetrische Ohren, verschwommene Hintergründe, identische Augenpartien bei drei Personen.",
+        quelle:   "Keine der Personen ist real identifizierbar; die Namen darunter existieren im Melderegister nicht.",
+        account:  "Frisch registriert, folgt niemandem, postet nur Drohinhalte zur Wahl.",
+        fakten:   "Die Polizei ermittelt bereits wegen Bedrohung und Verstoßes gegen das Wahlrecht (Wählernötigung, § 108 StGB). Wahlbeobachtung ist legal – Einschüchterung nicht.",
+      },
+      resolution: "KI-FAKE (Einschüchterung). Ziel ist nicht Täuschung, sondern Angst: Wahlhelfer sollen abspringen, Wähler sich beobachtet fühlen. Solche Inhalte sind auch strafrechtlich relevant – hier ist Kennzeichnen Pflicht, nicht Zensur. (Übrigens der seltene Fall, in dem alle vier Beweiskanäle sofort anschlagen.)"
+    },
+    {
+      id: "w2_echt_altvideo", week: 2, isFake: false, category: "Peinlich, aber echt & korrekt datiert",
+      medium: "video", source: "Video-Plattform", author: "PolitArchiv", handle: "@politarchiv",
+      reach: "520.000 Aufrufe",
+      title: "„Brenner 2019: ‚Digitalisierung ist Modekram‘“",
+      text: "Ein klar mit „Archiv, 2019“ beschrifteter Ausschnitt zeigt Kandidat Brenner, wie er Digitalpolitik als „Modekram, der in zwei Jahren keinen mehr interessiert“ abtut. Der Kanal fragt: „Sollte das im Wahlkampf 2032 eine Rolle spielen?“",
+      evidence: {
+        forensik: "Das Video ist unbearbeitet und stammt nachweislich aus einer Landtagsdebatte 2019 (Parlamentsarchiv, identischer Wortlaut im Protokoll).",
+        quelle:   "Der Kanal archiviert Politikeraussagen aller Parteien und datiert sie sauber – auch hier deutlich sichtbar.",
+        account:  "Seit Jahren aktiv, Quellenangabe unter jedem Video.",
+        fakten:   "Aussage, Ort und Datum stimmen; Brenners Team bestätigt sie („Position von damals“). Der Kontext wird NICHT verfälscht – anders als beim Kontext-Fake ist das Alter hier transparent.",
+      },
+      resolution: "ECHT (LEGITIM). Der feine Unterschied zum Kontext-Fake aus Woche 2: Hier ist das alte Material klar als alt gekennzeichnet und korrekt eingeordnet. Politiker an frühere Aussagen zu erinnern ist Kernaufgabe demokratischer Öffentlichkeit – unangenehm, aber legitim."
+    },
+    {
+      id: "w2_echt_ngo", week: 2, isFake: false, category: "Kritischer NGO-Bericht",
+      medium: "artikel", source: "Nachrichtenportal", author: "Transparenzwacht e.V.", handle: "transparenzwacht.org",
+      reach: "150.000 Leser",
+      title: "„Bericht: Parteispenden-Lücken bei drei von vier Parteien“",
+      text: "Die NGO dokumentiert, dass BM, FZP und Heimatliste Großspenden teils erst nach Monaten meldeten – nur die Soziale Mitte blieb im Rahmen. Alle Rohdaten und die Methodik sind als Download verfügbar.",
+      evidence: {
+        forensik: "Die Belege sind Screenshots aus dem offiziellen Bundestags-Spendenregister – nachprüfbar identisch mit dem Original.",
+        quelle:   "Eingetragener Verein, seit 2019 aktiv, finanziert über offengelegte Kleinspenden; Impressum vollständig.",
+        account:  "Kritisiert nachweislich Parteien aller Richtungen – die Trefferliste diesmal auch.",
+        fakten:   "Zwei Redaktionen haben die Auswertung nachvollzogen und bestätigen sie. Die betroffenen Parteien räumen „verspätete Meldungen“ ein.",
+      },
+      resolution: "ECHT. Watchdog-Organisationen sind unbequem – das ist ihr Job. Erkennungsmerkmale seriöser NGO-Arbeit: offene Rohdaten, nachvollziehbare Methodik, Kritik über Parteigrenzen hinweg. Dass ein Bericht einer Partei nützt, macht ihn nicht falsch."
+    },
+    {
+      id: "w2_echt_lehrerin", week: 2, isFake: false, category: "Echter Erfahrungs-Thread",
+      medium: "post", source: "Kurznachrichtendienst", author: "Frau Demir unterrichtet", handle: "@frau_demir",
+      reach: "310.000 Likes",
+      title: "Lehrerin über Deepfakes im Klassenzimmer",
+      text: "„Heute hat ein Schüler ein ‚Beweisvideo‘ für Wahlbetrug gezeigt – KI-generiert, aber verdammt gut. Wir haben dann 90 Minuten Forensik statt Mathe gemacht. Beste Stunde des Jahres. Thread mit unseren 5 Prüfschritten: 🧵“",
+      evidence: {
+        forensik: null,
+        quelle:   "Der Thread beschreibt Methoden, keine Tatsachenbehauptungen über Dritte; die 5 Prüfschritte decken sich mit Empfehlungen von Faktencheck-Organisationen.",
+        account:  "Seit 2028 aktives Lehrerkonto mit Unterrichtsideen; von Bildungsjournalisten mehrfach zitiert.",
+        fakten:   "Keine überprüfbaren Falschbehauptungen; der geschilderte Vorfall betrifft die eigene Klasse und nennt niemanden namentlich.",
+      },
+      resolution: "ECHT. Persönliche Erfahrungsberichte ohne Falschbehauptungen sind der Normalfall sozialer Medien – auch wenn sie viral gehen. Der Thread verbreitet sogar Medienkompetenz. Wichtig fürs Kalibrieren: Nicht jeder virale Post über Desinformation ist selbst welche."
     },
 
     /* ---------------------------- WOCHE 3 ---------------------------- */
@@ -466,6 +636,90 @@ const DATA = {
       },
       resolution: "ECHT. „Das kann nicht stimmen, das gefällt mir nicht“ ist kein Prüfkriterium. Seriöse Umfragen erkennt man an offener Methodik und Fehlertoleranz – nicht am Ergebnis. Wer unliebsame Zahlen sperrt, betreibt genau die Manipulation, die er bekämpfen soll. (Der Empörungssturm im Netz ist übrigens ein Lieblingsziel für echte Botnetze.)"
     },
+    {
+      id: "w3_sprachnachricht", week: 3, isFake: true, category: "Hyperlokaler Audio-Deepfake",
+      medium: "video", source: "Kurznachrichtendienst", author: "Nachbarschaft Falkenau-Süd", handle: "Weitergeleitete Sprachnachricht",
+      reach: "kursiert in 40+ Nachbarschaftsgruppen",
+      title: "„Sprachnachricht vom Bürgermeister“",
+      text: "Eine Sprachnachricht, angeblich vom Falkenauer Bürgermeister: „Liebe Mitbürger, aufgrund der Sicherheitslage müssen wir die Wahl in den Bezirken Süd und West leider auf kommende Woche verschieben. Bitte gebt das weiter.“ Die Stimme klingt täuschend echt.",
+      evidence: {
+        forensik: "Die Stimme trifft Klangfarbe und Dialekt perfekt – aber die Betonung ist unnatürlich gleichmäßig und Atemgeräusche fehlen komplett. Der Bürgermeister spricht öffentlich viel: perfektes Trainingsmaterial für Stimm-Klone.",
+        quelle:   "Die Nachricht kommt ohne Absender über Weiterleitungsketten – niemand kann sagen, woher sie ursprünglich stammt.",
+        account:  "Nicht anwendbar bei Kettenweiterleitungen – genau deshalb ist der Kanal so beliebt für Desinformation.",
+        fakten:   "Wahltermine kann kein Bürgermeister verschieben – sie sind bundesgesetzlich festgelegt. Die Stadt dementiert auf allen Kanälen; der echte Bürgermeister hat ein Video-Statement veröffentlicht.",
+      },
+      resolution: "KI-FAKE. Der gefährlichste Angriff der Woche: hyperlokal, per Messenger, mit geklonter Stimme einer Vertrauensperson – und nicht öffentlich sichtbar, also schwer zu kontern. Merksatz: Wahltermine ändern sich nie per Sprachnachricht. Im Zweifel: Website der Stadt."
+    },
+    {
+      id: "w3_eilmeldung_screenshot", week: 3, isFake: true, category: "Gefälschter Eilmeldungs-Screenshot",
+      medium: "bild", source: "Kurznachrichtendienst", author: "BreakingLeaks", handle: "@breaking_leaks",
+      reach: "1,1 Mio. Ansichten",
+      title: "Screenshot: „Nachrichten24 EILMELDUNG“",
+      text: "Ein Screenshot zeigt eine angebliche Push-Meldung von Nachrichten24: „EIL: Kaya tritt zurück – Staatsanwaltschaft bestätigt Ermittlungen“. Der Post: „Schon wieder gelöscht! Sichert den Screenshot!!“",
+      evidence: {
+        forensik: "Im Screenshot stimmt der Zeilenabstand des Logos nicht mit echten Nachrichten24-Pushes überein; die Uhrzeit-Anzeige nutzt ein Format, das die App nie hatte.",
+        quelle:   "Auf nachrichten24.de existiert keine solche Meldung – auch nicht als Korrektur oder Löschhinweis. Die Redaktion dementiert.",
+        account:  "Der Account lebt von „gelöschten“ Meldungen, die nie existierten – dreimal von Faktencheckern widerlegt.",
+        fakten:   "Weder Staatsanwaltschaft noch irgendein Medium bestätigen Ermittlungen. Kaya tritt zwei Stunden später live auf. Das „schon gelöscht“-Framing soll die Nichtauffindbarkeit ERKLÄREN – ein Selbstimmunisierungs-Trick.",
+      },
+      resolution: "KI-FAKE. Der „Screenshot einer gelöschten Eilmeldung“ ist perfide: Er imitiert eine vertrauenswürdige Quelle und erklärt gleich mit, warum man das Original nicht findet. Wenn „gelöscht!“ die einzige Quelle ist, ist die Meldung fast immer erfunden."
+    },
+    {
+      id: "w3_robocall", week: 3, isFake: true, category: "KI-Anruf-Kampagne",
+      medium: "post", source: "Kurznachrichtendienst", author: "Renate B.", handle: "@renate_b_1958",
+      reach: "67.000 geteilt",
+      title: "„Ich wurde gerade ANGERUFEN“",
+      text: "„Gerade rief mich ‚das Wahlamt‘ an: Wegen hoher Briefwahl-Nachfrage soll ich am Sonntag NICHT ins Wahllokal, meine Stimme sei ‚automatisch registriert‘. Die Stimme klang total offiziell. Ist das normal?? Bitte teilen, meine halbe Seniorengruppe hat den Anruf auch bekommen!“",
+      evidence: {
+        forensik: null,
+        quelle:   "Der Post selbst ist eine ehrliche Nachfrage – die Desinformation steckt im beschriebenen ANRUF, nicht im Post.",
+        account:  "Echtes Konto einer Seniorin, seit Jahren normale Aktivität. Sie ist Opfer, nicht Täterin.",
+        fakten:   "Wahlämter rufen niemals an, und es gibt keine „automatische Registrierung“ der Stimme. Die Bundeswahlleiterin und mehrere Städte warnen zeitgleich vor exakt dieser Robocall-Welle mit KI-Stimme.",
+      },
+      resolution: "KI-FAKE (Desinformations-Kampagne per Robocall). Kniffliger Sonderfall: Der POST ist echt und gutgläubig – aber er transportiert die Falschinfo der Anrufer weiter. Richtig ist Kennzeichnen mit Aufklärung (so machen es Plattformen mit Warnhinweisen), damit die Behauptung „Stimme automatisch registriert“ nicht weiterwandert. Die Seniorin trifft keine Schuld."
+    },
+    {
+      id: "w3_echt_korrektur", week: 3, isFake: false, category: "Transparente Korrektur",
+      medium: "artikel", source: "Nachrichtenportal", author: "Westkurier", handle: "westkurier.de",
+      reach: "88.000 Leser",
+      title: "„In eigener Sache: Wir haben einen Fehler gemacht“",
+      text: "Der Westkurier korrigiert seine gestrige Meldung über Wahlkampfkosten der FZP: Statt 12 Mio. € sind es 1,2 Mio. € – ein Kommafehler aus einer Agenturmeldung. „Der Fehler lag bei uns. Die Original-Meldung wurde korrigiert und markiert.“",
+      evidence: {
+        forensik: "Die korrigierte Originalmeldung trägt einen sichtbaren Korrekturvermerk mit Zeitstempel.",
+        quelle:   "Etablierte Zeitung; die Korrektur nennt Ursache, Verantwortung und den richtigen Wert.",
+        account:  "Redaktionskonto verweist aktiv auf die Korrektur – kein stilles Löschen.",
+        fakten:   "Der korrigierte Wert deckt sich mit dem offiziellen Rechenschaftsbericht der Partei.",
+      },
+      resolution: "ECHT. Fehler passieren auch seriösen Medien – der Unterschied zu Desinformation ist der Umgang: sichtbare Korrektur statt stillem Löschen, Verantwortung statt Ausrede. Transparente Korrekturen sind ein STÄRKE-Signal einer Quelle, kein Schwäche-Signal."
+    },
+    {
+      id: "w3_echt_preprint", week: 3, isFake: false, category: "Überraschende, echte Forschung",
+      medium: "artikel", source: "Nachrichtenportal", author: "Wissenschaft Heute", handle: "wissenschaft-heute.de",
+      reach: "134.000 Leser",
+      title: "„Studie: Deepfake-Warnungen können Vertrauen MEHR beschädigen als Deepfakes“",
+      text: "Ein Forschungsteam der (fiktiven) Universität Rheintal zeigt in einem Preprint: Wer ständig vor Fälschungen gewarnt wird, hält auch echte Aufnahmen häufiger für gefälscht – die „Lügendividende“. Der Artikel ordnet ein: Preprint, noch nicht begutachtet.",
+      evidence: {
+        forensik: null,
+        quelle:   "Das Preprint ist öffentlich abrufbar, Autoren und Daten einsehbar; der Artikel kennzeichnet den Vorab-Status deutlich.",
+        account:  "Etabliertes Wissenschaftsportal, das regelmäßig auch Einschränkungen von Studien benennt.",
+        fakten:   "Der Befund klingt paradox, ist aber in der realen Forschung gut dokumentiert („liar's dividend“). Zwei unabhängige Fachleute nennen die Methodik im Artikel solide.",
+      },
+      resolution: "ECHT. Kontraintuitive Forschung ist kein Fake – und dieser Befund betrifft dich als Prüfer:in direkt: Überwarnung macht Menschen zynisch („ist eh alles fake“), und genau davon profitieren Lügner, deren echte Skandale dann als „bestimmt KI“ abgetan werden. Prüfen statt pauschal misstrauen."
+    },
+    {
+      id: "w3_echt_panne", week: 3, isFake: false, category: "Langweilige Wahrheit",
+      medium: "post", source: "Kurznachrichtendienst", author: "Landesrundfunk Technik", handle: "@lrf_technik",
+      reach: "45.000 geteilt",
+      title: "„Zur Livestream-Panne von gestern Abend“",
+      text: "„Der Ausfall während der TV-Debatte (Minute 41–44) hatte eine unspektakuläre Ursache: ein defekter Encoder in Studio 3. Hier das Fehlerprotokoll und ein Foto des getauschten Geräts. Es wurde nichts ‚abgeschaltet‘, die fehlenden Minuten sind in der Mediathek.“",
+      evidence: {
+        forensik: "Das Foto zeigt reale Studiotechnik; das angehängte Fehlerprotokoll ist konsistent mit dem Ausfallzeitraum.",
+        quelle:   "Offizielles Technik-Konto des Senders; die Mediathek enthält tatsächlich die vollständige Debatte.",
+        account:  "Postet seit Jahren Technik-Transparenz („Warum war der Ton weg?“).",
+        fakten:   "Unter #Debattengate kursiert die Theorie, der Stream sei „abgeschaltet worden, als Sandmann die Wahrheit sagte“ – die fehlenden Minuten sind aber vollständig abrufbar und enthalten nichts Brisantes.",
+      },
+      resolution: "ECHT. Technische Pannen sind der Rohstoff für Verschwörungstheorien – die langweilige Erklärung (defekter Encoder) ist fast immer die richtige, aber die aufregende verbreitet sich schneller. Wer die offizielle Erklärung sperrt, füttert die Theorie erst recht."
+    },
   ],
 
   /* =======================================================================
@@ -504,6 +758,24 @@ const DATA = {
     w3_echt_eilmeldung: "Nachrichtenagenturen (dpa, Reuters) kennzeichnen Unbestätigtes ausdrücklich – jede Exklusivmeldung hat anfangs genau eine Quelle. Vorsichtige Sprache ist das Echtheitssignal.",
     w3_echt_ki_spot: "Gekennzeichnete KI-Wahlwerbung ist real und zulässig: Der EU AI Act und Plattformregeln setzen auf Transparenzpflicht statt Verbot.",
     w3_echt_umfrage: "Seriosität von Umfragen erkennt man an offener Methodik und Fehlertoleranz (Standards des ADM / Rats der Deutschen Markt- und Sozialforschung) – nie am Ergebnis.",
+    w1_urnenbild: "KI-Schockbilder gehen regelmäßig viral, z. B. das KI-Bild der „Explosion am Pentagon“ (Mai 2023), das kurzzeitig sogar die Börse bewegte – widerlegt binnen Minuten durch Ortslogik.",
+    w1_gewinnspiel: "Phishing im Wahlkontext ist dokumentiert: Vor Wahlen warnen BSI und Verbraucherzentralen regelmäßig vor gefälschten „Behörden“-Seiten, die Ausweisdaten abgreifen. Stimmenkauf ist nach § 108b StGB strafbar.",
+    w1_zitatkachel: "Erfundene Zitatkacheln sind laut Faktencheckern (dpa, Correctiv, Mimikama) die häufigste gemeldete Fälschungsart – Prominente von Merkel bis Lindner waren betroffen.",
+    w1_echt_wahlhelfer: "Real: Wahlhelfer erhalten gesetzlich ein „Erfrischungsgeld“ (§ 10 BWO); Städte werben vor jeder Wahl öffentlich um Helfer.",
+    w1_echt_clickbait: "Die Unterscheidung „schlechter Stil ≠ Desinformation“ entspricht der Praxis aller großen Faktencheck-Redaktionen: Geprüft werden Tatsachenbehauptungen, nicht Tonlagen.",
+    w1_echt_erklaervideo: "Real: Formate wie die Erklärvideos der Bundeszentrale für politische Bildung oder von Creators wie „einfach politik“ erreichen Erstwähler nachweislich besser als klassische Kanäle.",
+    w2_umfragegrafik: "Manipulierte Achsen und gefälschte Instituts-Grafiken sind dokumentierte Praxis; Institute wie Forsa und Infratest mussten mehrfach öffentlich gefälschten „eigenen“ Zahlen widersprechen.",
+    w2_auslandsmedium: "Die „Doppelgänger“-Kampagne erfand komplette Artikel unter den Logos von Spiegel, Bild und internationalen Medien; erfundene „Auslandsberichte“ sind ein Standardtrick, dokumentiert u. a. von EU DisinfoLab.",
+    w2_drohpost: "Einschüchterung von Wahlhelfern ist real dokumentiert, v. a. um die US-Wahlen 2020/2024 (Reuters-Recherchen zu Drohungen gegen „election workers“); in Deutschland greift u. a. § 108 StGB (Wählernötigung).",
+    w2_echt_altvideo: "Archiv-Konfrontation ist legitime journalistische Praxis – entscheidend ist die korrekte Datierung. Der Unterschied zum „falschen Kontext“ (häufigste Desinfo-Form laut AFP/dpa) liegt genau dort.",
+    w2_echt_ngo: "Reale Vorbilder: LobbyControl und abgeordnetenwatch.de dokumentieren Parteispenden-Meldelücken über alle Parteien hinweg – mit offenen Daten.",
+    w2_echt_lehrerin: "Medienkompetenz-Unterricht mit echten Deepfake-Beispielen ist verbreitete Praxis (u. a. Materialien von klicksafe und der bpb).",
+    w3_sprachnachricht: "Der geklonte „Biden-Robocall“ von New Hampshire 2024 lief genau so: KI-Stimme einer Vertrauensperson + falsche Wahl-Anweisung. Messenger-Ketten ohne Absender sind laut WhatsApp-eigenen Maßnahmen (Weiterleitungs-Limits) ein Haupt-Verbreitungsweg.",
+    w3_eilmeldung_screenshot: "Gefälschte Screenshots „gelöschter“ Eilmeldungen etablierter Medien kursieren regelmäßig; die Tagesschau unterhält eine eigene Seite, die gefälschte Tagesschau-Screenshots sammelt und widerlegt.",
+    w3_robocall: "KI-Robocalls mit falschen Wahl-Anweisungen sind real (New Hampshire 2024, 6-Mio.-$-Strafe). Dass gutgläubige Empfänger die Falschinfo weitertragen, ist der beabsichtigte Multiplikator-Effekt.",
+    w3_echt_korrektur: "Transparente Korrekturvermerke sind Standard seriöser Redaktionen (Pressekodex Ziffer 3); Faktenchecker werten sichtbare Korrekturkultur als Vertrauenssignal.",
+    w3_echt_preprint: "Die „Lügendividende“ (liar's dividend) ist ein realer Forschungsbefund (Chesney & Citron, 2019): Je mehr über Deepfakes gesprochen wird, desto leichter können Täter echte Aufnahmen als Fälschung abtun.",
+    w3_echt_panne: "Reale Praxis: Sender wie ARD/ZDF erklären technische Pannen öffentlich, weil Sendeausfälle regelmäßig Verschwörungstheorien auslösen (dokumentiert u. a. bei TV-Duellen).",
   },
 
   /* =======================================================================
@@ -591,6 +863,7 @@ const DATA = {
     huntEnergy: 6,      // Prüf-Energie für den Boss-/Showdown-Feed
     feedSize: 4,        // 3 echte + 1 Fake
     maxCloaks: 2,
+    budget: 5,          // Tarnungs-Budget: die zwei stärksten (je 3) passen NICHT zusammen
 
     themes: [
       {
@@ -625,6 +898,22 @@ const DATA = {
         fakten_dirty: "Beide „abgesagten“ Termine fanden nachweislich statt (Fotos, Livestreams). Die zitierte Klinik hat den Kandidaten nie behandelt.",
         fakten_clean: "Die Terminlage ist unübersichtlich, das Team beruft sich auf Privatsphäre – ein Dementi bei Gesundheitsfragen wirkt immer wie Bestätigung.",
       },
+      {
+        id: "umfrage", name: "Umfrage-Fälschung", icon: "📊",
+        desc: "Eine erfundene 'Umfrage' verschiebt die gefühlte Mehrheit.",
+        title: "„Geheime Umfrage: Klarer Favorit stürzt ab“",
+        text: "Eine „noch unveröffentlichte Institutsumfrage“ zeige einen dramatischen Absturz des Favoriten um 9 Punkte – „das Institut hält die Zahlen bis nach der Wahl zurück“, so die Quelle.",
+        fakten_dirty: "Kein Institut kennt die Erhebung; die genannten Feldzeiten kollidieren mit veröffentlichten echten Umfragen, die stabil verlaufen.",
+        fakten_clean: "Das angebliche Institut gibt „zu laufenden Erhebungen keine Auskunft“ – die Behauptung bleibt schwer greifbar, Dementis wirken formelhaft.",
+      },
+      {
+        id: "infrastruktur", name: "Panik-Gerücht", icon: "⚠️",
+        desc: "Angst vor Chaos am Wahltag soll Menschen zuhause halten.",
+        title: "„Warnung: Chaos am Wahlsonntag erwartet“",
+        text: "„Interne Behördenpapiere“ warnten vor Überlastung: stundenlange Schlangen, fehlende Stimmzettel, mögliche Ausschreitungen – wer kann, solle „den Wahltag meiden“.",
+        fakten_dirty: "Die Wahlleitung dementiert; Stimmzettel-Logistik und Helferzahlen sind öffentlich dokumentiert und unauffällig. Das „Behördenpapier“ kann niemand vorlegen.",
+        fakten_clean: "Einzelne echte Berichte über Helfermangel geben dem Gerücht einen wahren Kern – die Übertreibung ist schwer sauber zu widerlegen.",
+      },
     ],
 
     formats: [
@@ -658,17 +947,101 @@ const DATA = {
         account_dirty: "Das Konto ist 9 Tage alt, folgt niemandem und hat ein KI-generiertes Profilbild (asymmetrische Ohrringe).",
         account_clean: "Gekaufter, 8 Jahre alter Account mit echter (fremder) Vergangenheit – die Analyse zeigt nur bei der Sprachhistorie einen feinen Bruch.",
       },
+      {
+        id: "audio", name: "Sprachnachricht", icon: "🎙️", medium: "video",
+        author: "Weitergeleitet", source: "Messenger-Kettenpost", reach: "kursiert in 60+ Gruppen",
+        forensik_dirty: "Die Stimme hat unnatürlich gleichmäßige Betonung, keinerlei Atemgeräusche und sterile Raumakustik – typisch für KI-Stimmklone.",
+        forensik_clean: "Der Klon ist mit Störgeräuschen und „Handy-Qualität“ kaschiert – die Audio-Analyse bleibt ergebnislos.",
+        quelle_dirty: "Die Nachricht kursiert ohne jeden Absender über Weiterleitungsketten – Ursprung nicht feststellbar, keine Originalquelle benannt.",
+        quelle_clean: "Die Kette nennt einen scheinbar konkreten Ursprung („aus der Elterngruppe der Grundschule“), der sich kaum überprüfen lässt.",
+        account_dirty: "Die ersten Verbreiter-Konten wurden alle am selben Tag erstellt und posten im Minutentakt in Dutzende Gruppen.",
+        account_clean: "Die Verbreitung läuft über echte Privatpersonen, die die Nachricht gutgläubig weiterleiten – kein Kampagnenmuster erkennbar.",
+      },
     ],
 
     cloaks: [
-      { id: "retusche", name: "Detail-Retusche", icon: "🎨", channel: "forensik",
+      { id: "retusche", name: "Detail-Retusche", icon: "🎨", channel: "forensik", cost: 2,
         desc: "Ein zweites KI-Modell entfernt alle visuellen Artefakte des ersten – die Medienforensik läuft ins Leere." },
-      { id: "altdomain", name: "Gekaufte Historie", icon: "🏚️", channel: "quelle",
+      { id: "altdomain", name: "Gekaufte Historie", icon: "🏚️", channel: "quelle", cost: 3,
         desc: "Alte Domain bzw. gewachsener Kanal wird aufgekauft – der Quellen-Check zeigt eine saubere Vergangenheit." },
-      { id: "seeding", name: "Organisches Seeding", icon: "🌱", channel: "account",
+      { id: "seeding", name: "Organisches Seeding", icon: "🌱", channel: "account", cost: 2,
         desc: "Der Inhalt wird langsam über echte, unauffällige Konten gestreut – die Account-Analyse findet kein Botnetz." },
-      { id: "halbwahrheit", name: "Kern-Wahrheit einweben", icon: "🧵", channel: "fakten",
+      { id: "halbwahrheit", name: "Kern-Wahrheit einweben", icon: "🧵", channel: "fakten", cost: 3,
         desc: "Die Lüge wird um ein echtes, überprüfbares Detail gebaut – der Fakten-Abgleich wird uneindeutig statt vernichtend." },
+    ],
+  },
+
+  /* =======================================================================
+     FALL-GENERATOR – Bausteine für automatisch erzeugte Fälle
+     (Endlosmodus ab Schicht 3; kombiniert mit dem Showdown-Baukasten)
+     ======================================================================= */
+  gen: {
+    cities: ["Falkenau", "Neustadt", "Grünberg", "Westhagen", "Birkenfeld", "Seedorf", "Altmark", "Lindau-Ost"],
+    parties: ["Bündnis Morgen", "Soziale Mitte", "Freie Zukunftspartei", "Heimatliste"],
+    people: ["Elif Kaya", "Dr. Robert Sandmann", "Carla Vogt", "Jonas Brenner"],
+    numbers: ["23", "40", "58", "72", "85"],
+    /* Echte generierte Beiträge (immer freizugeben) */
+    realTemplates: [
+      {
+        title: "„{stadt}: Rathaus verlängert Öffnungszeiten für Briefwahl“",
+        text: "Die Stadt {stadt} verlängert die Öffnungszeiten des Briefwahlbüros: Diese Woche täglich bis 19 Uhr, samstags bis 14 Uhr. Alle Infos auf der Website der Stadt.",
+        medium: "post", author: "Stadt {stadt}", source: "Kurznachrichtendienst", reach: "8.200 Erreichte", category: "Echte Behördeninfo",
+        evidence: {
+          forensik: "Grafik im offiziellen Stadt-Design, identisch mit der Website.",
+          quelle: "Verifiziertes Behördenkonto; die Information steht auch im Amtsblatt.",
+          account: "Langjähriges Stadtkonto mit Bürgerinfos.",
+          fakten: "Die Öffnungszeiten sind auf der offiziellen Website bestätigt; die Lokalzeitung berichtet ebenfalls.",
+        },
+        resolution: "ECHT. Eine überprüfbare Behördeninformation mit Bestätigung auf offiziellen Kanälen – Freigeben und weiter.",
+      },
+      {
+        title: "„Podiumsdiskussion in {stadt}: Alle Kandidaten am Donnerstag“",
+        text: "Der Bürgerverein {stadt} lädt zur Diskussionsrunde mit allen vier Direktkandidat:innen. Donnerstag, 19 Uhr, Stadthalle. Eintritt frei, Fragen willkommen.",
+        medium: "post", author: "Bürgerverein {stadt}", source: "Kurznachrichtendienst", reach: "2.100 Likes", category: "Echter Vereins-Post",
+        evidence: {
+          forensik: "Das Veranstaltungsplakat entspricht früheren Plakaten des Vereins.",
+          quelle: "Eingetragener Verein; die Veranstaltung steht im offiziellen Stadtkalender.",
+          account: "Vereinskonto seit Jahren mit lokalen Terminen aktiv.",
+          fakten: "Stadthalle bestätigt die Buchung; die Lokalpresse kündigt den Termin an.",
+        },
+        resolution: "ECHT. Zivilgesellschaftliche Einladung, mehrfach verifizierbar – demokratische Teilhabe in Reinform.",
+      },
+      {
+        title: "„{person} besucht Berufsschule in {stadt}“",
+        text: "Beim Besuch der Berufsschule {stadt} diskutierte {person} eine Stunde mit Auszubildenden über Wohnkosten und Ausbildungsvergütung. Die Schule veröffentlichte Fotos des Termins.",
+        medium: "artikel", author: "Falkenauer Anzeiger", source: "Nachrichtenportal", reach: "6.900 Leser", category: "Echte Lokalmeldung",
+        evidence: {
+          forensik: "Die Fotos zeigen den Termin aus mehreren Blickwinkeln, Metadaten konsistent.",
+          quelle: "Etablierte Lokalzeitung mit Impressum; der Termin stand im öffentlichen Wahlkampfkalender.",
+          account: "Normales Redaktionskonto.",
+          fakten: "Schule und Parteibüro bestätigen den Besuch unabhängig voneinander.",
+        },
+        resolution: "ECHT. Ein gewöhnlicher Wahlkampftermin mit mehreren unabhängigen Belegen.",
+      },
+      {
+        title: "„Umfrage: {zahl} % der Jugendlichen in {stadt} wollen wählen gehen“",
+        text: "Eine Befragung des Jugendrings unter 500 Jugendlichen in {stadt} zeigt: {zahl} % wollen sicher wählen gehen. Methodik und Fragebogen sind auf der Website des Jugendrings einsehbar.",
+        medium: "artikel", author: "Nachrichten24", source: "Nachrichtenportal", reach: "31.000 Leser", category: "Echte Umfrage (lokal)",
+        evidence: {
+          forensik: "Die Grafiken stammen nachvollziehbar aus dem veröffentlichten Bericht.",
+          quelle: "Der Jugendring existiert und legt Methodik samt Stichprobe offen.",
+          account: "Etabliertes Portal, normales Verhalten.",
+          fakten: "Der Bericht ist abrufbar; die Zahlen im Artikel stimmen mit ihm überein.",
+        },
+        resolution: "ECHT. Kleine Stichprobe, aber transparent dokumentiert und korrekt wiedergegeben – legitime Berichterstattung.",
+      },
+      {
+        title: "„Plakat-Streit in {stadt}: Verein hängt zerstörte Wahlplakate nach“",
+        text: "Nachdem in {stadt} erneut Wahlplakate mehrerer Parteien zerstört wurden, hat ein überparteilicher Verein eine Nachhäng-Aktion organisiert – „egal für welche Partei, Zerstörung ist keine Meinung“.",
+        medium: "post", source: "Kurznachrichtendienst", author: "Demokratie-Werkstatt {stadt}", reach: "12.700 Likes", category: "Echter Bürgerbeitrag",
+        evidence: {
+          forensik: "Fotos der Aktion mit erkennbaren Straßenzügen aus {stadt}.",
+          quelle: "Der Verein ist im Register eingetragen; die Polizei bestätigt die Sachbeschädigungen.",
+          account: "Vereinskonto mit überparteilicher Historie.",
+          fakten: "Lokalmedien berichten über beide Ereignisse – Zerstörung und Nachhäng-Aktion.",
+        },
+        resolution: "ECHT. Überparteiliches Engagement, unabhängig belegt. Achtung Bauchgefühl: Auch Beiträge über Straftaten können völlig legitim sein.",
+      },
     ],
   },
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>WAHLWÄCHTER – Duell der Algorithmen</title>
-<meta name="description" content="Forensik-Strategiespiel zum Thema KI &amp; Demokratie: Enttarne KI-Desinformation vor der Wahl 2032 – solo, im Online-Duell oder im Turnier.">
+<meta name="description" content="Forensik-Strategiespiel zum Thema KI &amp; Demokratie: Enttarne KI-Desinformation vor der Wahl 2032 – solo, im Online-Duell oder mit der ganzen Klasse.">
 <meta name="theme-color" content="#070b14">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
 <link rel="stylesheet" href="css/style.css">
@@ -22,20 +22,22 @@
       <p class="tagline">Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk <strong>HYDRA</strong> die Netze mit Fälschungen, die niemand mehr auf den ersten Blick erkennt. Du leitest die Prüfstelle. Ermittle. Entscheide. Schütze die Wahl – ohne die Freiheit zu opfern.</p>
 
       <div class="name-row">
-        <label for="player-name">Dein Analyst:innen-Name</label>
+        <label for="player-name">Dein Analyst:innen-Name <span class="muted small">(bitte Pseudonym – erscheint öffentlich in Ranglisten)</span></label>
         <input id="player-name" type="text" maxlength="16" placeholder="z.&nbsp;B. Agent Nova" autocomplete="off">
       </div>
 
       <div class="menu-buttons">
         <button class="btn btn-primary btn-big" id="btn-solo">🛡️ Solo-Kampagne <small>Klassisch oder Endlos</small></button>
-        <button class="btn btn-accent btn-big" id="btn-duel">⚔️ Online-Duell <small>1 vs 1 mit Raum-Code</small></button>
-        <button class="btn btn-tournament btn-big" id="btn-tournament">🏟️ Turnier <small>K.-o.-Runde für den ganzen Kurs</small></button>
+        <button class="btn btn-daily btn-big" id="btn-daily">📅 Tages-Challenge <small>Gleiche Fälle für alle – 1 Versuch pro Tag</small></button>
+        <button class="btn btn-accent btn-big" id="btn-duel">⚔️ Online-Duell <small>1 vs 1 mit Raum-Code &amp; eigenen Regeln</small></button>
+        <button class="btn btn-tournament btn-big" id="btn-class">🏟️ Klassenraum <small>Bis 30 Spieler:innen gleichzeitig</small></button>
         <div class="menu-row">
           <button class="btn btn-ghost" id="btn-board">🏆 Rangliste</button>
+          <button class="btn btn-ghost" id="btn-profile">👤 Profil</button>
           <button class="btn btn-ghost" id="btn-howto">📖 Anleitung</button>
         </div>
       </div>
-      <p class="footnote">Alle Spielinhalte sind fiktiv und nach realen, belegten Fällen gestaltet (Quellen in jeder Auflösung) · Projektkurs „KI meets Democracy“</p>
+      <p class="footnote">Alle Spielinhalte sind fiktiv und nach realen, belegten Fällen gestaltet (Quellen in jeder Auflösung) · Projektkurs „KI meets Democracy“ · <button class="linklike" id="btn-legal">Rechtliches &amp; Datenschutz</button></p>
     </div>
   </section>
 
@@ -54,7 +56,7 @@
         <button class="mode-card" id="btn-mode-endless">
           <span class="mode-icon">♾️</span>
           <h3>Endlos</h3>
-          <p>Schicht um Schicht wird HYDRA schneller und subtiler: weniger Zeit, weniger Energie, härtere Fälle. Wie lange hält dein Demokratie-Index?</p>
+          <p>Schicht um Schicht wird HYDRA schneller und subtiler – und generiert ab Schicht 3 laufend neue, einzigartige Fälle. Wie lange hält dein Index?</p>
           <span class="mode-meta">⏱️ bis zum Zusammenbruch · 🏆 Rangliste „Endlos“</span>
         </button>
       </div>
@@ -71,28 +73,56 @@
         <p>Jeder gemeldete Beitrag sieht an der Oberfläche glaubwürdig aus – egal ob echt oder KI-Fälschung. Die Wahrheit findest du nur mit den vier <strong>Prüfwerkzeugen</strong>: Medienforensik&nbsp;🔬, Quellen-Check&nbsp;📡, Account-Analyse&nbsp;🤖 und Fakten-Abgleich&nbsp;🧭.</p>
       </div>
       <div class="howto-block">
-        <h3>⚡ Prüf-Energie</h3>
-        <p>Jede Prüfung kostet <strong>1 Energie</strong> aus deinem Budget – und das reicht <em>nicht</em> für alles. Haushalte klug: Einzelne Indizien können täuschen, erst die Kombination trägt. Wer mit wenig Energie richtig liegt, kassiert den <strong>Spürnasen-Bonus</strong>.</p>
-      </div>
-      <div class="howto-block">
-        <h3>⚖️ Das Urteil</h3>
-        <p>Vor Ablauf des Timers entscheidest du: <strong>✅ Freigeben</strong> (echt/legitim) oder <strong>🚫 Kennzeichnen</strong> (KI-Desinformation). Achtung: Auch Satire, harte Wahlwerbung und unbequeme Wahrheiten sind <em>legitim</em> – Übersperren ist Zensur und kostet Demokratie-Index!</p>
+        <h3>⚡ Prüf-Energie &amp; ⚖️ Urteil</h3>
+        <p>Jede Prüfung kostet <strong>1 Energie</strong> – das Budget reicht nie für alles. Vor Ablauf des Timers entscheidest du: <strong>✅ Freigeben</strong> oder <strong>🚫 Kennzeichnen</strong>. Achtung: Auch Satire, harte Wahlwerbung und unbequeme Wahrheiten sind <em>legitim</em> – Übersperren ist Zensur und kostet Demokratie-Index!</p>
       </div>
       <div class="howto-block">
         <h3>🏛️ Der Demokratie-Index</h3>
-        <p>Startet bei 100. Durchgelassene Fakes (−12), zensierte echte Beiträge (−6) und skrupellose Behörden-Upgrades senken ihn. Klassisch gilt am Ende: <strong>Endpunktzahl = Punkte × (0,5 + Index/200)</strong>. Fällt der Index auf 0, ist Schluss.</p>
+        <p>Startet bei 100. Durchgelassene Fakes (−12), zensierte echte Beiträge (−6) und skrupellose Behörden-Upgrades senken ihn. Klassisch gilt: <strong>Endpunktzahl = Punkte × (0,5 + Index/200)</strong>. Bei 0 ist Schluss.</p>
       </div>
       <div class="howto-block">
-        <h3>♾️ Endlosmodus</h3>
-        <p>Schichten à 5 Fälle, jede Schicht härter (weniger Zeit &amp; Energie, subtilere Fälle). Eine <strong>fehlerfreie Schicht</strong> gibt +4 Index zurück. Spiel läuft, bis der Index auf 0 fällt – zählt Rohpunkte für die Endlos-Rangliste.</p>
+        <h3>📅 Tages-Challenge</h3>
+        <p>Jeden Tag ein neuer, für <strong>alle identischer</strong> Fallsatz – ein Versuch pro Tag und Gerät. Perfekt für den fairen Klassenvergleich in der Tages-Rangliste.</p>
       </div>
       <div class="howto-block">
-        <h3>⚔️ Online-Duell &amp; 🏟️ Turnier</h3>
-        <p>Im Duell spielen beide zeitgleich <strong>dieselben Fälle</strong> (Live-Punktestand), danach der <strong>Showdown</strong>: Jede:r baut verdeckt einen eigenen KI-Fake für den Feed des Gegners. Das Turnier organisiert eine K.-o.-Runde für bis zu 16 Personen – die Partien spielt ihr als Online-Duell (Raum-Code) oder nacheinander an einem Gerät.</p>
+        <h3>⚔️ Online-Duell mit eigenen Regeln</h3>
+        <p>Wer den Raum erstellt, legt vorher fest: Anzahl Fälle, Tempo, Schwierigkeit und ob der <strong>Showdown</strong> gespielt wird (jede:r baut verdeckt einen KI-Fake für den Feed des Gegners – Tarnungen kosten unterschiedlich viel Budget, die zwei stärksten passen nicht zusammen!).</p>
+      </div>
+      <div class="howto-block">
+        <h3>🏟️ Klassenraum</h3>
+        <p>Bis zu 30 Spieler:innen treten mit denselben Fällen gleichzeitig an. Oben im Spiel siehst du live, wer führt 👑 – am Ende gibt es die komplette Auswertung mit Podium.</p>
+      </div>
+      <div class="howto-block">
+        <h3>📋 Auswertung</h3>
+        <p>Nach jeder Runde kannst du in der <strong>Fall-Auswertung</strong> alle Beiträge noch einmal durchgehen: deine Antwort, die Wahrheit, die Auflösung und das reale Vorbild.</p>
       </div>
       <div class="howto-block">
         <h3>📚 Fiktion &amp; Wirklichkeit</h3>
-        <p>Alle Beiträge, Parteien, Personen und Medien im Spiel sind <strong>frei erfunden</strong> – aber jeder Fall bildet eine <strong>reale, dokumentierte</strong> Technik oder ein echtes Ereignis nach. Die Auflösung nennt jeweils das reale Vorbild samt Quelle. So bleibt das Spiel fair gegenüber echten Personen und trotzdem nah an der Wirklichkeit.</p>
+        <p>Alle Beiträge, Parteien, Personen und Medien im Spiel sind <strong>frei erfunden</strong> – aber jeder Fall bildet eine <strong>reale, dokumentierte</strong> Technik nach. Die Auflösung nennt jeweils das reale Vorbild samt Quelle.</p>
+      </div>
+      <button class="btn btn-primary" data-goto="screen-start">Zurück</button>
+    </div>
+  </section>
+
+  <!-- ================= RECHTLICHES ================= -->
+  <section class="screen" id="screen-legal">
+    <div class="panel narrow">
+      <h2>ℹ️ Rechtliches &amp; Datenschutz</h2>
+      <div class="howto-block">
+        <h3>Bildungsprojekt &amp; Fiktion</h3>
+        <p>WAHLWÄCHTER ist ein nicht-kommerzielles Schulprojekt (Projektkurs „KI meets Democracy“). <strong>Sämtliche Spielinhalte – Parteien, Personen, Medien, Beiträge und „Fälle“ – sind frei erfunden.</strong> Ähnlichkeiten mit realen Personen oder Organisationen sind unbeabsichtigt. Die dargestellten Manipulations<em>techniken</em> sind dagegen real und dokumentiert; die Auflösung jedes Falls nennt das reale Vorbild. Das Spiel dient der Medienkompetenz-Bildung und ruft ausdrücklich nicht zur Erstellung oder Verbreitung von Desinformation auf.</p>
+      </div>
+      <div class="howto-block">
+        <h3>Datenschutz</h3>
+        <p>Das Spiel verwendet <strong>keine Cookies, kein Tracking und keine Werbung</strong>. Gespeichert wird: (1) dein eingegebener Name und Spielstände lokal auf deinem Gerät (localStorage, jederzeit über die Browser-Einstellungen löschbar); (2) bei Ranglisten-, Duell-, Profil- und Klassenraum-Funktionen werden Name, Punktzahl und Spielstatistik an einen externen Speicherdienst (textdb.online) übertragen und sind dort <strong>öffentlich einsehbar</strong>. <strong>Bitte verwende deshalb ein Pseudonym und keinen echten vollen Namen.</strong> Es werden keine weiteren personenbezogenen Daten erhoben. Die Website wird über GitHub Pages ausgeliefert; dabei fallen technisch bedingt Server-Logs des Anbieters an (GitHub Inc.).</p>
+      </div>
+      <div class="howto-block">
+        <h3>Quellen &amp; Haftung</h3>
+        <p>Die Verweise auf reale Vorbilder beruhen auf öffentlicher Berichterstattung und Forschung (u. a. Faktencheck-Redaktionen, Behördenmitteilungen, wissenschaftliche Publikationen); sie geben den Stand zum Zeitpunkt der Erstellung wieder. Alle Angaben ohne Gewähr; dieses Spiel ist keine Rechts- oder Wahlberatung. Verbindliche Informationen zur Wahl gibt es ausschließlich bei den offiziellen Wahlbehörden.</p>
+      </div>
+      <div class="howto-block">
+        <h3>Verantwortlich</h3>
+        <p>Projektkurs „KI meets Democracy“ – Kontakt über die Kursleitung. Quellcode: github.com/LasseToenjann/wahlwaechter</p>
       </div>
       <button class="btn btn-primary" data-goto="screen-start">Zurück</button>
     </div>
@@ -108,19 +138,41 @@
         <div class="lobby-cards">
           <div class="lobby-card">
             <h3>🎲 Duell erstellen</h3>
-            <p class="muted small">Du bekommst einen 5-stelligen Raum-Code und sagst ihn deinem Gegner an.</p>
+            <p class="muted small">Du legst die Regeln fest und bekommst einen Raum-Code für deinen Gegner.</p>
+            <div class="cfg-group"><span class="cfg-label">Fälle</span>
+              <div class="cfg-chips" id="cfg-cases">
+                <button class="chip" data-v="6">6 · kurz</button>
+                <button class="chip active" data-v="10">10 · normal</button>
+                <button class="chip" data-v="14">14 · lang</button>
+              </div></div>
+            <div class="cfg-group"><span class="cfg-label">Tempo</span>
+              <div class="cfg-chips" id="cfg-timer">
+                <button class="chip" data-v="45">45s · entspannt</button>
+                <button class="chip active" data-v="35">35s · normal</button>
+                <button class="chip" data-v="24">24s · hardcore</button>
+              </div></div>
+            <div class="cfg-group"><span class="cfg-label">Schwierigkeit</span>
+              <div class="cfg-chips" id="cfg-hard">
+                <button class="chip active" data-v="0">Gemischt</button>
+                <button class="chip" data-v="1">Profi (nur schwere Fälle)</button>
+              </div></div>
+            <div class="cfg-group"><span class="cfg-label">Showdown</span>
+              <div class="cfg-chips" id="cfg-showdown">
+                <button class="chip active" data-v="1">🧪 An</button>
+                <button class="chip" data-v="0">Aus</button>
+              </div></div>
             <button class="btn btn-primary btn-big" id="btn-create-room">Raum erstellen</button>
           </div>
           <div class="lobby-card">
             <h3>🔑 Duell beitreten</h3>
-            <p class="muted small">Gib den Code ein, den dir dein Gegner ansagt.</p>
+            <p class="muted small">Gib den Code ein, den dir dein Gegner ansagt – die Regeln übernimmt der Raum.</p>
             <div class="join-row">
-              <input id="join-code" type="text" maxlength="5" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
+              <input id="join-code" type="text" maxlength="5" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false">
               <button class="btn btn-accent" id="btn-join-room">Beitreten&nbsp;▶</button>
             </div>
           </div>
         </div>
-        <p class="muted small lobby-hint">💡 Beide Geräte brauchen nur Internet und diese Website – das Duell läuft über den Spielserver und funktioniert in jedem Netz (WLAN, Handynetz, Schulnetz), auch gemischt.</p>
+        <p class="muted small lobby-hint">💡 Beide Geräte brauchen nur Internet und diese Website – funktioniert in jedem Netz (WLAN, Handynetz, Schulnetz), auch gemischt.</p>
       </div>
 
       <div id="lobby-wait" class="hidden">
@@ -142,34 +194,71 @@
     </div>
   </section>
 
-  <!-- ================= TURNIER: SETUP ================= -->
-  <section class="screen" id="screen-tournament-setup">
+  <!-- ================= KLASSENRAUM: START ================= -->
+  <section class="screen" id="screen-class">
     <div class="panel narrow">
-      <div class="week-kicker">TURNIER · K.-O.-SYSTEM</div>
-      <h2>🏟️ Turnier erstellen</h2>
-      <p class="muted">Für 2–16 Spieler:innen (Freilose werden automatisch vergeben). Die Partien spielt ihr als <strong>Online-Duell</strong> (Raum-Code) oder nacheinander an einem Gerät – der Sieger wird hier eingetragen.</p>
-      <div class="t-add-row">
-        <input id="t-name-input" type="text" maxlength="16" placeholder="Name eingeben…" autocomplete="off">
-        <button class="btn btn-primary" id="btn-t-add">+ Hinzufügen</button>
+      <div class="week-kicker">MEHRSPIELER · GANZE KLASSE</div>
+      <h2>🏟️ Klassenraum</h2>
+      <div class="lobby-cards">
+        <div class="lobby-card">
+          <h3>🎓 Raum erstellen (Host)</h3>
+          <p class="muted small">Alle spielen gleichzeitig dieselben Fälle. Bis zu 30 Spieler:innen.</p>
+          <div class="cfg-group"><span class="cfg-label">Fälle</span>
+            <div class="cfg-chips" id="ccfg-cases">
+              <button class="chip" data-v="6">6 · kurz</button>
+              <button class="chip active" data-v="10">10 · normal</button>
+              <button class="chip" data-v="14">14 · lang</button>
+            </div></div>
+          <div class="cfg-group"><span class="cfg-label">Tempo</span>
+            <div class="cfg-chips" id="ccfg-timer">
+              <button class="chip" data-v="45">45s</button>
+              <button class="chip active" data-v="35">35s</button>
+              <button class="chip" data-v="24">24s</button>
+            </div></div>
+          <button class="btn btn-primary btn-big" id="btn-class-create">Klassenraum öffnen</button>
+        </div>
+        <div class="lobby-card">
+          <h3>🙋 Beitreten</h3>
+          <p class="muted small">Code vom Host/Beamer eingeben.</p>
+          <div class="join-row">
+            <input id="class-join-code" type="text" maxlength="5" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button class="btn btn-accent" id="btn-class-join">Beitreten&nbsp;▶</button>
+          </div>
+        </div>
       </div>
-      <div class="t-name-list" id="t-name-list"></div>
-      <div class="menu-row">
-        <button class="btn btn-accent btn-big" id="btn-t-start" disabled>🎲 Auslosen &amp; starten</button>
-      </div>
+      <div id="class-error" class="lobby-error hidden"></div>
       <button class="btn btn-ghost" data-goto="screen-start">Zurück</button>
     </div>
   </section>
 
-  <!-- ================= TURNIER: BRACKET ================= -->
-  <section class="screen" id="screen-tournament">
-    <div class="panel">
-      <div class="week-kicker">TURNIER · K.-O.-SYSTEM</div>
-      <h2 id="t-headline">🏟️ Turnierbaum</h2>
-      <p class="muted small">Tippe nach jeder Partie auf den Namen des Siegers. 💡 Partie spielen: Beide öffnen das Online-Duell, eine:r erstellt den Raum, Code ansagen – Ergebnis hier eintragen.</p>
-      <div class="bracket-scroll"><div class="bracket" id="bracket"></div></div>
+  <!-- ================= KLASSENRAUM: LOBBY ================= -->
+  <section class="screen" id="screen-class-lobby">
+    <div class="panel narrow center">
+      <div class="week-kicker">KLASSENRAUM · WARTEBEREICH</div>
+      <div class="room-code-box">
+        <span class="muted">Raum-Code (an die Tafel / den Beamer!)</span>
+        <div class="room-code" id="class-code-display">·····</div>
+      </div>
+      <div class="class-count" id="class-count">1 Spieler:in im Raum</div>
+      <div class="class-players" id="class-players"></div>
+      <p class="muted small" id="class-lobby-hint">Warte, bis der Host die Runde startet…</p>
       <div class="menu-row">
-        <button class="btn btn-ghost" id="btn-t-reset">Neues Turnier</button>
-        <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
+        <button class="btn btn-accent btn-big hidden" id="btn-class-start">🚀 Runde starten</button>
+        <button class="btn btn-ghost" id="btn-class-leave">Verlassen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= KLASSENRAUM: AUSWERTUNG ================= -->
+  <section class="screen" id="screen-class-result">
+    <div class="panel narrow">
+      <div class="week-kicker">KLASSENRAUM · AUSWERTUNG</div>
+      <h2 id="class-result-headline">🏁 Endstand</h2>
+      <div class="board-sync" id="class-result-status"></div>
+      <div id="class-result-list"></div>
+      <div class="menu-row">
+        <button class="btn btn-primary" id="btn-class-review">📋 Meine Fälle ansehen</button>
+        <button class="btn btn-ghost" id="btn-class-menu">Hauptmenü</button>
       </div>
     </div>
   </section>
@@ -249,7 +338,6 @@
     </div>
   </section>
 
-  <!-- ================= DILEMMA-DEBRIEF (Overlay) ================= -->
   <div class="overlay hidden" id="overlay-dilemma">
     <div class="overlay-card">
       <div class="reveal-verdict neutral" id="dilemma-chosen-name">Gewählt</div>
@@ -263,19 +351,19 @@
   <section class="screen" id="screen-build">
     <div class="hud">
       <div class="hud-item"><span class="hud-label">SHOWDOWN</span><span class="hud-value">Fake-Werkstatt</span></div>
+      <div class="hud-item"><span class="hud-label">💰 Budget</span><span class="hud-value" id="build-budget">5</span></div>
       <div class="hud-item"><span class="hud-label">⏱️ Zeit</span><span class="hud-value" id="build-timer">75</span></div>
     </div>
     <div class="panel">
       <h2>🧪 Baue deinen KI-Fake</h2>
-      <p class="muted">Er wird in den Feed deines Gegners geschleust. Wähle <strong>1 Thema, 1 Format und genau 2 Tarnungen</strong>. Jede Tarnung löscht eine Beweisspur – aber zwei Kanäle bleiben immer offen. Wähle klug, welche Spuren du verwischst!</p>
+      <p class="muted">Er wird in den Feed deines Gegners geschleust. Wähle <strong>1 Thema, 1 Format und genau 2 Tarnungen</strong>. Jede Tarnung löscht eine Beweisspur – aber sie kosten unterschiedlich viel Budget (💰 5), und die zwei stärksten passen nicht zusammen. Welche Spuren verwischst du – und welche lässt du offen?</p>
       <div class="build-section"><h3>1 · Thema</h3><div class="build-grid" id="build-themes"></div></div>
       <div class="build-section"><h3>2 · Format</h3><div class="build-grid" id="build-formats"></div></div>
-      <div class="build-section"><h3>3 · Tarnung <span class="muted small" id="cloak-counter">(0/2 gewählt)</span></h3><div class="build-grid" id="build-cloaks"></div></div>
+      <div class="build-section"><h3>3 · Tarnung <span class="muted small" id="cloak-counter">(0/2 gewählt · Budget 5)</span></h3><div class="build-grid" id="build-cloaks"></div></div>
       <button class="btn btn-accent btn-big" id="btn-build-done" disabled>Fake einschleusen 🚀</button>
     </div>
   </section>
 
-  <!-- ================= WARTEN (Overlay) ================= -->
   <div class="overlay hidden" id="overlay-wait">
     <div class="overlay-card center">
       <div class="spinner"></div>
@@ -292,7 +380,7 @@
     </div>
     <div class="timerbar sticky"><div class="timerbar-fill" id="hunt-timerbar-fill"></div><span class="timerbar-text" id="hunt-timer-text">90</span></div>
     <div class="panel">
-      <p class="muted" id="hunt-intro">Einer dieser vier Beiträge ist der maßgeschneiderte Fake. Du hast <strong>eine einzige</strong> Markierung. Prüfe mit Bedacht – die Energie ist knapp.</p>
+      <p class="muted" id="hunt-intro">Einer dieser vier Beiträge ist der maßgeschneiderte Fake.</p>
       <div class="hunt-feed" id="hunt-feed"></div>
     </div>
   </section>
@@ -308,6 +396,7 @@
       <div class="result-breakdown" id="result-breakdown"></div>
       <div class="board-sync" id="result-sync"></div>
       <div class="menu-row">
+        <button class="btn btn-accent" id="btn-result-review">📋 Fall-Auswertung</button>
         <button class="btn btn-primary" id="btn-result-board">🏆 Rangliste</button>
         <button class="btn btn-ghost" id="btn-result-menu">Hauptmenü</button>
       </div>
@@ -323,11 +412,29 @@
       <div class="result-breakdown" id="duel-breakdown"></div>
       <div class="board-sync" id="duel-sync"></div>
       <div class="menu-row">
+        <button class="btn btn-accent" id="btn-duel-review">📋 Fall-Auswertung</button>
         <button class="btn btn-primary" id="btn-duel-board">🏆 Rangliste</button>
         <button class="btn btn-ghost" id="btn-duel-menu">Hauptmenü</button>
       </div>
     </div>
   </section>
+
+  <!-- ================= FALL-AUSWERTUNG (Review) ================= -->
+  <section class="screen" id="screen-review">
+    <div class="panel narrow">
+      <div class="week-kicker">NACHBESPRECHUNG</div>
+      <h2>📋 Fall-Auswertung</h2>
+      <div class="review-summary" id="review-summary"></div>
+      <div id="review-list"></div>
+      <div class="menu-row">
+        <button class="btn btn-primary" id="btn-review-back">Zurück zum Ergebnis</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="overlay hidden" id="overlay-review">
+    <div class="overlay-card" id="review-detail"></div>
+  </div>
 
   <!-- ================= RANGLISTE ================= -->
   <section class="screen" id="screen-board">
@@ -338,11 +445,27 @@
         <button class="chip" data-filter="klassisch">🛡️ Klassisch</button>
         <button class="chip" data-filter="endlos">♾️ Endlos</button>
         <button class="chip" data-filter="duell">⚔️ Duell</button>
+        <button class="chip" data-filter="tages">📅 Heute</button>
       </div>
       <div class="board-sync" id="board-sync">Lade globale Rangliste…</div>
       <div id="board-list"></div>
       <div class="menu-row">
         <button class="btn btn-ghost" id="btn-board-refresh">🔄 Aktualisieren</button>
+        <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROFIL ================= -->
+  <section class="screen" id="screen-profile">
+    <div class="panel narrow">
+      <h2>👤 Profil &amp; Duell-Bilanz</h2>
+      <div class="board-sync" id="profile-sync">Lade Profile…</div>
+      <div class="profile-card" id="profile-card"></div>
+      <h3 class="profile-subhead">⚔️ Duell-Bilanz aller Spieler:innen</h3>
+      <div id="profile-table"></div>
+      <div class="menu-row">
+        <button class="btn btn-ghost" id="btn-profile-refresh">🔄 Aktualisieren</button>
         <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
       </div>
     </div>
@@ -355,7 +478,8 @@
 <script src="js/rng.js"></script>
 <script src="js/data.js"></script>
 <script src="js/net.js"></script>
-<script src="js/tournament.js"></script>
+<script src="js/gen.js"></script>
+<script src="js/classroom.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

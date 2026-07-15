@@ -327,31 +327,52 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 .conn-steps li.done { color: var(--green); border-color: rgba(67,217,139,.35); }
 .conn-steps li.done::before { content: "●"; color: var(--green); }
 
-/* ---------- Turnier ---------- */
+/* ---------- Klassenraum & bunte Menü-Buttons ---------- */
 .btn-tournament { background: linear-gradient(180deg, #5b2a86, #45206a); border-color: #8a4dc8; color: #f0e4ff; }
 .btn-tournament small { color: #cdb2ec; }
-.t-add-row { display: flex; gap: 10px; margin: 14px 0 10px; }
-.t-add-row input { flex: 1; }
-.t-name-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; min-height: 34px; }
+.btn-daily { background: linear-gradient(180deg, #1c6e46, #14522f); border-color: #34a06a; color: #dcffe9; }
+.btn-daily small { color: #a5e8c1; }
 .t-name-pill {
   background: var(--panel2); border: 1px solid var(--line); border-radius: 999px;
-  padding: 6px 8px 6px 14px; font-size: .9rem; display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; font-size: .9rem; display: inline-flex; align-items: center; gap: 6px;
 }
-.t-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: .95rem; padding: 4px 8px; }
-.bracket-scroll { overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
-.bracket { display: flex; gap: 18px; align-items: stretch; min-width: min-content; padding: 10px 2px; }
-.bracket-round { display: flex; flex-direction: column; justify-content: space-around; gap: 14px; min-width: 190px; }
-.bracket-round-title { text-align: center; font-family: Consolas, monospace; font-size: .72rem; letter-spacing: .14em; color: var(--amber); }
-.bracket-match { background: var(--panel2); border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
-.bracket-player {
-  display: block; width: 100%; text-align: left; padding: 11px 14px; font-family: inherit; font-size: .92rem;
-  background: transparent; border: none; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--line);
+.class-count { font-family: Consolas, monospace; color: var(--cyan); margin: 12px 0 10px; font-weight: 700; }
+.class-players { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 16px; min-height: 34px; }
+.board-row.me { background: rgba(55,214,224,.07); border-radius: 8px; }
+.board-row.pending { opacity: .55; }
+
+/* ---------- Einstellungs-Chips (Duell/Klassenraum) ---------- */
+.cfg-group { margin: 8px 0; }
+.cfg-label { display: block; font-size: .68rem; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.cfg-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.cfg-chips .chip { padding: 7px 12px; font-size: .8rem; }
+
+/* ---------- Fall-Auswertung (Review) ---------- */
+.review-summary { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 16px; }
+.review-summary .week-stat { padding: 8px 14px; font-size: .82rem; }
+.review-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 11px;
+  padding: 11px 14px; margin-bottom: 8px; cursor: pointer; font-family: inherit; color: var(--text); font-size: .92rem;
 }
-.bracket-player:last-child { border-bottom: none; }
-.bracket-player:hover:not(:disabled):not(.empty) { background: rgba(55,214,224,.08); }
-.bracket-player:disabled { cursor: default; }
-.bracket-player.empty { color: var(--muted); font-style: italic; }
-.bracket-player.winner { color: var(--amber); font-weight: 700; background: rgba(255,182,72,.08); }
+.review-row:hover { border-color: var(--cyan-dim); }
+.review-row .review-mark { font-size: 1.15rem; font-weight: 900; width: 24px; text-align: center; flex-shrink: 0; }
+.review-row.ok .review-mark { color: var(--green); }
+.review-row.bad .review-mark { color: var(--red); }
+.review-row .review-main { flex: 1; min-width: 0; }
+.review-row .review-main b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-row .review-pts { font-family: Consolas, monospace; color: var(--cyan); flex-shrink: 0; }
+.review-case-text { background: rgba(244,246,251,.06); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: .88rem; margin-bottom: 12px; }
+
+/* ---------- Profil ---------- */
+.profile-card { margin: 10px 0 18px; }
+.profile-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
+.profile-subhead { margin-top: 8px; }
+
+/* ---------- Sonstiges ---------- */
+.linklike { background: none; border: none; color: var(--muted); text-decoration: underline; cursor: pointer; font-family: inherit; font-size: inherit; padding: 0; }
+.linklike:hover { color: var(--cyan); }
+.b-cost { font-family: Consolas, monospace; color: var(--amber); font-size: .82rem; margin-left: 6px; }
 
 /* ---------- Rangliste: Filter & Sync ---------- */
 .board-filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }

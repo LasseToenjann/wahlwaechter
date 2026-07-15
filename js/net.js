@@ -187,10 +187,6 @@ const Net = {
       this._lastRemoteBeat = other.beat;
       this._lastRemoteChange = Date.now();
     }
-    if (this.active && other.bye) return this._drop("Der Gegner hat das Duell verlassen.");
-    if (this.active && Date.now() - this._lastRemoteChange > this._STALE_MS) {
-      return this._drop("Der Gegner antwortet nicht mehr.");
-    }
 
     // Gast: Prüfen, ob der Host einen anderen Partner angenommen hat
     if (!this.isHost && other.partner && other.partner !== this._gid) {
@@ -199,6 +195,10 @@ const Net = {
       return;
     }
 
+    // WICHTIG: Nachrichten IMMER ZUERST verarbeiten – erst danach bye/stale.
+    // Sonst geht z. B. das Endergebnis des Gegners verloren, wenn er direkt
+    // nach dem Senden die Seite verlässt (bye und final stehen im selben
+    // Zustand) – und die Auswertung "springt weg".
     const msgs = Array.isArray(other.msgs) ? other.msgs : [];
     for (const m of msgs) {
       if (!m || typeof m.q !== "number" || m.q <= this._lastSeen) continue;
@@ -214,6 +214,11 @@ const Net = {
         if (this.isHost && this.onConnected) this.onConnected();
       }
       if (this.onMessage) this.onMessage(m);
+    }
+
+    if (this.active && other.bye) return this._drop("Der Gegner hat das Duell verlassen.");
+    if (this.active && Date.now() - this._lastRemoteChange > this._STALE_MS) {
+      return this._drop("Der Gegner antwortet nicht mehr.");
     }
   },
 
