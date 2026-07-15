@@ -9,7 +9,7 @@ Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk **HYDRA** die sozialen Medi
 
 ## Features
 
-- 🕵️ **Forensik-Gameplay:** 30 Fall-Dossiers, bei denen die Oberfläche nichts verrät – nur die Kombination von Beweisen (Medienforensik, Quellen-Check, Account-Analyse, Fakten-Abgleich) trägt
+- 🕵️ **Forensik-Gameplay:** 47 handgeschriebene Fall-Dossiers, bei denen die Oberfläche nichts verrät – nur die Kombination von Beweisen (Medienforensik, Quellen-Check, Account-Analyse, Fakten-Abgleich) trägt
 - 📚 **Fiktiv, aber belegt:** Alle Inhalte sind erfunden (FIKTIV-Badge), jeder Fall nennt in der Auflösung sein **reales, dokumentiertes Vorbild** samt Quelle
 - ⚡ **Prüf-Energie:** knappes Budget, strategisches Haushalten
 - ⚖️ **Dilemma-Upgrades:** KI-Ethik als Spielmechanik (Überwachung vs. Grundrechte)
@@ -34,7 +34,7 @@ python -m http.server 8123
 ```
 
 Alternativ jeder andere statische Server (`npx serve`, VS-Code-Live-Server, …).
-Für das **Online-Duell** wird eine Internetverbindung benötigt (PeerJS-Vermittlungsserver); das Spiel selbst läuft auch offline.
+Für **Online-Duell, Klassenraum und globale Rangliste** wird eine Internetverbindung benötigt (HTTP-Spielserver textdb.online); das Solo-Spiel selbst läuft auch offline.
 
 ## Kostenlos veröffentlichen (GitHub Pages)
 
@@ -61,7 +61,9 @@ index.html      – alle Screens
 css/style.css   – „Lagezentrum“-Design
 js/data.js      – Fall-Dossiers, Dilemmas, Showdown-Baukasten (alle Inhalte fiktiv)
 js/rng.js       – seeded RNG
-js/net.js       – PeerJS-Wrapper (Duell)
+js/net.js       – HTTP-Relay-Duell (textdb.online, Postfach-Prinzip)
+js/classroom.js – Klassenraum-Netzwerk (bis 30 Spieler:innen auf einem Raum-Key)
+js/gen.js       – Fall-Generator (Endlos ab Schicht 3)
 js/game.js      – Spiellogik / State-Machine
 KONZEPT.md      – ausführliches Spielkonzept (abgabefertig)
 ```

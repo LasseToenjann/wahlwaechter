@@ -1,4 +1,6 @@
-# HANDOFF – Stand 15.07.2026 (Abend)
+# HANDOFF – Stand 16.07.2026
+
+> **Update 16.07.:** Drive-Uploads sind ab sofort tabu (Lasse: zu unzuverlässig, Dateien nur noch lokal abliefern). **Datenverlust-Vorfall:** Das „frische Leeren" der textdb-Keys am 15.07. hat Lasses Versuche unwiederbringlich gelöscht (textdb hat keine Historie; nur 4 Test-Einträge überlebten im localStorage des In-App-Browsers, Wiederherstellung von Lasse abgelehnt). **Regel ab jetzt: NIE wieder eigenmächtig Daten löschen/leeren — siehe Memory `nie-daten-loeschen.md`.** Alle 5 Keys sind auf Lasses Anweisung wieder leer. README + KONZEPT auf v3 nachgezogen (47 Fälle, PeerJS-Reste raus, Modi 6.1–6.4, Erweiterungsideen).
 
 ## Projekt
 
@@ -47,7 +49,7 @@ Vanilla HTML/CSS/JS, kein Build. Lokal testen: `python -m http.server 8123` (lau
 
 ## Offene Punkte / bekannte Probleme
 
-1. **⏳ Drive-Upload der neuen ANLEITUNG.pdf steht aus**: Der Permission-Classifier war zweimal „temporarily unavailable“. Base64 liegt bereit in Scratchpad `anleitung_b64.txt` (24.352 Zeichen, passt in EINEN Read). Ziel-Ordner-ID `1SB7zFQz-zqW7BNT3t4jswmN8IGbv6KmZ`, Titel „WAHLWÄCHTER – Handout & Anleitung.pdf“, `contentMimeType application/pdf`, `disableConversionToGoogleType true`. **Achtung: vollständigen Base64-String übergeben** (erster Fehlversuch war gekürzt → wäre korrupt gewesen). Im Drive-Ordner liegt noch die **fehlerhafte Version vom 14.07.** (ID `109eZDBuLV7d-P8xeP3VHnNvFWwJ_EKgw`, kaputter Zeichenabstand) – Lasse sollte sie löschen (wir löschen nicht).
+1. **✅ ERLEDIGT (anders als geplant): Kein Drive-Upload mehr.** Lasse hat am 16.07. entschieden: Drive-Upload ist zu unzuverlässig, Dateien nur noch lokal abliefern (siehe Memory `keine-drive-uploads.md`). Die fertige ANLEITUNG.pdf liegt in `wahlwaechter/ANLEITUNG.pdf`. Im Drive-Ordner liegt noch die **fehlerhafte Version vom 14.07.** (ID `109eZDBuLV7d-P8xeP3VHnNvFWwJ_EKgw`, kaputter Zeichenabstand) – Lasse sollte sie selbst löschen.
 2. **Live-Smoke von v3 auf Pages noch nicht gemacht** (nur Datei-Verfügbarkeit geprüft; alle Funktionstests liefen lokal mit identischem Code). Empfohlen: Live-URL laden (Cache! JS wird 10 min gecached → ggf. `fetch(url,{cache:'reload'})`+reload), Konsole prüfen, 1 Duell + 1 Klassenraum mit 2–3 Tabs kurz durchspielen.
 3. textdb.online: keine Zusicherung zu Rate-Limits/Persistenz; bei 30 gleichzeitigen Spielern ~15–20 req/s. Lokal mit 3 Spielern problemlos; Klassen-Volllast ungetestet. Fallback wäre späterer Umzug auf Firebase.
 4. Profile identifizieren sich nur über den Namen → Namens-Doppelgänger teilen sich ein Profil (bewusst simpel gehalten).
@@ -55,10 +57,9 @@ Vanilla HTML/CSS/JS, kein Build. Lokal testen: `python -m http.server 8123` (lau
 
 ## Nächste Schritte
 
-1. Drive-Upload nachholen (siehe Punkt 1 oben), sobald der Classifier wieder da ist.
-2. Kurzer Live-Smoke-Test v3 (Duell + Klassenraum, 2–3 Tabs, Konsole).
-3. Lasse Bescheid geben: neue URL kommunizieren, alte Drive-PDF löschen lassen, morgen Kurseinsatz.
-4. Danach ausstehende Ideen (nur mit Go): Best-of-3-Revanche, Team-Modus, Präsentationsmodus.
+1. Kurzer Live-Smoke-Test v3 (Duell + Klassenraum, 2–3 Tabs, Konsole).
+2. Lasse Bescheid geben: neue URL kommunizieren, alte Drive-PDF löschen lassen, Kurseinsatz 16.07.
+3. Danach ausstehende Ideen (nur mit Go): Best-of-3-Revanche, Team-Modus, Präsentationsmodus.
 
 ## Gedächtnis
 
