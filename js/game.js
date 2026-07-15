@@ -1,9 +1,9 @@
 "use strict";
 /* =========================================================================
-   WAHLWÄCHTER – Spiellogik
-   Solo (Klassisch: 3 Wochen + Boss | Endlos: Schichten mit steigender
-   Schwierigkeit), Online-Duell (2 Wellen + Showdown), Turnier-Verwaltung,
-   globale Online-Rangliste.
+   WAHLWÄCHTER – Spiellogik (v3)
+   Solo (Klassisch / Endlos mit Fall-Generator), Tages-Challenge,
+   Online-Duell mit konfigurierbaren Regeln + Showdown-Budget,
+   Klassenraum (bis 30), Fall-Auswertung, Profile, globale Ranglisten.
    ========================================================================= */
 
 /* ---------- Kurz-Helfer ---------- */
@@ -22,34 +22,50 @@ function esc(str) {
   return d.innerHTML;
 }
 const MEDIUM_LABEL = { video: "🎬 Video", bild: "🖼️ Bild", artikel: "📰 Artikel", post: "💬 Post", anzeige: "📢 Anzeige" };
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+/* Exklusive Auswahl-Chips (Duell-/Klassenraum-Einstellungen) */
+function initChipGroup(groupId) {
+  document.querySelectorAll("#" + groupId + " .chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll("#" + groupId + " .chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+    });
+  });
+}
+function chipVal(groupId) {
+  const el = document.querySelector("#" + groupId + " .chip.active");
+  return el ? parseInt(el.dataset.v, 10) : 0;
+}
 
 /* ---------- Spielzustand ---------- */
 let G = null;
-let myName = "";   // im Speicher statt localStorage: robust auch bei mehreren Tabs
+let myName = "";
+let reviewReturn = "screen-result";
 
 function freshState(mode, name, seed) {
   return {
     mode, name,                  // mode: "solo" | "duel"
-    variant: "klassisch",        // solo: "klassisch" | "endlos"
+    variant: "klassisch",        // solo: klassisch | endlos | tages | klasse
     seed,
-    deck: [],                    // Array von Abschnitten (Wochen/Wellen/Schichten)
-    sections: [],
+    deck: [], sections: [],
     secIdx: 0, caseIdx: 0, caseNo: 0,
-    score: 0, index: 100, energy: 0, streak: 0,
+    score: 0, index: 100, energy: 0, streak: 0, maxStreak: 0,
     correct: 0, total: 0,
     usedEnergy: 0, freeProbeUsed: false, resolved: false,
     effects: { energyPerWeek: 0, timerPlus: 0, freeProbe: false, damageShield: 0, flagPenaltyPlus: 0 },
     offeredDilemmas: [],
     lastEnergyBonus: 0, lastPerfectBonus: 0,
-    shift: 0, shiftErrors: 0, usedCaseIds: [],   // Endlos
+    shift: 0, shiftErrors: 0, usedCaseIds: [],
     crisis: false,
+    history: [],                 // Fall-Auswertung
     boss: null,
     duel: null,
     finalScore: 0, resultSaved: false,
   };
 }
 
-/* ---------- Deck-Aufbau (seeded => im Duell identisch) ---------- */
+/* ---------- Deck-Aufbau ---------- */
 function buildSoloDeck(seed) {
   const rng = mulberry32(seed);
   const deck = [], sections = [];
@@ -61,40 +77,70 @@ function buildSoloDeck(seed) {
   return { deck, sections };
 }
 
-function buildDuelDeck(seed) {
+/* Gemischtes Deck für Duell / Tages-Challenge / Klassenraum */
+function buildMixedDeck(seed, cfg, kickerBase) {
   const rng = mulberry32(seed);
-  const pick = (week, n) => seededShuffle(DATA.cases.filter(c => c.week === week), rng).slice(0, n);
-  const all = [...pick(1, 3), ...pick(2, 4), ...pick(3, 3)];
-  const deck = [all.slice(0, 5), all.slice(5, 10)];
+  const total = cfg.cases || 10;
+  const per = Math.ceil(total / 2);
+  let pool;
+  if (cfg.hard) {
+    pool = [
+      ...seededShuffle(DATA.cases.filter(c => c.week === 2), rng),
+      ...seededShuffle(DATA.cases.filter(c => c.week === 3), rng),
+    ];
+  } else {
+    const n1 = Math.round(total * 0.3), n3 = Math.round(total * 0.3);
+    const n2 = total - n1 - n3;
+    pool = [
+      ...seededShuffle(DATA.cases.filter(c => c.week === 1), rng).slice(0, n1),
+      ...seededShuffle(DATA.cases.filter(c => c.week === 2), rng).slice(0, n2),
+      ...seededShuffle(DATA.cases.filter(c => c.week === 3), rng).slice(0, n3),
+    ];
+  }
+  const all = pool.slice(0, total);
+  const deck = [all.slice(0, per), all.slice(per)];
+  const energy = Math.max(4, Math.round(per * 1.8));
+  const timer = cfg.timer || 35;
   const sections = [
-    { title: "Welle 1 – Gleiche Fälle, gleiche Chance", intro: "Ihr prüft zeitgleich exakt dieselben Beiträge. Der Live-Punktestand des Gegners läuft mit. Genauigkeit schlägt Hektik – aber die Uhr tickt.", energy: 9, timer: 40, kicker: "DUELL · WELLE 1/2" },
-    { title: "Welle 2 – HYDRA legt nach", intro: "Die zweite Welle ist subtiler. Danach wartet der Showdown: Du baust deinen eigenen Fake für den Feed des Gegners.", energy: 9, timer: 40, kicker: "DUELL · WELLE 2/2" },
+    { title: "Welle 1 – Gleiche Fälle, gleiche Chance", intro: "Alle prüfen exakt dieselben Beiträge. Genauigkeit schlägt Hektik – aber die Uhr tickt.", energy, timer, kicker: kickerBase + " · WELLE 1/2" },
+    { title: "Welle 2 – HYDRA legt nach", intro: "Die zweite Welle ist subtiler. Konzentration!", energy, timer, kicker: kickerBase + " · WELLE 2/2" },
   ];
   return { deck, sections };
 }
 
-/* Endlos: nächste Schicht erzeugen (immer schwerer) */
+/* Endlos: nächste Schicht (ab Schicht 3 zunehmend generierte Fälle) */
 function buildShift(s) {
   const E = DATA.endless;
+  const rng = mulberry32((G.seed + s * 104729) >>> 0);
   const weeks = E.poolForShift(s);
   let pool = DATA.cases.filter(c => weeks.includes(c.week) && !G.usedCaseIds.includes(c.id));
   if (pool.length < E.casesPerShift) {
-    // Pool erschöpft: Fälle dieser Schwierigkeit wieder freigeben
     G.usedCaseIds = G.usedCaseIds.filter(id => {
       const c = DATA.cases.find(x => x.id === id);
       return c && !weeks.includes(c.week);
     });
     pool = DATA.cases.filter(c => weeks.includes(c.week) && !G.usedCaseIds.includes(c.id));
   }
-  const rng = mulberry32((G.seed + s * 104729) >>> 0);
-  const cases = seededShuffle(pool, rng).slice(0, E.casesPerShift);
-  cases.forEach(c => G.usedCaseIds.push(c.id));
+  const shuffled = seededShuffle(pool, rng);
+  const genChance = s < 3 ? 0 : Math.min(0.75, 0.25 + 0.12 * (s - 3));
+  const cases = [];
+  for (let i = 0; i < E.casesPerShift; i++) {
+    if ((rng() < genChance || !shuffled.length) && s >= 3) {
+      cases.push(generateCase(rng));
+    } else {
+      const c = shuffled.shift();
+      if (c) { cases.push(c); G.usedCaseIds.push(c.id); }
+      else cases.push(generateCase(rng));
+    }
+  }
   G.deck.push(cases);
   G.sections.push({
     title: "Schicht " + s + " – HYDRA beschleunigt",
     intro: s === 1
-      ? "Der Endlos-Einsatz beginnt. Jede Schicht wird härter: weniger Zeit, weniger Energie, subtilere Fälle. Eine fehlerfreie Schicht gibt +4 Demokratie-Index zurück. Halte durch, so lange du kannst!"
-      : "HYDRA skaliert die Angriffe hoch. Timer und Energie schrumpfen – Präzision ist jetzt alles.",
+      ? "Der Endlos-Einsatz beginnt. Jede Schicht wird härter: weniger Zeit, weniger Energie, subtilere Fälle – und ab Schicht 3 generiert HYDRA laufend neue. Eine fehlerfreie Schicht gibt +4 Demokratie-Index zurück."
+      : s === 3
+        ? "Ab jetzt mischt HYDRA automatisch generierte, nie gesehene Fälle in den Feed. Bleib bei deiner Methode: Indizien kombinieren!"
+        : "HYDRA skaliert die Angriffe hoch. Timer und Energie schrumpfen – Präzision ist jetzt alles.",
     energy: E.energyForShift(s), timer: E.timerForShift(s),
     kicker: "ENDLOS-EINSATZ · SCHICHT " + s,
   });
@@ -109,8 +155,8 @@ function getPlayerName() {
   if (!name) {
     el.style.borderColor = "var(--red)";
     el.placeholder = "Bitte zuerst Namen eingeben!";
-    el.focus();
     showScreen("screen-start");
+    el.focus();
     return null;
   }
   el.style.borderColor = "";
@@ -135,8 +181,35 @@ function startSolo(variant) {
   showSectionIntro();
 }
 
+/* ---------- Tages-Challenge ---------- */
+function dailySeed() {
+  const str = "wahlwaechter-" + todayStr();
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function startDaily() {
+  const name = getPlayerName();
+  if (!name) return;
+  if (localStorage.getItem("ww_daily_" + todayStr())) {
+    netBanner("📅 Du hast die heutige Challenge schon gespielt – morgen gibt's neue Fälle! Hier ist die Tages-Rangliste.");
+    boardFilter = "tages";
+    syncBoardChips();
+    renderBoard();
+    return;
+  }
+  localStorage.setItem("ww_daily_" + todayStr(), "1");
+  const seed = dailySeed();
+  G = freshState("solo", name, seed);
+  G.variant = "tages";
+  const { deck, sections } = buildMixedDeck(seed, { cases: 10, timer: 38, hard: 0 }, "TAGES-CHALLENGE " + todayStr());
+  G.deck = deck; G.sections = sections;
+  showSectionIntro();
+}
+
 /* =========================================================================
-   ABSCHNITTS-INTRO (Woche / Welle / Schicht)
+   ABSCHNITTS-INTRO
    ========================================================================= */
 function showSectionIntro() {
   const sec = G.sections[G.secIdx];
@@ -191,17 +264,20 @@ function showCase() {
   G.usedEnergy = 0; G.freeProbeUsed = false; G.resolved = false;
   G.caseNo++;
 
-  $("hud-week").textContent = G.mode === "duel" ? "WELLE " + (G.secIdx + 1)
+  $("hud-week").textContent =
+    G.mode === "duel" ? "WELLE " + (G.secIdx + 1)
     : G.variant === "endlos" ? "SCHICHT " + (G.secIdx + 1)
+    : G.variant === "tages" ? "TAGES-CH."
+    : G.variant === "klasse" ? "KLASSE"
     : "WOCHE " + (G.secIdx + 1);
   $("hud-case").textContent = "Fall " + (G.caseIdx + 1) + "/" + G.deck[G.secIdx].length;
   updateHud();
 
   $("dossier-medium").textContent = MEDIUM_LABEL[c.medium] || c.medium;
   $("dossier-source").textContent = c.source;
-  $("dossier-avatar").textContent = c.author.charAt(0).toUpperCase();
+  $("dossier-avatar").textContent = (c.author || "?").charAt(0).toUpperCase();
   $("dossier-author").textContent = c.author;
-  $("dossier-handle").textContent = c.handle;
+  $("dossier-handle").textContent = c.handle || "";
   $("dossier-reach").textContent = c.reach;
   $("dossier-title").textContent = c.title;
   $("dossier-text").textContent = c.text;
@@ -220,12 +296,18 @@ function updateHud() {
   $("hud-score").textContent = G.score;
   $("hud-energy").textContent = G.energy;
   $("hud-index").textContent = G.index;
+  const opp = $("hud-opponent");
   if (G.mode === "duel" && G.duel) {
-    $("hud-opponent").classList.remove("hidden");
+    opp.classList.remove("hidden");
     $("opp-name").textContent = G.duel.oppName || "Gegner";
     $("opp-score").textContent = G.duel.oppScore;
+  } else if (G.mode === "solo" && G.variant === "klasse") {
+    const lead = ClassNet.leader();
+    opp.classList.remove("hidden");
+    $("opp-name").textContent = lead ? "👑 " + lead.n : "👑 Führung";
+    $("opp-score").textContent = lead ? (lead.s || 0) : 0;
   } else {
-    $("hud-opponent").classList.add("hidden");
+    opp.classList.add("hidden");
   }
 }
 
@@ -292,11 +374,10 @@ function applyIndexDamage(dmg) {
   return shielded;
 }
 
-function setRealRef(caseId) {
+function setRealRef(text) {
   const el = $("reveal-realref");
-  const ref = caseId && DATA.realRefs[caseId];
-  if (ref) {
-    el.innerHTML = `<b>📚 Reales Vorbild (Spielinhalt fiktiv):</b> ${esc(ref)}`;
+  if (text) {
+    el.innerHTML = `<b>📚 Reales Vorbild (Spielinhalt fiktiv):</b> ${esc(text)}`;
     el.classList.remove("hidden");
   } else {
     el.classList.add("hidden");
@@ -319,6 +400,7 @@ function judge(verdict) {   // "approve" | "flag" | null (Timeout)
   if (correct) {
     G.correct++;
     G.streak++;
+    G.maxStreak = Math.max(G.maxStreak, G.streak);
     const timeB = Math.round(timeLeft) * S.timeBonusPerSec;
     const sleuth = G.usedEnergy <= S.sleuthMaxEnergy ? S.sleuthBonus : 0;
     const streakB = Math.min(G.streak, S.streakCap) * S.streakBonus;
@@ -345,7 +427,9 @@ function judge(verdict) {   // "approve" | "flag" | null (Timeout)
     lines.push(`🏛️ Demokratie-Index: −${dmg}`);
   }
 
-  // Letzter Fall des Abschnitts: Restenergie-Bonus
+  // Fall-Auswertung protokollieren
+  G.history.push({ c, verdict, correct, gained });
+
   const lastOfSection = G.caseIdx === G.deck[G.secIdx].length - 1;
   if (lastOfSection && G.energy > 0) {
     const eb = G.energy * S.energyLeftBonus;
@@ -356,6 +440,7 @@ function judge(verdict) {   // "approve" | "flag" | null (Timeout)
 
   updateHud();
   if (G.mode === "duel") Net.send("progress", { score: G.score, caseNo: G.caseNo, index: G.index });
+  if (G.mode === "solo" && G.variant === "klasse") ClassNet.reportSelf({ s: G.score, x: G.index, c: G.total });
 
   const v = $("reveal-verdict");
   if (verdict === null) { v.textContent = "ZEIT ABGELAUFEN"; v.className = "reveal-verdict bad"; }
@@ -364,26 +449,24 @@ function judge(verdict) {   // "approve" | "flag" | null (Timeout)
   $("reveal-truth").textContent = "Der Beitrag war: " + (c.isFake ? "🚫 KI-DESINFORMATION" : "✅ ECHT / LEGITIM") + " · Kategorie: " + c.category;
   $("reveal-points").textContent = lines.join("\n");
   $("reveal-text").textContent = c.resolution;
-  setRealRef(c.id);
+  setRealRef(DATA.realRefs[c.id] || null);
   showOverlay("overlay-reveal", true);
 }
 
 function nextCase() {
   showOverlay("overlay-reveal", false);
 
-  // Vertrauenskrise nur im Solo-Modus (im Duell friert der Index bei 5 ein)
-  if (G.index <= 0 && G.mode === "solo") { G.crisis = true; return showResult(); }
+  if (G.index <= 0 && G.mode === "solo") { G.crisis = true; return finishSoloRun(); }
   if (G.mode === "duel" && G.index <= 0) G.index = 5;
 
   G.caseIdx++;
   if (G.caseIdx < G.deck[G.secIdx].length) return showCase();
 
-  // Abschnitt fertig
   G.caseIdx = 0;
   G.secIdx++;
   if (G.mode === "duel") {
     if (G.secIdx < G.deck.length) return showSectionIntro();
-    return startBuildPhase();                              // Duell: Showdown
+    return (G.duel.cfg && !G.duel.cfg.showdown) ? finishDuel() : startBuildPhase();
   }
   if (G.variant === "endlos") {
     if (G.shiftErrors === 0) {
@@ -395,13 +478,29 @@ function nextCase() {
     buildShift(G.shift);
     return showSectionIntro();
   }
+  if (G.variant === "tages" || G.variant === "klasse") {
+    if (G.secIdx < G.deck.length) return showSectionIntro();
+    return finishSoloRun();
+  }
   // Solo klassisch
-  if (G.secIdx < G.deck.length) return showDilemma();      // nach Woche 1 & 2
-  return startBossHunt();                                   // nach Woche 3: Finale
+  if (G.secIdx < G.deck.length) return showDilemma();
+  return startBossHunt();
+}
+
+/* Solo-/Tages-/Klassen-Lauf beenden */
+function finishSoloRun() {
+  if (G.variant === "klasse") {
+    computeFinal();
+    const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
+    ClassNet.reportSelf({ f: 1, s: G.finalScore, a: acc, x: G.index });
+    saveResult(null);            // Profil-Statistik, keine globale Rangliste
+    return showClassResult();
+  }
+  showResult();
 }
 
 /* =========================================================================
-   DILEMMA-UPGRADES (nur Solo klassisch, nach Woche 1 & 2)
+   DILEMMA-UPGRADES (nur Solo klassisch)
    ========================================================================= */
 function showDilemma() {
   const rng = mulberry32(G.seed + G.secIdx * 7919);
@@ -447,38 +546,12 @@ function afterDilemma() {
 }
 
 /* =========================================================================
-   SHOWDOWN-BAUKASTEN (Duell) & HYDRA-BUILD (Solo-Boss)
+   SHOWDOWN-BAUKASTEN (Budget-System)
    ========================================================================= */
 const build = { theme: null, format: null, cloaks: [] };
 
-function randomBuild(rng) {
-  const sab = DATA.sabotage;
-  const theme = sab.themes[Math.floor(rng() * sab.themes.length)];
-  const format = sab.formats[Math.floor(rng() * sab.formats.length)];
-  const cloaks = seededShuffle(sab.cloaks, rng).slice(0, sab.maxCloaks).map(c => c.id);
-  return { themeId: theme.id, formatId: format.id, cloakIds: cloaks };
-}
-
-function craftFake(buildSpec) {
-  const sab = DATA.sabotage;
-  const theme = sab.themes.find(t => t.id === buildSpec.themeId);
-  const format = sab.formats.find(f => f.id === buildSpec.formatId);
-  const cloaked = (ch) => buildSpec.cloakIds.some(id => (sab.cloaks.find(c => c.id === id) || {}).channel === ch);
-  return {
-    isFake: true,
-    crafted: true,
-    build: buildSpec,
-    medium: format.medium, author: format.author, source: format.source, reach: format.reach,
-    title: theme.title, text: theme.text,
-    category: theme.name + " als " + format.name,
-    evidence: {
-      forensik: format.forensik_dirty === null ? null : (cloaked("forensik") ? format.forensik_clean : format.forensik_dirty),
-      quelle:   cloaked("quelle") ? format.quelle_clean : format.quelle_dirty,
-      account:  cloaked("account") ? format.account_clean : format.account_dirty,
-      fakten:   cloaked("fakten") ? theme.fakten_clean : theme.fakten_dirty,
-    },
-  };
-}
+function cloakById(id) { return DATA.sabotage.cloaks.find(c => c.id === id); }
+function buildCostSum() { return build.cloaks.reduce((s, id) => s + (cloakById(id).cost || 2), 0); }
 
 function startBuildPhase() {
   build.theme = null; build.format = null; build.cloaks = [];
@@ -488,7 +561,8 @@ function startBuildPhase() {
     const b = document.createElement("button");
     b.className = "build-card";
     b.dataset.kind = kind; b.dataset.id = obj.id;
-    b.innerHTML = `<span class="b-name">${obj.icon} ${esc(obj.name)}</span><span class="b-desc">${esc(obj.desc)}</span>`;
+    const cost = kind === "cloak" ? ` <span class="b-cost">💰 ${obj.cost}</span>` : "";
+    b.innerHTML = `<span class="b-name">${obj.icon} ${esc(obj.name)}${cost}</span><span class="b-desc">${esc(obj.desc)}</span>`;
     b.addEventListener("click", () => pickBuild(kind, obj.id, b));
     return b;
   };
@@ -498,26 +572,37 @@ function startBuildPhase() {
   sab.formats.forEach(f => formats.appendChild(mkCard(f, "format")));
   const cloaks = $("build-cloaks"); cloaks.innerHTML = "";
   sab.cloaks.forEach(c => cloaks.appendChild(mkCard(c, "cloak")));
-  $("cloak-counter").textContent = "(0/" + sab.maxCloaks + " gewählt)";
-  $("btn-build-done").disabled = true;
+  refreshBuildUI();
 
   showScreen("screen-build");
   startTimer(sab.buildTime, $("build-timer"), document.createElement("div"), () => finishBuild(true));
 }
 
-function pickBuild(kind, id, btn) {
+function refreshBuildUI() {
   const sab = DATA.sabotage;
+  const spent = buildCostSum();
+  $("build-budget").textContent = (sab.budget - spent) + "/" + sab.budget;
+  $("cloak-counter").textContent = `(${build.cloaks.length}/${sab.maxCloaks} gewählt · 💰 ${sab.budget - spent} übrig)`;
+  document.querySelectorAll('.build-card[data-kind="cloak"]').forEach(btn => {
+    const c = cloakById(btn.dataset.id);
+    const selected = build.cloaks.includes(c.id);
+    btn.classList.toggle("selected", selected);
+    btn.disabled = !selected && (build.cloaks.length >= sab.maxCloaks || spent + (c.cost || 2) > sab.budget);
+  });
+  $("btn-build-done").disabled = !(build.theme && build.format && build.cloaks.length === sab.maxCloaks);
+}
+
+function pickBuild(kind, id, btn) {
   if (kind === "theme" || kind === "format") {
     document.querySelectorAll(`.build-card[data-kind="${kind}"]`).forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
     build[kind] = id;
   } else {
     const i = build.cloaks.indexOf(id);
-    if (i >= 0) { build.cloaks.splice(i, 1); btn.classList.remove("selected"); }
-    else if (build.cloaks.length < sab.maxCloaks) { build.cloaks.push(id); btn.classList.add("selected"); }
-    $("cloak-counter").textContent = `(${build.cloaks.length}/${sab.maxCloaks} gewählt)`;
+    if (i >= 0) build.cloaks.splice(i, 1);
+    else build.cloaks.push(id);
   }
-  $("btn-build-done").disabled = !(build.theme && build.format && build.cloaks.length === sab.maxCloaks);
+  refreshBuildUI();
 }
 
 function finishBuild(timeout) {
@@ -588,7 +673,7 @@ function startHunt(fakeCard, kicker, introHtml) {
   });
 
   wrap.querySelectorAll(".mini-tool[data-tool]").forEach(btn => btn.addEventListener("click", () => huntProbe(btn)));
-  wrap.querySelectorAll(".mini-flag").forEach(btn => btn.addEventListener("click", () => huntFlag(parseInt(btn.dataset.flag, 10))));
+  wrap.querySelectorAll(".mini-flag").forEach(btn => btn.addEventListener("click", () => huntResolve(parseInt(btn.dataset.flag, 10))));
 
   showScreen("screen-hunt");
   startTimer(DATA.sabotage.huntTime, $("hunt-timer-text"), $("hunt-timerbar-fill"), () => huntResolve(null));
@@ -613,8 +698,6 @@ function huntProbe(btn) {
   }
 }
 
-function huntFlag(idx) { huntResolve(idx); }
-
 function huntResolve(pickedIdx) {
   if (G.boss.done) return;
   G.boss.done = true;
@@ -626,7 +709,7 @@ function huntResolve(pickedIdx) {
 
   const fake = G.boss.feed[G.boss.fakeIdx];
   const sab = DATA.sabotage;
-  const cloakNames = fake.build.cloakIds.map(id => (sab.cloaks.find(c => c.id === id) || {}).name).join(" + ");
+  const cloakNames = fake.build.cloakIds.map(id => (cloakById(id) || {}).name).join(" + ");
   let lines = [], gained = 0;
 
   G.total++;
@@ -645,14 +728,17 @@ function huntResolve(pickedIdx) {
     lines.push(`🏛️ Demokratie-Index: −${dmg}`);
   }
 
+  const resolutionText = (G.mode === "duel" ? (G.duel.oppName || "Dein Gegner") : "HYDRA") +
+    " hat die Spuren mit „" + cloakNames + "“ verwischt – die übrigen Beweiskanäle hätten den Fake verraten. " +
+    "Merke: Perfekte Tarnung ist unmöglich, irgendwo bleibt immer eine Spur.";
+  G.history.push({ c: Object.assign({}, fake, { resolution: resolutionText }), verdict: found ? "flag" : (pickedIdx === null ? null : "approve"), correct: found, gained, isBoss: true });
+
   const v = $("reveal-verdict");
   v.textContent = found ? "GEFUNDEN ✓  +" + gained : "NICHT GEFUNDEN ✗";
   v.className = "reveal-verdict " + (found ? "good" : "bad");
   $("reveal-truth").textContent = "Der Fake war: " + fake.title + " (" + fake.category + ")";
   $("reveal-points").textContent = lines.join("\n");
-  $("reveal-text").textContent = (G.mode === "duel" ? (G.duel.oppName || "Dein Gegner") : "HYDRA") +
-    " hat die Spuren mit „" + cloakNames + "“ verwischt – die übrigen Beweiskanäle hätten den Fake verraten. " +
-    "Merke: Perfekte Tarnung ist unmöglich, irgendwo bleibt immer eine Spur.";
+  $("reveal-text").textContent = resolutionText;
   setRealRef(null);
   updateHud();
   $("hunt-score").textContent = G.score;
@@ -675,13 +761,13 @@ function afterHuntReveal() {
 }
 
 /* =========================================================================
-   ERGEBNIS (Solo klassisch & Endlos)
+   ERGEBNIS
    ========================================================================= */
 function rankFor(score) { return DATA.ranks.find(r => score >= r.min) || DATA.ranks[DATA.ranks.length - 1]; }
 
 function computeFinal() {
   if (G.variant === "endlos" && G.mode === "solo") {
-    G.finalScore = G.score;   // Endlos: Rohpunkte zählen, der Index ist das "Leben"
+    G.finalScore = G.score;
     return 1;
   }
   const mult = G.crisis ? 0.5 : S.finalMultiplier(G.index);
@@ -695,12 +781,17 @@ function showResult() {
   const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
   const rank = rankFor(G.finalScore);
   const endless = G.mode === "solo" && G.variant === "endlos";
+  const daily = G.mode === "solo" && G.variant === "tages";
 
   const shifts = Math.max(1, G.secIdx + (G.caseIdx > 0 || G.crisis ? 1 : 0));
   if (endless) {
     $("result-kicker").textContent = "ENDLOS-PROTOKOLL";
     $("result-headline").textContent = "HYDRA hat dich überrannt";
     $("result-story").textContent = `Du hast ${shifts} Schicht${shifts === 1 ? "" : "en"} und ${G.total} Fälle durchgehalten, bevor das Vertrauen zusammenbrach. Jede Schicht war schneller und subtiler als die letzte – irgendwann erwischt HYDRA jeden. Wie weit kommst du beim nächsten Mal?`;
+  } else if (daily) {
+    $("result-kicker").textContent = "TAGES-CHALLENGE · " + todayStr();
+    $("result-headline").textContent = G.crisis ? "Heute nicht dein Tag" : "Deine Tageswertung steht";
+    $("result-story").textContent = "Alle spielen heute exakt dieselben Fälle – dein Ergebnis zählt für die Tages-Rangliste. Morgen gibt es einen neuen Fallsatz und eine neue Chance.";
   } else if (G.crisis) {
     $("result-kicker").textContent = "ABBRUCH · VERTRAUENSKRISE";
     $("result-headline").textContent = "Die Wahl wird angefochten";
@@ -728,28 +819,72 @@ function showResult() {
   }
   breakdown += `<div class="total"><span>Endpunktzahl</span><span>${G.finalScore}</span></div>`;
   $("result-breakdown").innerHTML = breakdown;
+  reviewReturn = "screen-result";
   saveResult("result-sync");
   showScreen("screen-result");
 }
 
 /* =========================================================================
-   RANGLISTE – lokal (localStorage) + global (kostenloser JSON-Speicher)
+   FALL-AUSWERTUNG (Review)
    ========================================================================= */
-/* Kostenloser Key-Value-Speicher (textdb.online): Lesen per GET (CORS offen),
-   Schreiben per GET-Query (kein CORS-Preflight nötig). Pro Modus ein eigener
-   Schlüssel -> kurze Anfragen und weniger Schreib-Kollisionen. */
+function showReview(returnScreen) {
+  reviewReturn = returnScreen || reviewReturn;
+  const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
+  $("review-summary").innerHTML = `
+    <div class="week-stat"><b>${G.correct}/${G.total}</b>richtig (${acc} %)</div>
+    <div class="week-stat"><b>🔥 ${G.maxStreak}</b>beste Serie</div>
+    <div class="week-stat"><b>${G.finalScore || G.score}</b>Punkte</div>
+    <div class="week-stat"><b>🏛️ ${G.index}</b>Index</div>`;
+
+  const list = $("review-list");
+  list.innerHTML = "";
+  G.history.forEach((h, i) => {
+    const row = document.createElement("button");
+    row.className = "review-row " + (h.correct ? "ok" : "bad");
+    const yourCall = h.verdict === null ? "⏱️ Zeit abgelaufen" : h.verdict === "flag" ? "🚫 Gekennzeichnet" : "✅ Freigegeben";
+    const truth = h.c.isFake ? "🚫 Fake" : "✅ Echt";
+    row.innerHTML = `
+      <span class="review-mark">${h.correct ? "✓" : "✗"}</span>
+      <span class="review-main"><b>${esc(h.c.title)}</b>
+        <span class="bmeta">${h.isBoss ? "🎯 Finale · " : ""}${esc(h.c.category)} · Du: ${yourCall} · War: ${truth}</span></span>
+      <span class="review-pts">${h.gained ? "+" + h.gained : "±0"}</span>`;
+    row.addEventListener("click", () => showReviewDetail(h, i));
+    list.appendChild(row);
+  });
+  showScreen("screen-review");
+}
+
+function showReviewDetail(h, i) {
+  const c = h.c;
+  const yourCall = h.verdict === null ? "⏱️ Zeit abgelaufen" : h.verdict === "flag" ? "🚫 Gekennzeichnet" : "✅ Freigegeben";
+  const ref = DATA.realRefs[c.id];
+  $("review-detail").innerHTML = `
+    <div class="reveal-verdict ${h.correct ? "good" : "bad"}">${h.correct ? "RICHTIG ✓" : "FALSCH ✗"} <span class="muted" style="font-size:.9rem">· Fall ${i + 1}</span></div>
+    <div class="reveal-truth">${esc(c.category)} · ${MEDIUM_LABEL[c.medium] || esc(c.medium)} · ${esc(c.author || "")}</div>
+    <div class="review-case-text"><b>${esc(c.title)}</b><br>${esc(c.text)}</div>
+    <div class="reveal-points">Deine Antwort: ${yourCall}\nWahrheit: ${c.isFake ? "🚫 KI-DESINFORMATION" : "✅ ECHT / LEGITIM"}${h.gained ? "\nPunkte: +" + h.gained : ""}</div>
+    <p class="reveal-text">${esc(c.resolution)}</p>
+    ${ref ? `<div class="real-ref"><b>📚 Reales Vorbild (Spielinhalt fiktiv):</b> ${esc(ref)}</div>` : ""}
+    <button class="btn btn-primary" id="btn-review-close">Schließen</button>`;
+  $("btn-review-close").addEventListener("click", () => showOverlay("overlay-review", false));
+  showOverlay("overlay-review", true);
+}
+
+/* =========================================================================
+   RANGLISTE – lokal + global
+   ========================================================================= */
 const BOARD_BASE = "https://textdb.online/";
 const BOARD_KEYS = {
   klassisch: "wahlwaechter_kl_x7k2m9",
   endlos:    "wahlwaechter_el_x7k2m9",
   duell:     "wahlwaechter_du_x7k2m9",
+  tages:     "wahlwaechter_tc_x7k2m9",
 };
-const BOARD_MAX = 30;   // Top 30 pro Modus global
+const PROFILE_KEY = "wahlwaechter_pr_x7k2m9";
+const BOARD_MAX = 30;
 let boardFilter = "alle";
 
 function normMode(m) { return m === "solo" ? "klassisch" : m === "duel" ? "duell" : m; }
-
-/* kompaktes Speicherformat <-> volle Einträge */
 function packEntry(e) { return { i: e.id, n: e.name, s: e.score, a: e.acc, x: e.index, m: e.mode, e: e.extra || "", d: e.date }; }
 function unpackEntry(p) { return { id: p.i, name: p.n, score: p.s, acc: p.a, index: p.x, mode: p.m, extra: p.e || "", date: p.d }; }
 
@@ -757,33 +892,32 @@ function loadLocalBoard() {
   try { return (JSON.parse(localStorage.getItem("ww_board_v1")) || []).map(e => Object.assign({}, e, { mode: normMode(e.mode) })); }
   catch (e) { return []; }
 }
-function saveLocalBoard(list) {
-  localStorage.setItem("ww_board_v1", JSON.stringify(list.slice(0, 50)));
-}
+function saveLocalBoard(list) { localStorage.setItem("ww_board_v1", JSON.stringify(list.slice(0, 50))); }
 
-async function fetchModeBoard(mode) {
+async function tdbRead(key) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 8000);
   try {
-    const res = await fetch(BOARD_BASE + BOARD_KEYS[mode] + "?t=" + Date.now(), { signal: ctrl.signal });
+    const res = await fetch(BOARD_BASE + key + "?t=" + Date.now(), { signal: ctrl.signal });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const text = await res.text();
-    if (!text.trim()) return [];
-    const data = JSON.parse(text);
-    return Array.isArray(data.scores) ? data.scores.map(unpackEntry) : [];
+    if (!text.trim()) return null;
+    try { return JSON.parse(text); } catch (e) { return null; }
   } finally { clearTimeout(t); }
 }
-
-async function writeModeBoard(mode, entries) {
-  const payload = JSON.stringify({ scores: entries.slice(0, BOARD_MAX).map(packEntry) });
-  const url = BOARD_BASE + "update/?key=" + BOARD_KEYS[mode] + "&value=" + encodeURIComponent(payload);
+async function tdbWrite(key, obj) {
+  const url = BOARD_BASE + "update/?key=" + key + "&value=" + encodeURIComponent(JSON.stringify(obj));
   const res = await fetch(url);
   if (!res.ok) throw new Error("HTTP " + res.status);
   const j = await res.json();
   if (j.status !== 1) throw new Error("write rejected");
 }
 
-/* Alle Modi zusammen laden (für Filter "alle"); wirft, wenn offline */
+async function fetchModeBoard(mode) {
+  const data = await tdbRead(BOARD_KEYS[mode]);
+  return data && Array.isArray(data.scores) ? data.scores.map(unpackEntry) : [];
+}
+
 async function fetchGlobalBoard(mode) {
   if (mode && mode !== "alle") return fetchModeBoard(mode);
   const lists = await Promise.all(Object.keys(BOARD_KEYS).map(m => fetchModeBoard(m).catch(() => null)));
@@ -792,16 +926,14 @@ async function fetchGlobalBoard(mode) {
 }
 
 async function pushGlobalScore(entry) {
-  // GET -> mergen -> schreiben -> per Rücklesen verifizieren (gegen Kollisionen)
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const scores = await fetchModeBoard(entry.mode);
       if (!scores.some(e => e.id === entry.id)) {
         scores.push(entry);
         scores.sort((a, b) => b.score - a.score);
-        // Nur schreiben, wenn der Eintrag es in die Top-Liste schafft
         if (!scores.slice(0, BOARD_MAX).some(e => e.id === entry.id)) return true;
-        await writeModeBoard(entry.mode, scores);
+        await tdbWrite(BOARD_KEYS[entry.mode], { scores: scores.slice(0, BOARD_MAX).map(packEntry) });
       }
       const check = await fetchModeBoard(entry.mode);
       if (check.some(e => e.id === entry.id)) return true;
@@ -813,24 +945,63 @@ async function pushGlobalScore(entry) {
 
 function makeBoardEntry() {
   const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
-  const mode = G.mode === "duel" ? "duell" : G.variant === "endlos" ? "endlos" : "klassisch";
+  const mode = G.mode === "duel" ? "duell"
+    : G.variant === "endlos" ? "endlos"
+    : G.variant === "tages" ? "tages"
+    : G.variant === "klasse" ? "klasse"
+    : "klassisch";
   return {
     id: Math.random().toString(36).slice(2) + Date.now().toString(36),
     name: G.name, score: G.finalScore, acc, index: G.index, mode,
     extra: mode === "endlos" ? "Schicht " + Math.max(1, G.secIdx + (G.caseIdx > 0 || G.crisis ? 1 : 0)) : "",
-    date: new Date().toISOString().slice(0, 10),
+    date: todayStr(),
   };
+}
+
+/* ---------- Profil-Statistik (global) ---------- */
+async function updateProfile(mutate) {
+  const name = myName || "Anonym";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const data = (await tdbRead(PROFILE_KEY)) || { profiles: [] };
+      const list = Array.isArray(data.profiles) ? data.profiles : [];
+      let p = list.find(x => x.n === name);
+      if (!p) { p = { n: name, g: 0, w: 0, l: 0, d: 0, bs: 0, c: 0, t: 0 }; list.push(p); }
+      mutate(p);
+      p.u = todayStr();
+      await tdbWrite(PROFILE_KEY, { profiles: list.slice(0, 120) });
+      const check = (await tdbRead(PROFILE_KEY)) || {};
+      const mine = (check.profiles || []).find(x => x.n === name);
+      if (mine && mine.u === todayStr()) return true;
+    } catch (e) { /* retry */ }
+    await new Promise(r => setTimeout(r, 400 + Math.random() * 1600));
+  }
+  return false;
 }
 
 function saveResult(syncElId) {
   if (G.resultSaved) return;
   G.resultSaved = true;
   const entry = makeBoardEntry();
+
+  // Profil-Statistik immer aktualisieren
+  const acc = { correct: G.correct, total: G.total, best: G.finalScore };
+  updateProfile(p => {
+    p.g += 1; p.c += acc.correct; p.t += acc.total;
+    p.bs = Math.max(p.bs || 0, acc.best);
+  });
+
+  if (entry.mode === "klasse") {
+    if (syncElId) $(syncElId).textContent = "🏟️ Klassenraum – dein Ergebnis zählt in der Raum-Auswertung.";
+    return;
+  }
+
   const local = loadLocalBoard();
   local.push(entry);
   local.sort((a, b) => b.score - a.score);
   saveLocalBoard(local);
 
+  if (!syncElId) { pushGlobalScore(entry); return; }
   const el = $(syncElId);
   el.textContent = "🌐 Speichere in globaler Rangliste…";
   pushGlobalScore(entry).then(ok => {
@@ -838,6 +1009,11 @@ function saveResult(syncElId) {
     el.classList.toggle("sync-ok", ok);
     el.classList.toggle("sync-fail", !ok);
   });
+}
+
+function syncBoardChips() {
+  document.querySelectorAll("#board-filters .chip").forEach(c =>
+    c.classList.toggle("active", c.dataset.filter === boardFilter));
 }
 
 async function renderBoard() {
@@ -850,27 +1026,24 @@ async function renderBoard() {
 
   let entries = [];
   let global = true;
-  try {
-    entries = await fetchGlobalBoard(boardFilter);
-  } catch (e) {
-    global = false;
-  }
-  // lokale Einträge ergänzen (falls offline entstanden)
+  try { entries = await fetchGlobalBoard(boardFilter); }
+  catch (e) { global = false; }
   const local = loadLocalBoard();
   local.forEach(le => { if (!entries.some(e => e.id === le.id)) entries.push(le); });
   entries = entries.map(e => Object.assign({}, e, { mode: normMode(e.mode) }));
 
   sync.textContent = global
-    ? `🌐 Globale Rangliste · ${entries.length} Einträge gesamt`
+    ? `🌐 Globale Rangliste · Stand ${new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`
     : "⚠️ Offline – zeige nur Einträge dieses Geräts";
   sync.classList.toggle("sync-fail", !global);
 
   const filtered = entries
-    .filter(e => boardFilter === "alle" || e.mode === boardFilter)
+    .filter(e => boardFilter === "alle" ? e.mode !== "tages" || e.date === todayStr() : e.mode === boardFilter)
+    .filter(e => boardFilter !== "tages" || e.date === todayStr())
     .sort((a, b) => b.score - a.score)
     .slice(0, 25);
 
-  const modeIcon = { klassisch: "🛡️", endlos: "♾️", duell: "⚔️" };
+  const modeIcon = { klassisch: "🛡️", endlos: "♾️", duell: "⚔️", tages: "📅" };
   if (!filtered.length) {
     list.innerHTML = `<div class="board-empty">Noch keine Einträge${boardFilter !== "alle" ? " in dieser Kategorie" : ""}. Spiel eine Runde – dann steht dein Name hier.</div>`;
   } else {
@@ -883,9 +1056,68 @@ async function renderBoard() {
   }
 }
 
+/* ---------- Profil-Screen ---------- */
+async function renderProfile() {
+  const name = ($("player-name").value.trim()) || myName || localStorage.getItem("ww_name") || "";
+  showScreen("screen-profile");
+  const sync = $("profile-sync");
+  sync.className = "board-sync";
+  sync.textContent = "🌐 Lade Profile…";
+  $("profile-card").innerHTML = "";
+  $("profile-table").innerHTML = "";
+
+  let profiles = [];
+  try {
+    const data = await tdbRead(PROFILE_KEY);
+    profiles = (data && data.profiles) || [];
+    sync.textContent = "🌐 " + profiles.length + " Spieler:innen mit Profil";
+  } catch (e) {
+    sync.textContent = "⚠️ Offline – Profile nicht erreichbar";
+    sync.classList.add("sync-fail");
+    return;
+  }
+
+  const me = profiles.find(p => p.n === name);
+  if (me) {
+    const accAvg = me.t ? Math.round((me.c / me.t) * 100) : 0;
+    const duels = (me.w || 0) + (me.l || 0) + (me.d || 0);
+    const winrate = duels ? Math.round((me.w / duels) * 100) : 0;
+    $("profile-card").innerHTML = `
+      <div class="profile-name">👤 ${esc(me.n)}</div>
+      <div class="week-stats">
+        <div class="week-stat"><b>${me.g || 0}</b>Runden gespielt</div>
+        <div class="week-stat"><b>${me.w || 0}-${me.l || 0}-${me.d || 0}</b>Duelle S-N-U</div>
+        <div class="week-stat"><b>${winrate} %</b>Duell-Siegquote</div>
+        <div class="week-stat"><b>${accAvg} %</b>Ø Genauigkeit</div>
+        <div class="week-stat"><b>${me.bs || 0}</b>Bestleistung</div>
+      </div>`;
+  } else {
+    $("profile-card").innerHTML = `<div class="board-empty">Noch kein Profil für „${esc(name || "…")}“ – spiel eine Runde, dann entsteht es automatisch.</div>`;
+  }
+
+  const ranked = profiles.slice().sort((a, b) => (b.w || 0) - (a.w || 0) || (b.g || 0) - (a.g || 0)).slice(0, 30);
+  $("profile-table").innerHTML = ranked.length ? ranked.map((p, i) => `
+    <div class="board-row ${p.n === name ? "me" : ""}">
+      <span class="pos">${i + 1}.</span>
+      <span class="bname">${esc(p.n)} <span class="bmeta">${p.g || 0} Runden · Ø ${p.t ? Math.round((p.c / p.t) * 100) : 0} % · Best ${p.bs || 0}</span></span>
+      <span class="bscore">${p.w || 0}-${p.l || 0}-${p.d || 0}</span>
+    </div>`).join("") : `<div class="board-empty">Noch keine Duell-Bilanzen.</div>`;
+}
+
 /* =========================================================================
    ONLINE-DUELL
    ========================================================================= */
+let hostDuelCfg = null;
+
+function readDuelCfg() {
+  return {
+    cases: chipVal("cfg-cases") || 10,
+    timer: chipVal("cfg-timer") || 35,
+    hard: chipVal("cfg-hard") === 1,
+    showdown: chipVal("cfg-showdown") === 1,
+  };
+}
+
 function lobbyError(msg) {
   const el = $("lobby-error");
   el.textContent = msg;
@@ -947,14 +1179,15 @@ function wireNet() {
 
   Net.onMessage = (msg) => {
     switch (msg.type) {
-      case "hello": {           // Host empfängt Gast-Namen -> Duell starten
+      case "hello": {
         const seed = randomSeed();
-        Net.send("start", { seed, name: myName || "Host" });
-        startDuel(seed, msg.name);
+        const cfg = hostDuelCfg || { cases: 10, timer: 35, hard: false, showdown: true };
+        Net.send("start", { seed, name: myName || "Host", cfg });
+        startDuel(seed, msg.name, cfg);
         break;
       }
-      case "start":             // Gast empfängt Seed
-        startDuel(msg.seed, msg.name);
+      case "start":
+        startDuel(msg.seed, msg.name, msg.cfg || { cases: 10, timer: 35, hard: false, showdown: true });
         break;
       case "progress":
         if (G && G.duel) { G.duel.oppScore = msg.score; G.duel.oppIndex = msg.index; updateHud(); }
@@ -962,7 +1195,7 @@ function wireNet() {
       case "sabotage":
         if (G && G.duel) {
           G.duel.oppBuild = msg.build;
-          if (G.duel.myBuild && !G.boss) startShowdownHunt();  // G.boss verhindert Doppelstart
+          if (G.duel.myBuild && !G.boss) startShowdownHunt();
         }
         break;
       case "huntResult":
@@ -986,7 +1219,7 @@ function wireNet() {
       lobbyError("Verbindung verloren: " + reason);
       return;
     }
-    if (G.finalScore && !G.duel.waitingFinal) return;  // Duell ist bereits sauber beendet
+    if (G.finalScore && !G.duel.waitingFinal) return;
     G.duel.dropped = true;
     netBanner("📡 " + reason + " – du spielst gegen HYDRA weiter, dein Ergebnis zählt für die Rangliste.");
     if (!$("overlay-wait").classList.contains("hidden")) {
@@ -1017,12 +1250,13 @@ function netBanner(text) {
   bannerTimer = setTimeout(() => b.classList.add("hidden"), 8000);
 }
 
-function startDuel(seed, oppName) {
+function startDuel(seed, oppName, cfg) {
   const name = myName || localStorage.getItem("ww_name") || "Anonym";
   G = freshState("duel", name, seed);
-  G.duel = { oppName: oppName || "Gegner", oppScore: 0, oppIndex: 100, oppBuild: null, oppHunt: null, oppFinal: null, myBuild: null, myHunt: null, dropped: false, waitingFinal: false };
-  const { deck, sections } = buildDuelDeck(seed);
+  G.duel = { oppName: oppName || "Gegner", oppScore: 0, oppIndex: 100, oppBuild: null, oppHunt: null, oppFinal: null, myBuild: null, myHunt: null, dropped: false, waitingFinal: false, cfg };
+  const { deck, sections } = buildMixedDeck(seed, cfg, "DUELL");
   G.deck = deck; G.sections = sections;
+  sections.forEach(s => { s.intro += cfg.showdown ? " Danach: der Showdown." : ""; });
   showSectionIntro();
 }
 
@@ -1032,7 +1266,7 @@ function finishDuel() {
     G.score += 250;
     netBanner("🎭 Dein Fake blieb unentdeckt: +250 Punkte!");
   }
-  const mult = computeFinal();
+  computeFinal();
   const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
   Net.send("final", { score: G.finalScore, acc, index: G.index });
   saveResult("duel-sync");
@@ -1047,10 +1281,12 @@ function showDuelResult() {
   const me = { name: G.name, score: G.finalScore, acc: G.total ? Math.round((G.correct / G.total) * 100) : 0, index: G.index };
   const opp = G.duel.oppFinal;
 
-  if (!opp) return showResult();   // Gegner weg -> Solo-Ergebnis zeigen
+  if (!opp) return showResult();
 
   const iWin = me.score > opp.score;
   const draw = me.score === opp.score;
+  updateProfile(p => { if (draw) p.d = (p.d || 0) + 1; else if (iWin) p.w = (p.w || 0) + 1; else p.l = (p.l || 0) + 1; });
+
   $("duel-verdict").textContent = draw ? "🤝 Unentschieden!" : iWin ? "🏆 SIEG!" : "Niederlage…";
   $("duel-compare").innerHTML = `
     <div class="duel-side ${iWin && !draw ? "winner" : ""}"><div class="name">${esc(me.name)} (du)</div><div class="pts">${me.score}</div>
@@ -1062,89 +1298,130 @@ function showDuelResult() {
     <div><span>Deine Rohpunkte</span><span>${G.score}</span></div>
     <div><span>Dein Multiplikator</span><span>× ${(G.crisis ? 0.5 : S.finalMultiplier(G.index)).toFixed(2)}</span></div>
     <div class="total"><span>Endpunktzahl</span><span>${G.finalScore}</span></div>`;
-  setTimeout(() => Net.close(), 1500);  // Verzögert, damit die letzte Nachricht sicher ankommt
+  reviewReturn = "screen-duel-result";
+  setTimeout(() => Net.close(), 4000);  // großzügig, damit die letzte Nachricht sicher gelesen wird
   showScreen("screen-duel-result");
 }
 
 /* =========================================================================
-   TURNIER-UI
+   KLASSENRAUM
    ========================================================================= */
-let tNames = [];
+let classGameStarted = false;
 
-function openTournament() {
-  if (Tournament.load()) return renderBracket();
-  tNames = [];
-  renderTNameList();
-  $("t-name-input").value = "";
-  showScreen("screen-tournament-setup");
+function classError(msg) {
+  const el = $("class-error");
+  el.textContent = msg;
+  el.classList.remove("hidden");
 }
 
-function renderTNameList() {
-  const wrap = $("t-name-list");
-  wrap.innerHTML = tNames.map((n, i) =>
-    `<span class="t-name-pill">${esc(n)} <button class="t-remove" data-i="${i}" aria-label="entfernen">✕</button></span>`).join("");
-  wrap.querySelectorAll(".t-remove").forEach(b =>
-    b.addEventListener("click", () => { tNames.splice(parseInt(b.dataset.i, 10), 1); renderTNameList(); }));
-  $("btn-t-start").disabled = tNames.length < 2;
-  $("btn-t-start").textContent = tNames.length < 2
-    ? "🎲 Auslosen & starten (mind. 2 Namen)"
-    : `🎲 Auslosen & starten (${tNames.length} Spieler:innen)`;
-}
-
-function addTName() {
-  const input = $("t-name-input");
-  const name = input.value.trim();
+function openClass() {
+  const name = getPlayerName();
   if (!name) return;
-  if (tNames.length >= 16) { input.value = ""; return; }
-  if (!tNames.includes(name)) tNames.push(name);
-  input.value = "";
-  input.focus();
-  renderTNameList();
+  $("class-error").classList.add("hidden");
+  $("class-join-code").value = "";
+  classGameStarted = false;
+  showScreen("screen-class");
 }
 
-function renderBracket() {
-  const st = Tournament.state;
-  const M = st.matches;
-  const champ = Tournament.champion();
-  $("t-headline").innerHTML = champ
-    ? `👑 ${esc(champ)} gewinnt das Turnier!`
-    : "🏟️ Turnierbaum";
+function wireClassNet() {
+  ClassNet.onFailed = (reason) => { showScreen("screen-class"); classError(reason); };
+  ClassNet.onLost = (reason) => netBanner("📡 " + reason);
 
-  const bracket = $("bracket");
-  bracket.innerHTML = "";
-  M.forEach((round, r) => {
-    const col = document.createElement("div");
-    col.className = "bracket-round";
-    col.innerHTML = `<div class="bracket-round-title">${Tournament.roundName(r, M.length)}</div>`;
-    round.forEach((match, m) => {
-      const card = document.createElement("div");
-      card.className = "bracket-match";
-      const mkP = (p, other) => {
-        if (p === null) return `<div class="bracket-player empty">${r === 0 && other !== null ? "Freilos" : "– offen –"}</div>`;
-        const isWinner = match.winner === p;
-        const clickable = match.p1 && match.p2;
-        return `<button class="bracket-player ${isWinner ? "winner" : ""}" data-r="${r}" data-m="${m}" data-p="${esc(p)}" ${clickable ? "" : "disabled"}>${esc(p)}${isWinner ? " ✓" : ""}</button>`;
-      };
-      card.innerHTML = mkP(match.p1, match.p2) + mkP(match.p2, match.p1);
-      col.appendChild(card);
-    });
-    bracket.appendChild(col);
-  });
+  ClassNet.onUpdate = (st) => {
+    const active = document.querySelector(".screen.active").id;
 
-  bracket.querySelectorAll(".bracket-player[data-p]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const r = parseInt(btn.dataset.r, 10), m = parseInt(btn.dataset.m, 10);
-      const match = Tournament.state.matches[r][m];
-      const name = btn.dataset.p;
-      if (match.winner === name) return;
-      if (confirm(`„${name}“ als Sieger dieser Partie eintragen?`)) {
-        Tournament.setWinner(r, m, name);
-        renderBracket();
-      }
-    });
-  });
+    // Runde startet
+    if (st.started && !classGameStarted) {
+      classGameStarted = true;
+      startClassGame(st.seed, st.cfg || {});
+      return;
+    }
 
-  showScreen("screen-tournament");
+    if (active === "screen-class-lobby") renderClassLobby(st);
+    if (active === "screen-case" && G && G.variant === "klasse") updateHud();
+    if (active === "screen-class-result") renderClassResult(st);
+  };
+}
+
+function renderClassLobby(st) {
+  const players = (st.players || []);
+  $("class-count").textContent = players.length + " von " + ClassNet.MAX_PLAYERS + " Spieler:innen im Raum";
+  $("class-players").innerHTML = players.map(p =>
+    `<span class="t-name-pill">${p.g === st.host ? "🎓 " : ""}${esc(p.n)}</span>`).join("");
+  const startBtn = $("btn-class-start");
+  if (ClassNet.isHost) {
+    startBtn.classList.remove("hidden");
+    startBtn.disabled = players.length < 2;
+    startBtn.textContent = players.length < 2 ? "🚀 Runde starten (mind. 2)" : `🚀 Runde starten (${players.length} Spieler:innen)`;
+    $("class-lobby-hint").textContent = "Starte, sobald alle drin sind – Nachzügler können nicht mehr beitreten.";
+  } else {
+    startBtn.classList.add("hidden");
+  }
+}
+
+async function classCreate() {
+  const cfg = { cases: chipVal("ccfg-cases") || 10, timer: chipVal("ccfg-timer") || 35 };
+  $("class-error").classList.add("hidden");
+  const ok = await ClassNet.create(cfg);
+  if (!ok) return;
+  $("class-code-display").textContent = ClassNet.code;
+  classGameStarted = false;
+  showScreen("screen-class-lobby");
+  renderClassLobby(ClassNet.state);
+}
+
+async function classJoin() {
+  const code = $("class-join-code").value.trim().toUpperCase();
+  if (code.length !== 5) return classError("Der Raum-Code hat 5 Zeichen.");
+  $("class-error").classList.add("hidden");
+  const ok = await ClassNet.join(code);
+  if (!ok) return;
+  $("class-code-display").textContent = code;
+  classGameStarted = false;
+  showScreen("screen-class-lobby");
+  if (ClassNet.state) renderClassLobby(ClassNet.state);
+}
+
+function startClassGame(seed, cfg) {
+  const name = myName || localStorage.getItem("ww_name") || "Anonym";
+  G = freshState("solo", name, seed);
+  G.variant = "klasse";
+  const { deck, sections } = buildMixedDeck(seed, { cases: cfg.cases || 10, timer: cfg.timer || 35, hard: 0 }, "KLASSENRAUM " + ClassNet.code);
+  G.deck = deck; G.sections = sections;
+  showSectionIntro();
+}
+
+function showClassResult() {
+  stopTimer();
+  reviewReturn = "screen-class-result";
+  showScreen("screen-class-result");
+  if (ClassNet.state) renderClassResult(ClassNet.state);
+}
+
+function renderClassResult(st) {
+  const players = (st.players || []).slice();
+  const done = players.filter(p => p.f === 1);
+  const playing = players.filter(p => p.f !== 1);
+  $("class-result-status").textContent = playing.length
+    ? `⏳ ${done.length} von ${players.length} fertig – ${playing.length} spielen noch… (aktualisiert sich automatisch)`
+    : `🏁 Alle ${players.length} Spieler:innen sind fertig!`;
+  $("class-result-headline").textContent = playing.length ? "🏁 Zwischenstand" : "🏁 Endstand";
+
+  const medals = ["🥇", "🥈", "🥉"];
+  const sorted = done.sort((a, b) => (b.s || 0) - (a.s || 0));
+  let html = sorted.map((p, i) => `
+    <div class="board-row ${p.g === ClassNet.gid ? "me" : ""}">
+      <span class="pos">${medals[i] || (i + 1) + "."}</span>
+      <span class="bname">${esc(p.n)} <span class="bmeta">${p.a || 0} % richtig · Index ${p.x != null ? p.x : "–"}</span></span>
+      <span class="bscore">${p.s || 0}</span>
+    </div>`).join("");
+  html += playing.map(p => `
+    <div class="board-row pending">
+      <span class="pos">…</span>
+      <span class="bname">${esc(p.n)} <span class="bmeta">spielt noch · Fall ${p.c || 0}</span></span>
+      <span class="bscore">${p.s || 0}</span>
+    </div>`).join("");
+  $("class-result-list").innerHTML = html || `<div class="board-empty">Noch keine Ergebnisse.</div>`;
 }
 
 /* =========================================================================
@@ -1152,20 +1429,28 @@ function renderBracket() {
    ========================================================================= */
 function init() {
   $("player-name").value = localStorage.getItem("ww_name") || "";
+  myName = localStorage.getItem("ww_name") || "";
 
   $("btn-solo").addEventListener("click", () => { if (getPlayerName()) showScreen("screen-solomode"); });
   $("btn-mode-classic").addEventListener("click", () => startSolo("klassisch"));
   $("btn-mode-endless").addEventListener("click", () => startSolo("endlos"));
+  $("btn-daily").addEventListener("click", startDaily);
   $("btn-duel").addEventListener("click", openLobby);
-  $("btn-tournament").addEventListener("click", openTournament);
+  $("btn-class").addEventListener("click", openClass);
   $("btn-board").addEventListener("click", renderBoard);
+  $("btn-profile").addEventListener("click", renderProfile);
   $("btn-howto").addEventListener("click", () => showScreen("screen-howto"));
+  $("btn-legal").addEventListener("click", () => showScreen("screen-legal"));
 
   document.querySelectorAll("[data-goto]").forEach(b =>
     b.addEventListener("click", () => showScreen(b.dataset.goto)));
 
-  // Lobby
+  // Einstellungs-Chips
+  ["cfg-cases", "cfg-timer", "cfg-hard", "cfg-showdown", "ccfg-cases", "ccfg-timer"].forEach(initChipGroup);
+
+  // Duell-Lobby
   $("btn-create-room").addEventListener("click", () => {
+    hostDuelCfg = readDuelCfg();
     $("lobby-error").classList.add("hidden");
     $("lobby-choice").classList.add("hidden");
     $("lobby-wait").classList.remove("hidden");
@@ -1193,6 +1478,20 @@ function init() {
   });
   $("btn-lobby-back").addEventListener("click", () => { Net.close(); showScreen("screen-start"); });
 
+  // Klassenraum
+  $("btn-class-create").addEventListener("click", classCreate);
+  $("btn-class-join").addEventListener("click", classJoin);
+  $("class-join-code").addEventListener("keydown", (e) => { if (e.key === "Enter") classJoin(); });
+  $("class-join-code").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); });
+  $("btn-class-start").addEventListener("click", async () => {
+    $("btn-class-start").disabled = true;
+    try { await ClassNet.start(randomSeed()); }
+    catch (e) { $("btn-class-start").disabled = false; netBanner("⚠️ Start fehlgeschlagen – bitte erneut versuchen."); }
+  });
+  $("btn-class-leave").addEventListener("click", () => { ClassNet.close(); showScreen("screen-start"); });
+  $("btn-class-menu").addEventListener("click", () => { ClassNet.close(); showScreen("screen-start"); });
+  $("btn-class-review").addEventListener("click", () => showReview("screen-class-result"));
+
   // Spiel
   $("btn-week-start").addEventListener("click", showCase);
   $("btn-approve").addEventListener("click", () => judge("approve"));
@@ -1204,37 +1503,26 @@ function init() {
   $("btn-dilemma-next").addEventListener("click", afterDilemma);
   $("btn-build-done").addEventListener("click", () => finishBuild(false));
 
-  // Ergebnis & Rangliste
+  // Ergebnis, Review & Rangliste
+  $("btn-result-review").addEventListener("click", () => showReview("screen-result"));
+  $("btn-duel-review").addEventListener("click", () => showReview("screen-duel-result"));
+  $("btn-review-back").addEventListener("click", () => showScreen(reviewReturn));
   $("btn-result-board").addEventListener("click", renderBoard);
   $("btn-result-menu").addEventListener("click", () => showScreen("screen-start"));
   $("btn-duel-board").addEventListener("click", renderBoard);
   $("btn-duel-menu").addEventListener("click", () => showScreen("screen-start"));
   $("btn-board-refresh").addEventListener("click", renderBoard);
+  $("btn-profile-refresh").addEventListener("click", renderProfile);
   document.querySelectorAll("#board-filters .chip").forEach(chip => {
     chip.addEventListener("click", () => {
-      document.querySelectorAll("#board-filters .chip").forEach(c => c.classList.remove("active"));
-      chip.classList.add("active");
       boardFilter = chip.dataset.filter;
+      syncBoardChips();
       renderBoard();
     });
   });
 
-  // Turnier
-  $("btn-t-add").addEventListener("click", addTName);
-  $("t-name-input").addEventListener("keydown", (e) => { if (e.key === "Enter") addTName(); });
-  $("btn-t-start").addEventListener("click", () => {
-    if (tNames.length < 2) return;
-    Tournament.create(tNames);
-    renderBracket();
-  });
-  $("btn-t-reset").addEventListener("click", () => {
-    if (confirm("Turnier wirklich löschen und neu starten?")) {
-      Tournament.reset();
-      openTournament();
-    }
-  });
-
   wireNet();
+  wireClassNet();
 }
 
 document.addEventListener("DOMContentLoaded", init);

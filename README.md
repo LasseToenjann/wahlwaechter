@@ -14,10 +14,14 @@ Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk **HYDRA** die sozialen Medi
 - ⚡ **Prüf-Energie:** knappes Budget, strategisches Haushalten
 - ⚖️ **Dilemma-Upgrades:** KI-Ethik als Spielmechanik (Überwachung vs. Grundrechte)
 - 🏛️ **Demokratie-Index:** wirkt als Punkte-Multiplikator – wer die Demokratie beschädigt, kann nicht gewinnen
-- 🛡️ **Solo klassisch** (3 Wochen + Boss-Finale) oder **♾️ Endlos** (Schichten mit steigender Schwierigkeit)
-- ⚔️ **Online-Duell 1vs1** per Raum-Code – läuft über einen kostenlosen HTTP-Spielserver (kein WebRTC, funktioniert daher auch in Schul-WLANs und Mobilnetzen): gleiche Fälle, Live-Punktestand, und im **Showdown** baut jede:r einen eigenen Fake für den Feed des Gegners
-- 🏟️ **Turniermodus:** K.-o.-Baum für 2–16 Spieler:innen mit Freilosen, Ergebnis-Eintrag per Tipp
+- 🛡️ **Solo klassisch** (3 Wochen + Boss-Finale) oder **♾️ Endlos** (steigende Schwierigkeit, ab Schicht 3 mit **automatisch generierten, immer neuen Fällen**)
+- 📅 **Tages-Challenge:** täglich neuer, für alle identischer Fallsatz – 1 Versuch pro Tag, eigene Tages-Rangliste
+- ⚔️ **Online-Duell 1vs1** per Raum-Code mit **konfigurierbaren Regeln** (Fälle, Tempo, Schwierigkeit, Showdown an/aus) – läuft über einen kostenlosen HTTP-Spielserver (kein WebRTC, funktioniert daher auch in Schul-WLANs und Mobilnetzen). Im **Showdown** baut jede:r einen eigenen Fake mit Tarnungs-Budget
+- 🏟️ **Klassenraum:** bis zu 30 Spieler:innen gleichzeitig in einer Runde – Live-Spitzenreiter im Spiel, Abschluss-Auswertung mit Podium
+- 📋 **Fall-Auswertung:** nach jeder Runde alle Beiträge mit Antwort, Auflösung und realem Vorbild nachlesen
+- 👤 **Profile:** globale Duell-Bilanz (Siege/Niederlagen), Ø-Genauigkeit, Bestleistung
 - 🌐 **Globale Rangliste** (kostenloser Online-Speicher) mit Modus-Filtern und Offline-Fallback
+- ℹ️ **Rechtliches & Datenschutz** direkt im Spiel (Fiktionshinweis, Pseudonym-Empfehlung)
 
 ## Lokal starten
 
