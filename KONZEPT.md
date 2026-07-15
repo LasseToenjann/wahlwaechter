@@ -101,17 +101,29 @@ Nach Woche 1 und Woche 2 bietet das Ministerium je **eine von drei zufälligen A
 
 ### 6.1 Solo-Kampagne: „Drei Wochen gegen HYDRA"
 
-3 Wochen × 6 Fälle, 2 Dilemma-Upgrades, Fälle werden pro Woche subtiler. **Finale:** HYDRA baut einen maßgeschneiderten Fake und versteckt ihn in einem **Boss-Feed** aus 4 Beiträgen — nur einer ist gefälscht, eine einzige Chance, doppelte Punkte. Das Ergebnis wandert in die lokale **Top-10-Rangliste** (Name, Endpunktzahl, Genauigkeit, Index) — der Klassen-Wettkampf am selben Gerät.
+3 Wochen × 6 Fälle, 2 Dilemma-Upgrades, Fälle werden pro Woche subtiler. **Finale:** HYDRA baut einen maßgeschneiderten Fake und versteckt ihn in einem **Boss-Feed** aus 4 Beiträgen — nur einer ist gefälscht, eine einzige Chance, doppelte Punkte. Das Ergebnis wandert in die **globale Rangliste** (Name, Endpunktzahl, Genauigkeit, Index); ohne Internet lokal als Fallback.
+
+Alternativ: **♾️ Endlos-Modus** — Schicht um Schicht steigende Schwierigkeit; ab Schicht 3 erzeugt ein **Fall-Generator** immer neue, nie identische Fälle (in der Auflösung als generiert gekennzeichnet).
 
 ### 6.2 Online-Duell 1 vs 1
 
-Zwei Spieler:innen verbinden sich über einen **kostenlosen HTTP-Spielserver** (Nachrichten-Postfächer mit Sekundentakt-Abruf – bewusst kein WebRTC, damit es auch in Schul-WLANs und Mobilnetzen zuverlässig funktioniert): Spieler:in A erstellt ein Duell und erhält einen **Raum-Code**, B tritt damit bei.
+Zwei Spieler:innen verbinden sich über einen **kostenlosen HTTP-Spielserver** (Nachrichten-Postfächer mit Sekundentakt-Abruf – bewusst kein WebRTC, damit es auch in Schul-WLANs und Mobilnetzen zuverlässig funktioniert): Spieler:in A erstellt ein Duell und erhält einen **Raum-Code**, B tritt damit bei. Der Host legt vorher die **Regeln** fest: Fallzahl (6/10/14), Tempo (45/35/24 s), Schwierigkeit (gemischt/Profi) und Showdown an/aus.
 
-- **Phase 1 – Wettermitteln:** Beide erhalten (per geteiltem Zufalls-Seed) **exakt dieselben Fälle** (2 Wellen à 5 Fälle) und spielen simultan. Der Punktestand des Gegners ist live sichtbar — Nervenkitzel durch direkten Vergleich.
+- **Phase 1 – Wettermitteln:** Beide erhalten (per geteiltem Zufalls-Seed) **exakt dieselben Fälle** (2 Wellen) und spielen simultan. Der Punktestand des Gegners ist live sichtbar — Nervenkitzel durch direkten Vergleich.
 - **Phase 2 – Showdown mit Rollentausch:** Jede:r baut **verdeckt in 75 Sekunden einen eigenen KI-Fake** aus Bausteinen (Thema × Format × Tarnmaßnahmen). Jede Tarnung löscht eine Beweisspur, aber das Budget ist knapp — perfekte Tarnung ist unmöglich, irgendeine Spur bleibt. Der gebaute Fake wird in einen Mini-Feed aus echten Beiträgen **beim Gegner** eingeschleust: Wer den gegnerischen Fake schneller findet, gewinnt die Showdown-Punkte.
 - Sieger:in ist, wer nach Showdown die höhere **Endpunktzahl** hat (Demokratie-Index zählt auch hier — wer im Ermitteln schludert, verliert Multiplikator).
 
 **Didaktischer Kniff des Showdowns:** Man versteht KI-Manipulation am tiefsten, wenn man sie einmal *selbst konstruiert* — und dabei merkt, welche Spuren sie zwangsläufig hinterlässt. Das Spiel lässt beide Seiten der Technologie erleben: Angriff und Verteidigung.
+
+### 6.3 Tages-Challenge
+
+Jeden Tag ein neuer, **für alle identischer Fallsatz** (Datums-Seed) — genau **1 Versuch pro Tag** und Gerät. Eigene Tages-Rangliste („Heute") macht den fairen Klassenvergleich möglich: Alle hatten dieselben Fälle.
+
+### 6.4 Klassenraum
+
+Bis zu **30 Spieler:innen** treten gleichzeitig in einer Runde an: ein Raum-Code für alle, identische Fälle, der/die Spitzenreiter:in ist live im Spiel sichtbar (👑). Zum Abschluss eine gemeinsame **Auswertung mit Podium**, die sich live aktualisiert, während Nachzügler:innen fertig spielen. Ideal für den Kurseinsatz auf iPads.
+
+Ergänzend führt jede:r Spieler:in ein **Profil** (über den Spielnamen): Runden, Duell-Bilanz (Siege/Niederlagen/Unentschieden), Ø-Genauigkeit und Bestleistung — global gespeichert. Nach jeder Runde lässt sich in der **Fall-Auswertung** jeder Beitrag samt Auflösung und realem Vorbild nachlesen.
 
 ## 7. Warum das Konzept zum Thema passt
 
@@ -131,7 +143,8 @@ Zwei Spieler:innen verbinden sich über einen **kostenlosen HTTP-Spielserver** (
 
 ## 9. Erweiterungsideen (Ausblick)
 
-- Turniermodus (Bracket für die ganze Klasse)
-- Globale Rangliste über einen kostenlosen Cloud-Dienst (z. B. Firebase)
+- Best-of-3-Revanche im Duell
+- Team-Modus (Klasse gegen Klasse)
+- Präsentationsmodus (Beamer-Ansicht für die Klassenraum-Auswertung)
 - Eigene Fälle im Editor erstellen und als Datei teilen
-- Schwierigkeitsgrade / „Endlosmodus" mit prozedural kombinierten Beweislagen
+- Bei Bedarf Umzug der Ranglisten auf einen skalierbareren Dienst (z. B. Firebase)
