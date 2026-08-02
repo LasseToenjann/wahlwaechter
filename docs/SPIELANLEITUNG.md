@@ -189,7 +189,7 @@ Nach dem Start kann niemand mehr beitreten – erst alle sammeln, dann starten.
 
 ## Für Lehrkräfte und Kursleitung
 
-**Vorbereitung:** Nichts zu installieren. Link oder QR-Code aus [ANLEITUNG.pdf](../ANLEITUNG.pdf) an die Tafel, fertig. Läuft auf iPads, Laptops und Handys.
+**Vorbereitung:** Nichts zu installieren. Die Adresse `lassetoenjann.github.io/wahlwaechter` an die Tafel oder den Beamer, fertig. Läuft auf iPads, Handys und Laptops – gebaut ist das Spiel für die kleinen Bildschirme.
 
 **Empfohlener Ablauf für eine Doppelstunde:**
 
@@ -230,7 +230,7 @@ Höchstens 60 Sekunden – danach baut HYDRA automatisch einen Fake für dich. D
 Dann war der Großteil der Klasse schon im Showdown und die 45-Sekunden-Frist ist abgelaufen. Das ist Absicht: So wartet niemand auf Einzelne. Deine restlichen Fälle entfallen, der Showdown zählt normal.
 
 **Ich finde meine Klassenraum-Runde nicht in der Rangliste.**
-Klassenraum-Ergebnisse stehen sowohl unter „Alle" als auch unter dem Filter „Klassenraum". Wenn der Showdown gespielt wurde, kann der Eintrag noch einen Moment brauchen: Der Bonus für einen unentdeckt gebliebenen Fake wird erst verrechnet, wenn das Gegenüber sein Urteil gefällt hat – der Eintrag aktualisiert sich dann von selbst.
+Klassenraum-Ergebnisse stehen in der Rangliste unter dem Filter „Klassenraum" – jeder Modus hat seine eigene Liste, weil die Punktzahlen zwischen den Modi nicht vergleichbar sind. Wenn der Showdown gespielt wurde, kann der Eintrag noch einen Moment brauchen: Der Bonus für einen unentdeckt gebliebenen Fake wird erst verrechnet, wenn das Gegenüber sein Urteil gefällt hat – der Eintrag aktualisiert sich dann von selbst.
 
 **Bekomme ich in der Tages-Challenge jeden Tag wirklich neue Fälle?**
 Ja. Ein Teil des Satzes wird täglich neu erzeugt, der Rest rotiert so durch die handgeschriebenen Fälle, dass sich innerhalb einer Woche keiner wiederholt. Der Wechsel ist um Mitternacht deutscher Zeit.

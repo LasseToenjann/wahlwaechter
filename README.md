@@ -16,7 +16,7 @@ Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippe
 | Ich will… | Datei |
 |---|---|
 | **spielen und verstehen, wie es geht** | Im Spiel: **🎓 Einweisung** (interaktiv, ca. 5 Min) · zum Nachschlagen: [docs/SPIELANLEITUNG.md](docs/SPIELANLEITUNG.md) |
-| **das Spiel im Unterricht einsetzen** | [docs/SPIELANLEITUNG.md → Für Lehrkräfte](docs/SPIELANLEITUNG.md#für-lehrkräfte-und-kursleitung) · Handout zum Ausdrucken: [ANLEITUNG.pdf](ANLEITUNG.pdf) |
+| **das Spiel im Unterricht einsetzen** | [docs/SPIELANLEITUNG.md → Für Lehrkräfte](docs/SPIELANLEITUNG.md#für-lehrkräfte-und-kursleitung) |
 | **wissen, warum das Spiel so gebaut ist** (Abgabe-Dokument) | [KONZEPT.md](KONZEPT.md) |
 | **am Code arbeiten** | [CLAUDE.md](CLAUDE.md) für Arbeitsweise und Stand · [docs/TECHNIK.md](docs/TECHNIK.md) für die Architektur |
 | **sehen, was sich geändert hat** | [docs/AENDERUNGEN.md](docs/AENDERUNGEN.md) |
@@ -80,9 +80,6 @@ js/net.js             Online-Duell (HTTP-Relay, Postfach-Prinzip)
 js/classroom.js       Klassenraum-Netzwerk (bis 30 Spieler:innen auf einem Raum-Key)
 js/tutorial.js        interaktive Einweisung (eigene Übungsfälle)
 js/game.js            Spiellogik, State-Machine, Ranglisten, Profile
-tools/shots.mjs       nimmt Screenshots aus dem laufenden Spiel auf
-tools/handout.py      baut daraus ANLEITUNG.pdf
-ANLEITUNG.pdf         bebilderte Anleitung zum Ausdrucken (QR-Code inklusive)
 CLAUDE.md             Arbeitsanleitung: Projekt, Konventionen, Teststrategie, Stand
 KONZEPT.md            Spielkonzept (Abgabe-Dokument)
 docs/                 Spielanleitung, Technik-Doku, Änderungsverlauf

@@ -95,16 +95,6 @@ Vor jedem Push mindestens durchspielen – **in Handy-Breite**, nicht am Desktop
 
 Die Browser-Konsole muss dabei leer bleiben.
 
-### Handout neu erzeugen
-
-`ANLEITUNG.pdf` wird aus echten Screenshots gebaut, damit es nicht veralten kann:
-
-```bash
-python -m http.server 8123 &
-node tools/shots.mjs      # Screenshots aus dem laufenden Spiel
-python tools/handout.py   # daraus ANLEITUNG.pdf
-```
-
 ## Fallstricke, die schon Zeit gekostet haben
 
 1. **Hintergrund-Tabs werden auf ~1 Timer pro Minute gedrosselt.** Deshalb steht der
@@ -118,9 +108,7 @@ python tools/handout.py   # daraus ANLEITUNG.pdf
    Feldnamen einbuchstabig. Beim Ergänzen die Größe im Blick behalten.
 5. **Zeitvergleiche über Geräte hinweg vermeiden.** Fristen laufen ab dem Moment, in
    dem das eigene Gerät einen Zustand *sieht* – nicht ab einem fremden Zeitstempel.
-6. **ReportLab-PDFs:** nie den `Tc`-Operator verwenden (Zeichenabstand überlebt
-   Textobjekte und wird von manchen Viewern nicht zurückgesetzt).
-7. **iOS ist der strengere Browser.** Drei Dinge, die nur dort auffielen:
+6. **iOS ist der strengere Browser.** Drei Dinge, die nur dort auffielen:
    Beschriftungen als reiner Textknoten in einem Flex-Knopf werden mit Emoji
    falsch gemessen und abgeschnitten (deshalb sind `.btn` bewusst kein Flexbox);
    Zahlenbereiche wie „2900–3599" werden ohne `format-detection`-Meta zu
@@ -146,7 +134,6 @@ Fertig und getestet:
 - Durchgängiges Animationskonzept („Lagezentrum", `js/anim.js`)
 - In-Game-Hilfe ist reines Nachschlagewerk und überschneidet sich bewusst **nicht**
   mit der Einweisung
-- `ANLEITUNG.pdf` als bebilderte Schritt-für-Schritt-Anleitung (`tools/`)
 - Mobile geprüft: kein Überlauf bei 320 px und 390 px, Safe-Area berücksichtigt,
   keine automatischen Telefonnummer-Links
 

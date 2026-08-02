@@ -1,6 +1,6 @@
 # Änderungsverlauf
 
-## v4.4 – Mobile-First, Tages-Challenge, Ranglisten, neues Handout
+## v4.4 – Mobile-First, Tages-Challenge, Ranglisten
 
 **Mobile und iPad zuerst – als Grundsatz festgeschrieben**
 - Gespielt wird auf kleinen Bildschirmen; der Desktop ist die Zugabe. Steht jetzt in `CLAUDE.md` und `docs/TECHNIK.md` samt Prüfmuster für horizontalen Überlauf (390 px bauen, 320 px gegenprüfen).
@@ -19,9 +19,9 @@
 - Die Inhalts-Ebene kennt jetzt **zwei Richtungen**: Neues steigt auf, das *nächste Element einer Reihe* kommt von rechts. Dadurch unterscheidet sich ein neuer Fall sichtbar von einem neuen Screen.
 - Zusätzlich klarer: gewähltes Urteil bleibt markiert, Fall-Nummer pulst beim Wechsel, Budget in der Fake-Werkstatt und Energie in der Jagd pulsen bei Änderung.
 
-**Handout `ANLEITUNG.pdf` komplett neu**
-- Aus dem Infoblatt ist eine **bebilderte Schritt-für-Schritt-Anleitung** geworden, im Aufbau der interaktiven Einweisung: 12 Kapitel von „Worum es geht" bis „Fünf Sätze, die dich durchbringen", mit Kapitel für den Unterricht.
-- Alle Abbildungen sind **echte Screenshots aus dem laufenden Spiel** – erzeugt von `tools/shots.mjs`, gesetzt von `tools/handout.py`. Dadurch kann das Handout nicht unbemerkt veralten.
+**Handout `ANLEITUNG.pdf` entfernt**
+- Das gedruckte Handout ist ersatzlos gestrichen: Die interaktive Einweisung erklärt das Spiel besser als ein Blatt Papier, und `docs/SPIELANLEITUNG.md` deckt alles ab, was zum Vorbereiten und Nachschlagen gebraucht wird. Für den Unterricht reicht die Adresse an der Tafel.
+- Damit entfallen auch die Erzeugungs-Skripte (`tools/`) und die dazugehörigen Screenshots.
 
 **Offene Punkte geschlossen**
 - Live-Smoke-Test: läuft gegen eine lokale Kopie von `origin/main` (aus dieser Umgebung ist `github.io` gesperrt) – ohne Befund.

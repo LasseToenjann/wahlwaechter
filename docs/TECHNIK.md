@@ -73,8 +73,6 @@ Beide Breiten müssen ohne Treffer durchlaufen. Häufigste Ursachen in der Verga
 | `js/classroom.js` | `ClassNet` – Klassenraum, bis 30 Spieler:innen auf einem Raum-Key |
 | `js/tutorial.js` | `Tutorial` – interaktive Einweisung mit eigenen Übungsfällen |
 | `js/game.js` | Spiellogik, Screens, Timer, Punkte, Ranglisten, Profile, Verdrahtung |
-| `tools/shots.mjs` | nimmt Screenshots aus dem laufenden Spiel auf (für das Handout) |
-| `tools/handout.py` | baut daraus `ANLEITUNG.pdf` |
 
 ## Spielzustand (`G`)
 
@@ -296,8 +294,7 @@ Meldungen am unteren Rand (`netBanner(text, art)`) sind eine Karte mit farbigem 
 3. **Stale-Timeout 90 s statt 15 s**, weil Browser Hintergrund-Tabs massiv drosseln. Kurzes Wegwischen der App darf ein Duell nicht beenden.
 4. **Fälle fiktiv, Techniken real.** Jede Auflösung nennt das reale Vorbild; das FIKTIV-Badge steht in jedem Dossier. Generierte Fälle sind in der Auflösung als solche gekennzeichnet.
 5. **Profile identifizieren sich nur über den Namen.** Namensgleiche teilen sich ein Profil – bewusst simpel gehalten.
-6. **PDF-Erzeugung (ReportLab):** Der `Tc`-Operator (Zeichenabstand) überlebt Textobjekte und wird von manchen Viewern nicht zurückgesetzt. Gesperrte Titel deshalb Zeichen für Zeichen zeichnen, nie `Tc` verwenden. PDFs sind in `.gitattributes` als binär markiert.
-7. **Die gültige Live-URL ist `https://lassetoenjann.github.io/wahlwaechter/`.** Das GitHub-Konto wurde umbenannt; die alte `lasse-toenjann.github.io`-Adresse ist tot. Wer sie noch irgendwo findet (Handout, Links, git-remote), sollte sie ersetzen.
+6. **Die gültige Live-URL ist `https://lassetoenjann.github.io/wahlwaechter/`.** Das GitHub-Konto wurde umbenannt; die alte `lasse-toenjann.github.io`-Adresse ist tot. Wer sie noch irgendwo findet (Links, git-remote), sollte sie ersetzen.
 
 ## Testen
 
@@ -324,7 +321,7 @@ Mindestens abdecken: Solo klassisch **bis ins Boss-Finale** (dazu muss man richt
 
 ## Bekannte Grenzen
 
-- **textdb.online** sichert weder Rate-Limits noch Persistenz zu. Bei 30 gleichzeitigen Spieler:innen entstehen grob 15–25 Anfragen pro Sekunde. Mit kleinen Gruppen problemlos, Volllast einer ganzen Klasse ist nicht unter Realbedingungen gemessen. Fallback wäre ein Umzug auf einen skalierbareren Dienst (z. B. Firebase).
+- **textdb.online** sichert weder Rate-Limits noch Persistenz zu. Bei 30 gleichzeitigen Spieler:innen entstehen grob 15–25 Anfragen pro Sekunde. Mit kleinen Gruppen problemlos. Ein Lasttest mit 30 simulierten Geräten wurde bewusst wieder entfernt: Er hat gegen den echten Dienst gemessen, das Ergebnis schwankte mit dessen Tagesform und der Aufwand stand in keinem Verhältnis zum Nutzen für ein Schulprojekt. Wenn es im Unterricht doch klemmt, wäre der Fallback ein Umzug auf einen skalierbareren Dienst (z. B. Firebase).
 - Die Zuteilung im Klassenraum-Showdown ist ein **Best-Effort-Verfahren**: In seltenen Fällen (viele Abgaben in derselben Sekunde) kann ein Fake an zwei Personen gehen. Das ist unschädlich – niemand bekommt je den eigenen, und niemand wartet.
 - Ranglisten sind öffentlich beschreibbar. Für ein Schulprojekt vertretbar, für einen echten Wettbewerb nicht.
 - Der Klassenraum-Zustand ist **ein** JSON-Wert in einer URL. Deshalb sind die Feldnamen so kurz. Wer Felder ergänzt, sollte das im Blick behalten.
