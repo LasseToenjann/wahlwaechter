@@ -97,6 +97,27 @@ Nach Woche 1 und Woche 2 bietet das Ministerium je **eine von drei zufälligen A
 
 → Die Kernfrage des Themas — *Effizienz durch KI vs. demokratische Grundrechte* — wird zur strategischen Entscheidung, die man am eigenen Score spürt.
 
+## 5a. Der Einstieg: eine Einweisung statt einer Wand aus Text
+
+Ein Spiel, dessen Kernaussage lautet „Die Oberfläche verrät nichts", hat ein Einstiegsproblem: Wer die Regeln nicht kennt, hält es für ein Quiz, rät – und lernt nichts. Ein Anleitungstext löst das nicht; er wird übersprungen.
+
+WAHLWÄCHTER schaltet deshalb vor dem ersten Spiel eine **interaktive Einweisung** (eine Trainings-Schicht ohne Wertung). In zwölf Schritten wird jede Funktion einmal **selbst benutzt**, nicht nur beschrieben:
+
+| Schritt | Was man tut |
+|---|---|
+| 1–2 | Auftrag lesen, ein Dossier ansehen und auf „echt oder gefälscht?" tippen – die Erfahrung, dass man es an der Oberfläche *nicht* wissen kann, ist der Aufhänger |
+| 3–4 | Zwei Prüfwerkzeuge einsetzen (mit echtem Energieverbrauch), dann das Urteil fällen und die Auflösung samt realem Vorbild lesen |
+| 5 | **Die Zensur-Falle:** ein legitimer Satire-Beitrag. Wer ihn kennzeichnet, erlebt sofort, dass Übersperren Demokratie-Index kostet |
+| 6–7 | Punktesystem; der Demokratie-Index als **Regler**, an dem man sieht, wie 2.000 Rohpunkte auf 1.000 zusammenschrumpfen |
+| 8 | Ein Dilemma-Upgrade wählen und das Debriefing lesen |
+| 9 | Einen eigenen Fake bauen – und angezeigt bekommen, **welche Beweisspur trotzdem offen bleibt** |
+| 10 | Denselben Fake in einem Feed wiederfinden |
+| 11–12 | Überblick über alle Modi, Merkzettel mit fünf Sätzen |
+
+Didaktisch entscheidend sind die Schritte 5 und 9: Die Zensur-Falle vermittelt die zweite Hälfte des Auftrags, bevor sie im echten Spiel Punkte kostet. Und wer einmal selbst gebaut hat, versteht die zentrale Einsicht des Spiels – perfekte Tarnung ist unmöglich, irgendein Kanal bleibt immer offen – als eigene Erfahrung statt als Behauptung.
+
+Erstspieler:innen bekommen die Einweisung automatisch angeboten. Ob jemand schon gespielt hat, erkennt das Spiel an drei Dingen: einer abgeschlossenen Einweisung, lokalen Ergebnissen oder einem **globalen Profil zum eingegebenen Namen** – wer im Kurs schon gespielt hat, wird auch am fremden Gerät nicht erneut eingewiesen.
+
 ## 6. Spielmodi
 
 ### 6.1 Solo-Kampagne: „Drei Wochen gegen HYDRA"
@@ -123,6 +144,16 @@ Jeden Tag ein neuer, **für alle identischer Fallsatz** (Datums-Seed) — genau 
 
 Bis zu **30 Spieler:innen** treten gleichzeitig in einer Runde an: ein Raum-Code für alle, identische Fälle, der/die Spitzenreiter:in ist live im Spiel sichtbar (👑). Zum Abschluss eine gemeinsame **Auswertung mit Podium**, die sich live aktualisiert, während Nachzügler:innen fertig spielen. Ideal für den Kurseinsatz auf iPads.
 
+**Showdown in der Klasse.** Auf Wunsch des Hosts endet die Runde wie im Duell damit, dass jede:r einen eigenen KI-Fake baut — nur eben mit bis zu 30 Fakes gleichzeitig. Damit das im Unterricht funktioniert, muss die Verteilung drei Bedingungen erfüllen: niemand darf den eigenen Fake bekommen, die Fakes sollen sich gleichmäßig verteilen (nicht alle jagen denselben), und niemand darf auf Langsamere warten müssen.
+
+Gelöst wird das ohne zentrale Instanz — jedes Gerät rechnet die Zuteilung selbst aus:
+
+1. **Ring:** Alle Teilnehmenden bilden eine feste Reihenfolge; jede:r bekommt den Fake der nächsten Person darin. Das geht mathematisch perfekt auf und braucht keinerlei Absprache.
+2. **Ausweichregel:** Ist diese Person noch nicht fertig, greift der Fake, der bisher am seltensten vergeben wurde.
+3. **Auto-Fill gegen Leerlauf:** Ist nach 30 Sekunden noch nichts verfügbar, baut HYDRA automatisch einen Fake — mit sichtbarem Countdown. Der Unterricht steht nie still, auch wenn einzelne trödeln oder abbrechen.
+
+Bleibt der eigene Fake beim Gegenüber unentdeckt, gibt es Bonuspunkte. In der Auswertung steht anschließend, wessen Fake man bekommen hat und wie es dem eigenen ergangen ist — ein natürlicher Gesprächsanlass darüber, welche Tarnung funktioniert hat und welche verraten wurde.
+
 Ergänzend führt jede:r Spieler:in ein **Profil** (über den Spielnamen): Runden, Duell-Bilanz (Siege/Niederlagen/Unentschieden), Ø-Genauigkeit und Bestleistung — global gespeichert. Nach jeder Runde lässt sich in der **Fall-Auswertung** jeder Beitrag samt Auflösung und realem Vorbild nachlesen.
 
 ## 7. Warum das Konzept zum Thema passt
@@ -132,14 +163,18 @@ Ergänzend führt jede:r Spieler:in ein **Profil** (über den Spielnamen): Runde
 3. **Medienkompetenz:** Die vier Prüfwerkzeuge sind reale Verifikationsmethoden; jede Auflösung erklärt echte Erkennungsmerkmale.
 4. **Demokratie als Ressource:** Der Demokratie-Index macht „Vertrauen in Wahlen" zur spielbaren Größe — man kann nicht gewinnen, indem man sie opfert.
 5. **Wettkampf:** Punktesystem, Rangliste und Online-Duell inkl. Showdown erfüllen den kompetitiven Anspruch des Kurses.
+6. **Niedrige Einstiegshürde:** Die interaktive Einweisung sorgt dafür, dass die Aussage des Spiels ankommt, statt an unverstandenen Regeln zu scheitern — im Unterricht der Unterschied zwischen „raten" und „ermitteln".
 
 ## 8. Technische Umsetzung (Kurzüberblick)
 
 - **Reines HTML/CSS/JavaScript** — läuft in jedem modernen Browser, keine Installation, kein Build-Schritt
 - **Online-Duell:** Nachrichtenaustausch über einen kostenlosen Key-Value-Speicher (HTTP-Polling, „Postfach-Prinzip“) — kein eigenes Backend, keine Registrierung, funktioniert in jedem Netz, in dem die Website lädt
-- **Gleiche Fälle im Duell:** deterministischer Zufallsgenerator (Mulberry32) mit geteiltem Seed
+- **Klassenraum:** ein gemeinsamer Schlüssel für den ganzen Raum; jedes Gerät ändert darin nur den eigenen Eintrag (Lesen → Mergen → Schreiben → Verifizieren). Die Showdown-Zuteilung rechnet jedes Gerät selbst aus — dadurch braucht es keine Server-Logik
+- **Gleiche Fälle im Duell und Klassenraum:** deterministischer Zufallsgenerator (Mulberry32) mit geteiltem Seed
 - **Rangliste:** global über denselben Speicher (pro Modus), lokal als Fallback
 - **Hosting:** GitHub Pages (kostenlos, HTTPS)
+
+Ausführlich in [docs/TECHNIK.md](docs/TECHNIK.md).
 
 ## 9. Erweiterungsideen (Ausblick)
 

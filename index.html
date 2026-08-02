@@ -26,6 +26,15 @@
         <input id="player-name" type="text" maxlength="16" placeholder="z.&nbsp;B. Agent Nova" autocomplete="off">
       </div>
 
+      <div class="firsttime-card hidden" id="firsttime-card">
+        <span class="ft-icon">🎓</span>
+        <div class="ft-body">
+          <b>Zum ersten Mal hier?</b>
+          <p class="muted small">Die <strong>interaktive Einweisung</strong> erklärt in ca. 5 Minuten alles, was du brauchst – mit echten Übungsfällen zum Anfassen. Danach geht es direkt ins Spiel.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-firsttime">▶ Einweisung starten</button>
+      </div>
+
       <div class="menu-buttons">
         <button class="btn btn-primary btn-big" id="btn-solo">🛡️ Solo-Kampagne <small>Klassisch oder Endlos</small></button>
         <button class="btn btn-daily btn-big" id="btn-daily">📅 Tages-Challenge <small>Gleiche Fälle für alle – 1 Versuch pro Tag</small></button>
@@ -35,6 +44,7 @@
           <button class="btn btn-ghost" id="btn-board">🏆 Rangliste</button>
           <button class="btn btn-ghost" id="btn-profile">👤 Profil</button>
           <button class="btn btn-ghost" id="btn-howto">📖 Anleitung</button>
+          <button class="btn btn-ghost" id="btn-tutorial">🎓 Einweisung</button>
         </div>
       </div>
       <p class="footnote">Alle Spielinhalte sind fiktiv und nach realen, belegten Fällen gestaltet (Quellen in jeder Auflösung) · Projektkurs „KI meets Democracy“ · <button class="linklike" id="btn-legal">Rechtliches &amp; Datenschutz</button></p>
@@ -68,6 +78,8 @@
   <section class="screen" id="screen-howto">
     <div class="panel narrow">
       <h2>📖 Anleitung</h2>
+      <p class="muted small">Zum Nachschlagen. Wenn du das Spiel <strong>zum ersten Mal</strong> spielst, nimm lieber die interaktive Einweisung – da probierst du alles einmal selbst aus.</p>
+      <button class="btn btn-primary btn-big" id="btn-howto-tutorial">🎓 Interaktive Einweisung starten <small>ca. 5 Minuten · zählt nicht für die Rangliste</small></button>
       <div class="howto-block">
         <h3>🕵️ Ermitteln statt raten</h3>
         <p>Jeder gemeldete Beitrag sieht an der Oberfläche glaubwürdig aus – egal ob echt oder KI-Fälschung. Die Wahrheit findest du nur mit den vier <strong>Prüfwerkzeugen</strong>: Medienforensik&nbsp;🔬, Quellen-Check&nbsp;📡, Account-Analyse&nbsp;🤖 und Fakten-Abgleich&nbsp;🧭.</p>
@@ -91,6 +103,7 @@
       <div class="howto-block">
         <h3>🏟️ Klassenraum</h3>
         <p>Bis zu 30 Spieler:innen treten mit denselben Fällen gleichzeitig an. Oben im Spiel siehst du live, wer führt 👑 – am Ende gibt es die komplette Auswertung mit Podium.</p>
+        <p>Ist der <strong>Showdown</strong> eingeschaltet, baut am Ende jede:r einen eigenen KI-Fake. Die Fakes werden <strong>reihum verteilt</strong>: Du bekommst nie deinen eigenen, und möglichst jeder Fake wird nur einmal vergeben. Wer zu lange braucht, wird nicht abgewartet – dann springt HYDRA mit einem automatisch gebauten Fake ein, damit niemand wartet. Bleibt <em>dein</em> Fake beim Gegenüber unentdeckt, gibt das Bonuspunkte.</p>
       </div>
       <div class="howto-block">
         <h3>📋 Auswertung</h3>
@@ -101,6 +114,30 @@
         <p>Alle Beiträge, Parteien, Personen und Medien im Spiel sind <strong>frei erfunden</strong> – aber jeder Fall bildet eine <strong>reale, dokumentierte</strong> Technik nach. Die Auflösung nennt jeweils das reale Vorbild samt Quelle.</p>
       </div>
       <button class="btn btn-primary" data-goto="screen-start">Zurück</button>
+    </div>
+  </section>
+
+  <!-- ================= INTERAKTIVE EINWEISUNG (TUTORIAL) ================= -->
+  <section class="screen" id="screen-tutorial">
+    <div class="panel">
+      <div class="tut-head">
+        <div>
+          <div class="week-kicker" id="tut-kicker">EINWEISUNG · PRÜFSTELLE 7</div>
+          <h2 id="tut-title">Willkommen</h2>
+        </div>
+        <button class="linklike" id="btn-tut-skip">Einweisung überspringen ✕</button>
+      </div>
+      <div class="tut-progress"><div class="tut-progress-fill" id="tut-progress-fill"></div></div>
+      <div class="tut-steplabel" id="tut-steplabel">Schritt 1 von 1</div>
+
+      <div class="tut-text" id="tut-text"></div>
+      <div id="tut-stage"></div>
+      <div class="tut-hint" id="tut-hint"></div>
+
+      <div class="menu-row tut-nav">
+        <button class="btn btn-ghost" id="btn-tut-back">◀ Zurück</button>
+        <button class="btn btn-primary" id="btn-tut-next">Weiter ▶</button>
+      </div>
     </div>
   </section>
 
@@ -215,6 +252,12 @@
               <button class="chip active" data-v="35">35s</button>
               <button class="chip" data-v="24">24s</button>
             </div></div>
+          <div class="cfg-group"><span class="cfg-label">Showdown (Fake bauen)</span>
+            <div class="cfg-chips" id="ccfg-showdown">
+              <button class="chip active" data-v="1">🧪 An</button>
+              <button class="chip" data-v="0">Aus</button>
+            </div>
+            <p class="muted small">Am Ende baut jede:r einen eigenen KI-Fake. Die Fakes werden reihum an andere Spieler:innen verteilt – niemand bekommt den eigenen.</p></div>
           <button class="btn btn-primary btn-big" id="btn-class-create">Klassenraum öffnen</button>
         </div>
         <div class="lobby-card">
@@ -255,6 +298,7 @@
       <div class="week-kicker">KLASSENRAUM · AUSWERTUNG</div>
       <h2 id="class-result-headline">🏁 Endstand</h2>
       <div class="board-sync" id="class-result-status"></div>
+      <div id="class-showdown-info"></div>
       <div id="class-result-list"></div>
       <div class="menu-row">
         <button class="btn btn-primary" id="btn-class-review">📋 Meine Fälle ansehen</button>
@@ -356,7 +400,7 @@
     </div>
     <div class="panel">
       <h2>🧪 Baue deinen KI-Fake</h2>
-      <p class="muted">Er wird in den Feed deines Gegners geschleust. Wähle <strong>1 Thema, 1 Format und genau 2 Tarnungen</strong>. Jede Tarnung löscht eine Beweisspur – aber sie kosten unterschiedlich viel Budget (💰 5), und die zwei stärksten passen nicht zusammen. Welche Spuren verwischst du – und welche lässt du offen?</p>
+      <p class="muted" id="build-intro">Er wird in den Feed deines Gegners geschleust. Wähle <strong>1 Thema, 1 Format und genau 2 Tarnungen</strong>. Jede Tarnung löscht eine Beweisspur – aber sie kosten unterschiedlich viel Budget (💰 5), und die zwei stärksten passen nicht zusammen. Welche Spuren verwischst du – und welche lässt du offen?</p>
       <div class="build-section"><h3>1 · Thema</h3><div class="build-grid" id="build-themes"></div></div>
       <div class="build-section"><h3>2 · Format</h3><div class="build-grid" id="build-formats"></div></div>
       <div class="build-section"><h3>3 · Tarnung <span class="muted small" id="cloak-counter">(0/2 gewählt · Budget 5)</span></h3><div class="build-grid" id="build-cloaks"></div></div>
@@ -368,6 +412,7 @@
     <div class="overlay-card center">
       <div class="spinner"></div>
       <p id="wait-text">Warte auf Gegner…</p>
+      <p class="muted small" id="wait-sub"></p>
     </div>
   </div>
 
@@ -480,6 +525,7 @@
 <script src="js/net.js"></script>
 <script src="js/gen.js"></script>
 <script src="js/classroom.js"></script>
+<script src="js/tutorial.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

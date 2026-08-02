@@ -1,72 +1,84 @@
 # 🛡️ WAHLWÄCHTER – Duell der Algorithmen
 
-**▶️ Spielen: https://lassetoenjann.github.io/wahlwaechter/**
+**▶️ Direkt spielen: https://lassetoenjann.github.io/wahlwaechter/**
 
-Ein Browser-Spiel zum Thema **„KI meets Democracy“** (Projektkurs).
+Ein Browser-Spiel zum Thema **„KI meets Democracy"** (Projektkurs).
 Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk **HYDRA** die sozialen Medien mit Fälschungen, die niemand mehr auf den ersten Blick erkennt. Du leitest die Prüfstelle für digitale Wahlintegrität: Ermittle mit echten Methoden der Medienforensik, entscheide unter Zeitdruck – und opfere dabei nicht die Freiheit, die du schützen sollst.
 
-➡️ Das vollständige Spielkonzept steht in [KONZEPT.md](KONZEPT.md).
+Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippen, los.
 
-## Features
+---
 
-- 🕵️ **Forensik-Gameplay:** 47 handgeschriebene Fall-Dossiers, bei denen die Oberfläche nichts verrät – nur die Kombination von Beweisen (Medienforensik, Quellen-Check, Account-Analyse, Fakten-Abgleich) trägt
-- 📚 **Fiktiv, aber belegt:** Alle Inhalte sind erfunden (FIKTIV-Badge), jeder Fall nennt in der Auflösung sein **reales, dokumentiertes Vorbild** samt Quelle
-- ⚡ **Prüf-Energie:** knappes Budget, strategisches Haushalten
-- ⚖️ **Dilemma-Upgrades:** KI-Ethik als Spielmechanik (Überwachung vs. Grundrechte)
-- 🏛️ **Demokratie-Index:** wirkt als Punkte-Multiplikator – wer die Demokratie beschädigt, kann nicht gewinnen
-- 🛡️ **Solo klassisch** (3 Wochen + Boss-Finale) oder **♾️ Endlos** (steigende Schwierigkeit, ab Schicht 3 mit **automatisch generierten, immer neuen Fällen**)
-- 📅 **Tages-Challenge:** täglich neuer, für alle identischer Fallsatz – 1 Versuch pro Tag, eigene Tages-Rangliste
-- ⚔️ **Online-Duell 1vs1** per Raum-Code mit **konfigurierbaren Regeln** (Fälle, Tempo, Schwierigkeit, Showdown an/aus) – läuft über einen kostenlosen HTTP-Spielserver (kein WebRTC, funktioniert daher auch in Schul-WLANs und Mobilnetzen). Im **Showdown** baut jede:r einen eigenen Fake mit Tarnungs-Budget
-- 🏟️ **Klassenraum:** bis zu 30 Spieler:innen gleichzeitig in einer Runde – Live-Spitzenreiter im Spiel, Abschluss-Auswertung mit Podium
-- 📋 **Fall-Auswertung:** nach jeder Runde alle Beiträge mit Antwort, Auflösung und realem Vorbild nachlesen
-- 👤 **Profile:** globale Duell-Bilanz (Siege/Niederlagen), Ø-Genauigkeit, Bestleistung
-- 🌐 **Globale Rangliste** (kostenloser Online-Speicher) mit Modus-Filtern und Offline-Fallback
-- ℹ️ **Rechtliches & Datenschutz** direkt im Spiel (Fiktionshinweis, Pseudonym-Empfehlung)
+## 📚 Wo steht was?
+
+| Ich will… | Datei |
+|---|---|
+| **spielen und verstehen, wie es geht** | Im Spiel: **🎓 Einweisung** (interaktiv, ca. 5 Min) · zum Nachschlagen: [docs/SPIELANLEITUNG.md](docs/SPIELANLEITUNG.md) |
+| **das Spiel im Unterricht einsetzen** | [docs/SPIELANLEITUNG.md → Für Lehrkräfte](docs/SPIELANLEITUNG.md#für-lehrkräfte-und-kursleitung) · Handout zum Ausdrucken: [ANLEITUNG.pdf](ANLEITUNG.pdf) |
+| **wissen, warum das Spiel so gebaut ist** (Abgabe-Dokument) | [KONZEPT.md](KONZEPT.md) |
+| **am Code arbeiten** | [docs/TECHNIK.md](docs/TECHNIK.md) |
+| **sehen, was sich geändert hat** | [docs/AENDERUNGEN.md](docs/AENDERUNGEN.md) |
+
+## Was das Spiel kann
+
+**Kern:** 🕵️ **Forensik statt Raten** – 47 handgeschriebene Fall-Dossiers, bei denen die Oberfläche nichts verrät. Nur die Kombination mehrerer Beweise (Medienforensik, Quellen-Check, Account-Analyse, Fakten-Abgleich) trägt. Jede Prüfung kostet ⚡ **Prüf-Energie**, das Budget reicht nie für alles.
+
+**Der Haken:** 🏛️ Der **Demokratie-Index** ist Punkte-Multiplikator. Durchgelassene Fakes schaden – zu viel Sperren aber auch. Man gewinnt nicht, indem man die Demokratie opfert. ⚖️ **Dilemma-Upgrades** machen die Abwägung „Effizienz durch KI vs. Grundrechte" zum Spielzug.
+
+**Die Spielarten:**
+
+| Modus | Was passiert |
+|---|---|
+| 🎓 **Einweisung** | Interaktive Trainings-Schicht vor dem ersten Spiel: alle Funktionen einmal selbst ausprobiert, keine Wertung. Wird Erstspieler:innen automatisch angeboten. |
+| 🛡️ **Solo klassisch** | 3 Wochen × 6 Fälle, 2 Dilemma-Upgrades, Boss-Finale gegen HYDRA (ca. 15–20 Min) |
+| ♾️ **Endlos** | Schicht um Schicht härter; ab Schicht 3 erzeugt der Fall-Generator laufend neue, nie gesehene Fälle |
+| 📅 **Tages-Challenge** | Täglich neuer, für alle identischer Fallsatz – 1 Versuch pro Tag, eigene Tages-Rangliste |
+| ⚔️ **Online-Duell 1 vs 1** | Raum-Code, gleiche Fälle, Punktestand des Gegners live. Host legt Fallzahl, Tempo, Schwierigkeit und Showdown fest |
+| 🏟️ **Klassenraum** | Bis 30 Spieler:innen gleichzeitig, 👑 Spitzenreiter live im HUD, Podium am Ende – **auf Wunsch mit Showdown** |
+
+**🧪 Showdown (Duell & Klassenraum):** Jede:r baut selbst einen KI-Fake aus Thema × Format × Tarnungen. Das Budget reicht nie für perfekte Tarnung – irgendein Beweiskanal bleibt immer offen. Im Klassenraum werden die gebauten Fakes **gleichmäßig reihum verteilt**: niemand bekommt den eigenen, möglichst jeder Fake geht an genau eine Person, und wer zu lange braucht, wird nicht abgewartet – dann springt ein automatisch gebauter HYDRA-Fake ein.
+
+**Drumherum:** 📋 Fall-Auswertung nach jeder Runde (jeder Fall mit Auflösung und **realem Vorbild**) · 🌐 globale Rangliste mit Modus-Filtern und Offline-Fallback · 👤 Profil mit Duell-Bilanz und Ø-Genauigkeit · ℹ️ Rechtliches & Datenschutz im Spiel.
+
+> **Fiktiv, aber belegt:** Alle Parteien, Personen, Medien und Beiträge sind **frei erfunden** (FIKTIV-Badge im Dossier). Die dargestellten Manipulations*techniken* sind real – jede Auflösung nennt das dokumentierte Vorbild samt Quelle.
 
 ## Lokal starten
 
-Das Spiel ist eine statische Website (HTML/CSS/JS, kein Build-Schritt). Wegen des Skript-Ladens am besten über einen Mini-Webserver öffnen:
+Statische Website (HTML/CSS/JS, kein Build-Schritt). Wegen des Skript-Ladens am besten über einen Mini-Webserver:
 
 ```bash
-# im Projektordner:
-python -m http.server 8123
+python -m http.server 8123     # im Projektordner
 # dann im Browser: http://localhost:8123
 ```
 
 Alternativ jeder andere statische Server (`npx serve`, VS-Code-Live-Server, …).
-Für **Online-Duell, Klassenraum und globale Rangliste** wird eine Internetverbindung benötigt (HTTP-Spielserver textdb.online); das Solo-Spiel selbst läuft auch offline.
+Solo, Endlos, Tages-Challenge und die Einweisung laufen **offline**. Für Duell, Klassenraum, Rangliste und Profil wird Internet gebraucht.
 
-## Kostenlos veröffentlichen (GitHub Pages)
+## Veröffentlichen (GitHub Pages, kostenlos)
 
-1. Kostenloses Konto auf [github.com](https://github.com) anlegen
-2. Neues Repository erstellen (z. B. `wahlwaechter`, „Public“)
-3. Diese Projektdateien hochladen (per `git push` oder „Add file → Upload files“ im Browser)
-4. Im Repository: **Settings → Pages → Branch: `main` / Ordner: `/ (root)` → Save**
-5. Nach ~1 Minute ist das Spiel unter `https://<benutzername>.github.io/wahlwaechter/` für alle erreichbar – HTTPS inklusive (Voraussetzung für das Online-Duell)
+1. Repository auf [github.com](https://github.com) anlegen (z. B. `wahlwaechter`, „Public")
+2. Projektdateien hochladen (`git push` oder „Add file → Upload files")
+3. **Settings → Pages → Branch: `main` / Ordner: `/ (root)` → Save**
+4. Nach ~1 Minute läuft das Spiel unter `https://<benutzername>.github.io/wahlwaechter/` – HTTPS inklusive (Voraussetzung für Duell und Klassenraum)
 
-## Technik
-
-| Baustein | Lösung |
-|---|---|
-| Frontend | Vanilla HTML/CSS/JS, keine Frameworks, kein Build |
-| Online-Duell | HTTP-Relay über [textdb.online](https://textdb.online) (kostenloser Key-Value-Speicher): zwei „Postfächer“ pro Raum, Polling im Sekundentakt. Bewusst kein WebRTC – das scheitert in Schul-WLANs/Mobilnetzen an Firewalls/NAT |
-| Gleiche Fälle im Duell | Deterministischer RNG (Mulberry32) mit geteiltem Seed |
-| Rangliste | Global via textdb.online (pro Modus ein Schlüssel) + `localStorage`-Fallback |
-| Hosting | GitHub Pages (kostenlos, HTTPS) |
-
-## Dateien
+## Projektstruktur
 
 ```
-index.html      – alle Screens
-css/style.css   – „Lagezentrum“-Design
-js/data.js      – Fall-Dossiers, Dilemmas, Showdown-Baukasten (alle Inhalte fiktiv)
-js/rng.js       – seeded RNG
-js/net.js       – HTTP-Relay-Duell (textdb.online, Postfach-Prinzip)
-js/classroom.js – Klassenraum-Netzwerk (bis 30 Spieler:innen auf einem Raum-Key)
-js/gen.js       – Fall-Generator (Endlos ab Schicht 3)
-js/game.js      – Spiellogik / State-Machine
-KONZEPT.md      – ausführliches Spielkonzept (abgabefertig)
+index.html            alle Screens
+css/style.css         „Lagezentrum"-Design
+js/rng.js             deterministischer Zufall (Mulberry32), Raum-Codes
+js/data.js            Fall-Dossiers, Dilemmas, Showdown-Baukasten (alles fiktiv)
+js/gen.js             Fall-Generator + Fake-Baukasten (craftFake / randomBuild)
+js/net.js             Online-Duell (HTTP-Relay, Postfach-Prinzip)
+js/classroom.js       Klassenraum-Netzwerk (bis 30 Spieler:innen auf einem Raum-Key)
+js/tutorial.js        interaktive Einweisung (eigene Übungsfälle)
+js/game.js            Spiellogik, State-Machine, Ranglisten, Profile
+ANLEITUNG.pdf         Handout mit QR-Code zum Ausdrucken
+KONZEPT.md            Spielkonzept (Abgabe-Dokument)
+docs/                 Spielanleitung, Technik-Doku, Änderungsverlauf
 ```
+
+Details zur Architektur, zu den Netzwerk-Protokollen und zum Erweitern: [docs/TECHNIK.md](docs/TECHNIK.md).
 
 ---
-Alle Inhalte (Parteien, Personen, Medien) sind frei erfunden.
+Nicht-kommerzielles Schulprojekt. Alle Spielinhalte (Parteien, Personen, Medien) sind frei erfunden.

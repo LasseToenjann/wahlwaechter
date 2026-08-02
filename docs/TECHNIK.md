@@ -1,0 +1,235 @@
+# 🔧 Technik-Dokumentation
+
+Alles, was man wissen muss, um am Code weiterzuarbeiten. Spielregeln stehen in der [Spielanleitung](SPIELANLEITUNG.md), die inhaltliche Begründung im [Konzept](../KONZEPT.md).
+
+- [Grundsätze](#grundsätze)
+- [Dateien und Zuständigkeiten](#dateien-und-zuständigkeiten)
+- [Spielzustand](#spielzustand-g)
+- [Datenmodell](#datenmodell-datajs)
+- [Netzwerk](#netzwerk)
+- [Klassenraum-Showdown: Verteilung der Fakes](#klassenraum-showdown-verteilung-der-fakes)
+- [Einweisung](#einweisung-tutorialjs)
+- [Ranglisten und Profile](#ranglisten-und-profile)
+- [Wichtige Entscheidungen](#wichtige-entscheidungen-und-warum)
+- [Testen](#testen)
+- [Erweitern](#erweitern)
+- [Bekannte Grenzen](#bekannte-grenzen)
+
+---
+
+## Grundsätze
+
+- **Vanilla HTML/CSS/JS, kein Build, keine Abhängigkeiten.** Die Dateien, die im Repo liegen, sind exakt die, die im Browser laufen. Das ist Absicht: Das Projekt soll ohne Toolchain wartbar bleiben.
+- **Kein eigenes Backend.** Alles Mehrspielerische läuft über einen kostenlosen öffentlichen Key-Value-Speicher.
+- **Alles auf einer Seite.** `index.html` enthält jeden Screen als `<section class="screen">`; `showScreen(id)` schaltet um.
+- **Deutsch im Code.** Kommentare, Bezeichner in den Daten und alle Texte sind deutsch – das Projekt wird von deutschsprachigen Menschen gelesen und abgegeben.
+
+Ladereihenfolge der Skripte (wichtig, weil ohne Modulsystem gearbeitet wird):
+
+```
+rng.js → data.js → net.js → gen.js → classroom.js → tutorial.js → game.js
+```
+
+`game.js` startet auf `DOMContentLoaded` mit `init()`.
+
+## Dateien und Zuständigkeiten
+
+| Datei | Zuständig für |
+|---|---|
+| `js/rng.js` | `mulberry32` (deterministischer RNG), `seededShuffle`, `randomSeed`, `randomRoomCode` |
+| `js/data.js` | Alle Inhalte: `cases`, `realRefs`, `weeks`, `ranks`, `tools`, `dilemmas`, `sabotage`, `feedReals`, `gen`, `scoring`, `endless` |
+| `js/gen.js` | `randomBuild` (budgetkonformer Bauplan), `craftFake` (Bauplan → Fake-Karte mit Beweislage), `generateCase` (Endlos-Generator) |
+| `js/net.js` | `Net` – Online-Duell über zwei Postfächer |
+| `js/classroom.js` | `ClassNet` – Klassenraum, bis 30 Spieler:innen auf einem Raum-Key |
+| `js/tutorial.js` | `Tutorial` – interaktive Einweisung mit eigenen Übungsfällen |
+| `js/game.js` | Spiellogik, Screens, Timer, Punkte, Ranglisten, Profile, Verdrahtung |
+
+## Spielzustand (`G`)
+
+Ein globales Objekt, erzeugt von `freshState(mode, name, seed)`. Die wichtigsten Felder:
+
+| Feld | Bedeutung |
+|---|---|
+| `mode` | `"solo"` oder `"duel"` |
+| `variant` | `"klassisch"` \| `"endlos"` \| `"tages"` \| `"klasse"` (nur bei `mode === "solo"`) |
+| `seed` | Startwert des RNG – im Duell und Klassenraum geteilt, dadurch identische Fälle |
+| `deck`, `sections` | Fälle je Abschnitt und die Abschnitts-Metadaten (Titel, Energie, Timer) |
+| `secIdx`, `caseIdx` | aktueller Abschnitt / Fall darin |
+| `score`, `index`, `energy`, `streak` | laufende Werte |
+| `effects` | kumulierte Dilemma-Effekte |
+| `history` | Protokoll für die Fall-Auswertung |
+| `boss` | Zustand der Jagd (Feed, Index des Fakes, Energie) |
+| `duel` | Duell-spezifisch: Gegnername, -punkte, Baupläne, Ergebnisse |
+| `class` | Klassenraum-spezifisch: Konfiguration, eigener Bauplan, Zuteilung, Bonus |
+
+Der Fluss durch die Screens läuft über `nextCase()`. Dort steht auch, welcher Modus wie endet – das ist die zentrale Weiche.
+
+## Datenmodell (`data.js`)
+
+Ein Fall-Dossier:
+
+```js
+{
+  id: "w2_lokalzeitung", week: 2, isFake: true,
+  category: "Gefälschtes Lokalmedium",
+  medium: "artikel", source: "…", author: "…", handle: "…", reach: "…",
+  title: "…", text: "…",              // Oberfläche – verrät NIE die Wahrheit
+  evidence: {                          // null = Werkzeug nicht anwendbar
+    forensik: null, quelle: "…", account: "…", fakten: "…",
+  },
+  resolution: "…",                     // Auflösung nach dem Urteil
+}
+```
+
+**Regeln beim Schreiben neuer Fälle:**
+
+1. `text` darf die Wahrheit nicht verraten – keine Rechtschreibfehler-Fakes, keine offensichtlichen Artefakte in der Oberfläche.
+2. Indizien in `evidence` sollen einzeln mehrdeutig sein. Erst die Kombination trägt.
+3. Zu jedem Fall gehört ein Eintrag in `DATA.realRefs[id]` mit dem realen, dokumentierten Vorbild – das ist der didaktische Kern.
+4. `week` steuert die Schwierigkeit (1 = nachlässig, 3 = einzelne Kanäle gesäubert).
+
+Aktueller Stand: **47 Fälle** (16 / 15 / 16 je Woche), 47 reale Vorbilder, 7 Dilemmas, Showdown-Baukasten mit 6 Themen × 4 Formaten × 4 Tarnungen.
+
+Der Showdown-Baukasten liefert pro Format/Thema jeweils eine „schmutzige" und eine „saubere" Variante pro Beweiskanal (`*_dirty` / `*_clean`). `craftFake` wählt anhand der gesetzten Tarnungen aus – deshalb ist jeder gebaute Fake automatisch mit einer vollständigen, konsistenten Beweislage versehen.
+
+## Netzwerk
+
+Beides läuft über **textdb.online**, einen kostenlosen öffentlichen Key-Value-Speicher:
+
+- **Lesen:** `GET https://textdb.online/<key>?t=<zeitstempel>` (der Zeitstempel umgeht den Cache)
+- **Schreiben:** `GET https://textdb.online/update/?key=<key>&value=<urlencoded JSON>`
+  Schreiben per GET ist Absicht: kein CORS-Preflight, funktioniert überall.
+
+### Online-Duell (`net.js`)
+
+Zwei Postfächer pro Raum: `wahlwaechter_room_<code>_h` (Host) und `_g` (Gast). Jede Seite schreibt **nur** in ihr eigenes Postfach und liest das der Gegenseite alle 1,8 s. Nachrichten tragen eine laufende Nummer (`q`), damit nichts doppelt verarbeitet wird.
+
+Nachrichtentypen: `hello`, `start`, `progress`, `sabotage`, `huntResult`, `final`.
+
+Zwei Fallstricke, die im Code adressiert sind:
+
+- **Hintergrund-Tabs werden vom Browser auf ca. 1 Timer pro Minute gedrosselt.** Deshalb `_STALE_MS = 90 s` (nicht kürzer!) und ein Resync bei `visibilitychange`. Absichtliches Verlassen meldet über `pagehide` sofort ein `bye`.
+- **Nachrichten werden immer VOR `bye`/`stale` verarbeitet.** Sonst geht das Endergebnis verloren, wenn die Gegenseite direkt nach dem Senden die Seite schließt.
+
+### Klassenraum (`classroom.js`)
+
+**Ein** Schlüssel für den ganzen Raum: `wahlwaechter_class_<code>`. Alle lesen ihn, jede:r ändert darin nur den **eigenen** Eintrag – Lesen → Ändern → Schreiben → Rücklesen-Verifikation, mit Wiederholungen gegen Kollisionen (`_merge`).
+
+Der eigene Eintrag wird bei jedem Schreibvorgang **vollständig** aus `ClassNet._self` neu aufgebaut. Grund: Scheitert ein Schreibversuch an einer Kollision und würde nur der letzte Patch nachgezogen, gingen frühere Felder (Bauplan, Zuteilung, Trefferergebnis) dauerhaft verloren. So heilt sich jeder Schreibvorgang selbst.
+
+Felder pro Spieler:in (bewusst einbuchstabig – der ganze Raum ist **ein** Wert in einer URL):
+
+| Feld | Bedeutung |
+|---|---|
+| `g` | Spieler-ID (zufällig, pro Sitzung) |
+| `n` | Name |
+| `s` `x` `c` `a` `f` | Punkte, Demokratie-Index, Fall-Nr., Genauigkeit, fertig (1) |
+| `b` | Zeitstempel des letzten Lebenszeichens |
+| `bd` | gebauter Fake als Index-Liste `[thema, format, tarnung1, tarnung2]` |
+| `ta` | zugeteilter Fake: Spieler-ID der Urheberin bzw. `"auto"` |
+| `hr` | Showdown-Ergebnis: `1` gefunden, `0` nicht gefunden |
+
+Die Abrufrate ist normal 2,6 s und während des Showdowns 1,3 s (`ClassNet.setPace`) – dort müssen Zuteilungen zügig sichtbar sein.
+
+## Klassenraum-Showdown: Verteilung der Fakes
+
+Die Anforderung: bis zu 30 selbstgebaute Fakes gleichmäßig verteilen, niemand bekommt den eigenen, und niemand wartet auf Trödler. Es gibt keinen Server, der das zuteilen könnte – **jeder Client rechnet die Zuteilung selbst aus** (`classTryAssign` in `game.js`):
+
+1. **Ring.** Alle Raum-Mitglieder werden nach Spieler-ID sortiert; jede:r nimmt den Fake der nächsten Person im Ring. Das ist eine reine Funktion der Teilnehmerliste – kein Rennen, keine Absprache – und geht mathematisch perfekt auf: jeder Fake genau einmal, niemand bekommt den eigenen. Gilt, sobald diese Person abgegeben hat und ihren Fake noch niemand sonst genommen hat.
+2. **Sonst der am wenigsten beanspruchte Fake.** Jede:r trägt seine Zuteilung als `ta` ein, alle sehen sie. Gleichstand wird pro Person unterschiedlich aufgelöst (Hash aus eigener und fremder ID). Ein bereits vergebener Fake wird nur als letzte Option genommen.
+3. **Auto-Fill.** Ist nach `CLASS_FAKE_WAIT_MS` (30 s) noch nichts verfügbar, baut HYDRA per `randomBuild` einen Fake – deterministisch aus Raum-Seed und eigener ID. Der Wartebildschirm zeigt den Countdown.
+
+Dazu zwei Kleinigkeiten gegen Rennen: ein kurzer, pro Person unterschiedlicher **Versatz** (0–4 s, `CLASS_STAGGER_MS`) vor der Zuteilung und das erwähnte schnellere Polling.
+
+**Simulationsergebnis** (30 Spieler:innen, Poll-Verzögerung berücksichtigt, Ergebnisse aus je 12 Durchläufen):
+
+| Szenario | Fakes an genau 1 Person | an 3+ Personen | Wartezeit Ø / max |
+|---|---|---|---|
+| Ende über 2 Min verteilt | ~24 von 30 | ~0,2 | 2,4 s / 6 s |
+| Ende über 5 Min verteilt | ~27 von 30 | ~0 | 3,8 s / 20 s |
+| alle binnen 20 s fertig | ~17 von 30 | ~1,2 | 2,3 s / 4 s |
+| kleine Gruppe (4–8) | fast alle | 0 | ~4 s |
+
+„Eigener Fake" trat in keinem Durchlauf auf – das ist strukturell ausgeschlossen.
+
+Der **Bonus für unentdeckte Fakes** (`classFakeBonus`) wird erst nach dem eigenen Rundenende ausgewertet, weil das Gegenüber oft später fertig ist. Nach `CLASS_BONUS_WAIT_MS` (150 s) wird auch ohne dessen Urteil abgeschlossen, damit die Auswertung nicht hängt.
+
+## Einweisung (`tutorial.js`)
+
+Ein schrittbasierter Screen (`#screen-tutorial`) mit 12 Schritten. Jeder Schritt ist ein Objekt mit `kicker`, `title`, `text`, optionalem `stage(host)` (baut interaktiven Inhalt) und `needs: true`, wenn „Weiter" erst nach einer Aktion freigeschaltet wird (`Tutorial.unlock(hinweis)`).
+
+Die Übungsfälle stehen absichtlich **in `tutorial.js` und nicht in `DATA.cases`** – so verrät die Einweisung keinen der 47 echten Fälle. Für Dilemmas, Showdown-Baukasten und Feed greift sie dagegen auf die echten Daten zu, damit sie nie veraltet.
+
+**Wann sie erzwungen wird** (`tutorialShouldRun` in `game.js`) – jede der drei Bedingungen allein genügt als „hat schon gespielt":
+
+1. `localStorage.ww_tut_v1` ist gesetzt (abgeschlossen oder übersprungen)
+2. es liegen lokale Ergebnisse vor (`ww_board_v1`)
+3. zum eingegebenen Namen existiert ein globales Profil mit mindestens einer Runde
+
+Punkt 3 deckt Wiederkehrende auf einem neuen Gerät ab. Die Prüfung (`checkProfileKnown`) läuft **im Hintergrund** und blockiert nie den Spielstart; sie wird beim Laden und bei jeder Namensänderung angestoßen.
+
+`beginMode(action)` ist der Einstieg in jeden Spielmodus: Name prüfen → Profil-Check anstoßen → ggf. Einweisung mit `action` als Fortsetzung öffnen → sonst direkt starten.
+
+## Ranglisten und Profile
+
+Schlüssel (öffentlich schreibbar – für ein Schulprojekt vertretbar):
+
+| Zweck | Schlüssel |
+|---|---|
+| Rangliste Klassisch | `wahlwaechter_kl_x7k2m9` |
+| Rangliste Endlos | `wahlwaechter_el_x7k2m9` |
+| Rangliste Duell | `wahlwaechter_du_x7k2m9` |
+| Rangliste Tages-Challenge | `wahlwaechter_tc_x7k2m9` |
+| Profile | `wahlwaechter_pr_x7k2m9` |
+| Duell-Räume | `wahlwaechter_room_<code>_h` / `_g` |
+| Klassenräume | `wahlwaechter_class_<code>` |
+
+Pro Modus werden maximal 30 Einträge gehalten, Profile maximal 120; bei Überlauf fallen die schlechtesten bzw. ältesten heraus. Schreibzugriffe laufen überall über Lesen → Mergen → Schreiben → Verifizieren mit Wiederholungen. Ohne Internet greift ein `localStorage`-Fallback (`ww_board_v1`).
+
+> ⚠️ **Daten nie eigenmächtig löschen.** Ein „frisches Leeren" der Schlüssel hat schon einmal echte Spielstände unwiederbringlich vernichtet – textdb.online hat keine Historie. Leeren nur auf ausdrückliche Anweisung: `GET https://textdb.online/update/?key=<KEY>&value={"scores":[]}` (Profile: `{"profiles":[]}`).
+
+## Wichtige Entscheidungen (und warum)
+
+1. **Kein WebRTC.** PeerJS/TURN ist real zwischen Geräten gescheitert (Schul-WLAN, Mobilnetze, NAT). Der HTTP-Relay über textdb funktioniert überall, wo die Website lädt. jsonblob und extendsclass fielen wegen CORS durch.
+2. **Schreiben per GET-Query** statt POST – vermeidet den CORS-Preflight.
+3. **Stale-Timeout 90 s statt 15 s**, weil Browser Hintergrund-Tabs massiv drosseln. Kurzes Wegwischen der App darf ein Duell nicht beenden.
+4. **Fälle fiktiv, Techniken real.** Jede Auflösung nennt das reale Vorbild; das FIKTIV-Badge steht in jedem Dossier. Generierte Fälle sind in der Auflösung als solche gekennzeichnet.
+5. **Profile identifizieren sich nur über den Namen.** Namensgleiche teilen sich ein Profil – bewusst simpel gehalten.
+6. **PDF-Erzeugung (ReportLab):** Der `Tc`-Operator (Zeichenabstand) überlebt Textobjekte und wird von manchen Viewern nicht zurückgesetzt. Gesperrte Titel deshalb Zeichen für Zeichen zeichnen, nie `Tc` verwenden. PDFs sind in `.gitattributes` als binär markiert.
+7. **Die gültige Live-URL ist `https://lassetoenjann.github.io/wahlwaechter/`.** Das GitHub-Konto wurde umbenannt; die alte `lasse-toenjann.github.io`-Adresse ist tot. Wer sie noch irgendwo findet (Handout, Links, git-remote), sollte sie ersetzen.
+
+## Testen
+
+Es gibt keine Test-Suite im Repo (bewusst: kein Build, keine Abhängigkeiten). Für Änderungen an der Spiellogik haben sich Playwright-Skripte bewährt, die gegen einen lokalen Server laufen und textdb per Route-Handler durch einen In-Memory-Speicher ersetzen – damit lassen sich Duell und Klassenraum mit mehreren Tabs komplett durchspielen, ohne echte Daten anzufassen.
+
+Sinnvolle Prüfungen vor einem Push:
+
+```bash
+node --check js/*.js              # Syntax
+python -m http.server 8123        # dann alle Modi einmal durchklicken
+```
+
+Mindestens abdecken: Solo klassisch **bis ins Boss-Finale** (dazu muss man richtig antworten – sonst endet der Lauf vorher in der Vertrauenskrise), Endlos, Tages-Challenge, Duell mit Showdown, Klassenraum mit Showdown (inklusive des Falls, dass jemand nicht abgibt), Einweisung von vorn bis hinten.
+
+## Erweitern
+
+**Neuen Fall hinzufügen:** Objekt in `DATA.cases` ergänzen, Eintrag in `DATA.realRefs` mit demselben `id`. Sonst nichts – Decks werden aus `week` gebaut.
+
+**Neues Dilemma:** Objekt in `DATA.dilemmas`; die Effekte in `chooseDilemma` unterstützen `energyPerWeek`, `timerPlus`, `freeProbe`, `damageShield`, `flagPenaltyPlus`, `indexNow`.
+
+**Neue Tarnung/Format/Thema:** in `DATA.sabotage` ergänzen. Wichtig: Jede Tarnung braucht einen `channel` (Werkzeug-ID) und `cost`; jedes Format/Thema braucht `*_dirty` und `*_clean` für die betroffenen Kanäle. Das Budget (`sabotage.budget`) muss so gesetzt bleiben, dass **nicht** alle Spuren verwischt werden können – das ist die Kernaussage des Showdowns.
+
+**Neuen Schritt in der Einweisung:** Objekt in `Tutorial.steps` einfügen; die Fortschrittsanzeige rechnet automatisch mit.
+
+## Bekannte Grenzen
+
+- **textdb.online** sichert weder Rate-Limits noch Persistenz zu. Bei 30 gleichzeitigen Spieler:innen entstehen grob 15–25 Anfragen pro Sekunde. Mit kleinen Gruppen problemlos, Volllast einer ganzen Klasse ist nicht unter Realbedingungen gemessen. Fallback wäre ein Umzug auf einen skalierbareren Dienst (z. B. Firebase).
+- Die Zuteilung im Klassenraum-Showdown ist ein **Best-Effort-Verfahren**: In seltenen Fällen (viele Abgaben in derselben Sekunde) kann ein Fake an zwei Personen gehen. Das ist unschädlich – niemand bekommt je den eigenen, und niemand wartet.
+- Ranglisten sind öffentlich beschreibbar. Für ein Schulprojekt vertretbar, für einen echten Wettbewerb nicht.
+- Der Klassenraum-Zustand ist **ein** JSON-Wert in einer URL. Deshalb sind die Feldnamen so kurz. Wer Felder ergänzt, sollte das im Blick behalten.
+
+## Offene Punkte
+
+- **Smoke-Test auf GitHub Pages** nach jedem größeren Update. Achtung: Pages cacht JavaScript ca. 10 Minuten – vor dem Test hart neu laden. Sinnvoll: Konsole offen lassen, ein Duell und einen Klassenraum mit 2–3 Tabs kurz durchspielen.
+- **Klassenraum unter Volllast** (30 Geräte gleichzeitig) ist noch nicht unter Realbedingungen gemessen worden, nur simuliert und mit kleinen Gruppen getestet.
+- Das Handout `ANLEITUNG.pdf` kennt die interaktive Einweisung und den Klassenraum-Showdown noch nicht. Beim nächsten Neusatz ergänzen.

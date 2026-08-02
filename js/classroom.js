@@ -13,11 +13,13 @@ const ClassNet = {
   BASE: "https://textdb.online/",
   MAX_PLAYERS: 30,
   POLL_MS: 2600,
+  POLL_FAST_MS: 1300,   // Showdown: Zuteilungen müssen schnell sichtbar sein
   ROOM_FRESH_MS: 2 * 60 * 60 * 1000,   // Raum max. 2 h gültig
 
   code: null, gid: null, isHost: false,
   state: null,
   _pollTimer: null, _inFlight: false, _pollFails: 0,
+  _self: {},           // alles, was ich je über mich gemeldet habe (s. _upsertSelf)
 
   onUpdate: null,      // (state)  bei jedem erfolgreichen Poll
   onFailed: null,      // (reason) Erstellen/Beitreten gescheitert
@@ -61,11 +63,16 @@ const ClassNet = {
     return Object.assign({ g: this.gid, n: myName || "Anonym", s: 0, x: 100, c: 0, f: 0, a: 0, b: Date.now() }, extra || {});
   },
 
+  /* Der eigene Eintrag wird IMMER vollständig aus this._self neu geschrieben.
+     Grund: Ein Schreibversuch kann an einer Kollision scheitern; würde nur der
+     letzte Patch nachgezogen, gingen frühere Felder (Bauplan, Zuteilung,
+     Trefferergebnis) dauerhaft verloren. So heilt sich jeder Schreibvorgang. */
   _upsertSelf(st, patch) {
+    if (patch) Object.assign(this._self, patch);
     const players = (st && Array.isArray(st.players)) ? st.players.slice() : [];
     const idx = players.findIndex(p => p.g === this.gid);
     const base = idx >= 0 ? players[idx] : this._me();
-    const mine = Object.assign({}, base, patch || {}, { b: Date.now(), n: myName || base.n });
+    const mine = Object.assign({}, base, this._self, { b: Date.now(), n: myName || base.n });
     if (idx >= 0) players[idx] = mine; else players.push(mine);
     return players;
   },
@@ -76,6 +83,7 @@ const ClassNet = {
     this.code = randomRoomCode();
     this.gid = Math.random().toString(36).slice(2, 10);
     this.isHost = true;
+    this._self = {};
     const fresh = {
       v: 2, created: Date.now(), host: this.gid,
       started: 0, seed: 0, cfg: cfg || {},
@@ -99,6 +107,7 @@ const ClassNet = {
     this.code = code;
     this.gid = Math.random().toString(36).slice(2, 10);
     this.isHost = false;
+    this._self = {};
     try {
       const st = await this._read();
       if (!st || st.v !== 2 || !st.created || Date.now() - st.created > this.ROOM_FRESH_MS) {
@@ -142,14 +151,18 @@ const ClassNet = {
     );
   },
 
-  /* ---------- Eigenen Fortschritt melden (Punkte, Index, Fall-Nr, fertig) ---------- */
+  /* ---------- Eigenen Fortschritt melden ----------
+     Felder: s Punkte · x Index · c Fall-Nr · f fertig · a Genauigkeit
+             bd gebauter Fake (Index-Liste) · ta zugeteilter Fake (gid|"auto")
+             hr Showdown-Treffer (1 gefunden / 0 nicht) */
   reportSelf(patch) {
     // bewusst ohne await: Feuer-und-vergiss mit interner Wiederholung
     this._merge(
       (cur) => cur ? Object.assign({}, cur, { players: this._upsertSelf(cur, patch) }) : null,
       (check) => {
         const mine = (check.players || []).find(p => p.g === this.gid);
-        return !!mine && (patch.f ? mine.f === 1 : true);
+        if (!mine) return false;
+        return Object.keys(patch || {}).every(k => JSON.stringify(mine[k]) === JSON.stringify(patch[k]));
       }
     ).catch(() => {});
   },
@@ -158,7 +171,17 @@ const ClassNet = {
   _startPolling() {
     clearInterval(this._pollTimer);
     this._pollFails = 0;
-    this._pollTimer = setInterval(() => this._poll(), this.POLL_MS + Math.random() * 600);
+    this._pace = this.POLL_MS;
+    this._pollTimer = setInterval(() => this._poll(), this._pace + Math.random() * 600);
+    this._poll();
+  },
+
+  /* Abrufrate umstellen (Showdown schneller, sonst schonend zum Spielserver) */
+  setPace(ms) {
+    if (!this.code || this._pace === ms) return;
+    this._pace = ms;
+    clearInterval(this._pollTimer);
+    this._pollTimer = setInterval(() => this._poll(), ms + Math.random() * 600);
     this._poll();
   },
 
@@ -190,6 +213,7 @@ const ClassNet = {
     clearInterval(this._pollTimer);
     this._pollTimer = null;
     this.code = null; this.state = null; this.isHost = false;
+    this._self = {};
     this._inFlight = false; this._pollFails = 0;
   },
 };

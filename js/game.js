@@ -23,6 +23,11 @@ function esc(str) {
 }
 const MEDIUM_LABEL = { video: "🎬 Video", bild: "🖼️ Bild", artikel: "📰 Artikel", post: "💬 Post", anzeige: "📢 Anzeige" };
 const todayStr = () => new Date().toISOString().slice(0, 10);
+function strHash(s) {
+  let h = 0;
+  for (let i = 0; i < String(s).length; i++) h = (Math.imul(h, 31) + String(s).charCodeAt(i)) >>> 0;
+  return h >>> 0;
+}
 
 /* Exklusive Auswahl-Chips (Duell-/Klassenraum-Einstellungen) */
 function initChipGroup(groupId) {
@@ -163,6 +168,54 @@ function getPlayerName() {
   myName = name;
   localStorage.setItem("ww_name", name);
   return name;
+}
+
+/* =========================================================================
+   EINWEISUNG: Wer noch nie gespielt hat, wird vor dem ersten Spiel eingewiesen.
+
+   Erkennung in drei Stufen (jede allein genügt als „hat schon gespielt“):
+     1. Einweisung wurde auf diesem Gerät schon abgeschlossen/übersprungen
+     2. es liegen lokale Ergebnisse vor (ww_board_v1)
+     3. zum eingegebenen Namen existiert ein globales Profil mit >= 1 Runde
+        (deckt Wiederkehrende auf einem fremden/neuen Gerät ab)
+   ========================================================================= */
+let profileKnown = false;
+let profileCheckedFor = "";
+
+function tutorialDone() {
+  try { const t = JSON.parse(localStorage.getItem("ww_tut_v1")); return !!(t && t.done); }
+  catch (e) { return false; }
+}
+function hasLocalHistory() {
+  try { return loadLocalBoard().length > 0; } catch (e) { return false; }
+}
+function tutorialShouldRun() {
+  return !tutorialDone() && !hasLocalHistory() && !profileKnown;
+}
+function refreshFirstTimeCard() {
+  const card = $("firsttime-card");
+  if (card) card.classList.toggle("hidden", !tutorialShouldRun());
+}
+
+/* Läuft im Hintergrund – blockiert nie den Spielstart. */
+async function checkProfileKnown(name) {
+  if (!name || name === profileCheckedFor) return;
+  profileCheckedFor = name;
+  try {
+    const data = await tdbRead(PROFILE_KEY);
+    const p = ((data && data.profiles) || []).find(x => x.n === name);
+    if (p && (p.g || 0) > 0) profileKnown = true;
+  } catch (e) { /* offline -> es entscheidet der lokale Stand */ }
+  refreshFirstTimeCard();
+}
+
+/* Einstieg in einen Spielmodus – ggf. mit vorgeschalteter Einweisung. */
+function beginMode(action) {
+  const name = getPlayerName();
+  if (!name) return;
+  checkProfileKnown(name);
+  if (tutorialShouldRun()) return Tutorial.open(action);
+  action();
 }
 
 function startSolo(variant) {
@@ -480,6 +533,7 @@ function nextCase() {
   }
   if (G.variant === "tages" || G.variant === "klasse") {
     if (G.secIdx < G.deck.length) return showSectionIntro();
+    if (G.variant === "klasse" && G.class && G.class.cfg.showdown) return startBuildPhase();
     return finishSoloRun();
   }
   // Solo klassisch
@@ -490,9 +544,8 @@ function nextCase() {
 /* Solo-/Tages-/Klassen-Lauf beenden */
 function finishSoloRun() {
   if (G.variant === "klasse") {
-    computeFinal();
-    const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
-    ClassNet.reportSelf({ f: 1, s: G.finalScore, a: acc, x: G.index });
+    classStopWaitTicker();
+    classReportFinal();
     saveResult(null);            // Profil-Statistik, keine globale Rangliste
     return showClassResult();
   }
@@ -557,6 +610,13 @@ function startBuildPhase() {
   build.theme = null; build.format = null; build.cloaks = [];
   const sab = DATA.sabotage;
 
+  const target = G.variant === "klasse"
+    ? "Er wird in den Feed einer <strong>anderen Person aus der Klasse</strong> geschleust – zugeteilt wird reihum, deinen eigenen Fake bekommst du nie."
+    : "Er wird in den Feed deines Gegners geschleust.";
+  $("build-intro").innerHTML = target + ` Wähle <strong>1 Thema, 1 Format und genau ${sab.maxCloaks} Tarnungen</strong>. ` +
+    `Jede Tarnung löscht eine Beweisspur – aber sie kosten unterschiedlich viel Budget (💰 ${sab.budget}), ` +
+    "und die zwei stärksten passen nicht zusammen. Welche Spuren verwischst du – und welche lässt du offen?";
+
   const mkCard = (obj, kind) => {
     const b = document.createElement("button");
     b.className = "build-card";
@@ -614,6 +674,7 @@ function finishBuild(timeout) {
     formatId: build.format || rnd.formatId,
     cloakIds: build.cloaks.length === DATA.sabotage.maxCloaks ? build.cloaks.slice() : rnd.cloakIds,
   };
+  if (G.variant === "klasse") return classSubmitBuild(spec);
   G.duel.myBuild = spec;
   Net.send("sabotage", { build: spec });
   if (G.duel.oppBuild) startShowdownHunt();
@@ -728,7 +789,10 @@ function huntResolve(pickedIdx) {
     lines.push(`🏛️ Demokratie-Index: −${dmg}`);
   }
 
-  const resolutionText = (G.mode === "duel" ? (G.duel.oppName || "Dein Gegner") : "HYDRA") +
+  const attacker = G.mode === "duel" ? (G.duel.oppName || "Dein Gegner")
+    : (G.variant === "klasse" && G.class && G.class.donorName) ? G.class.donorName
+    : "HYDRA";
+  const resolutionText = attacker +
     " hat die Spuren mit „" + cloakNames + "“ verwischt – die übrigen Beweiskanäle hätten den Fake verraten. " +
     "Merke: Perfekte Tarnung ist unmöglich, irgendwo bleibt immer eine Spur.";
   G.history.push({ c: Object.assign({}, fake, { resolution: resolutionText }), verdict: found ? "flag" : (pickedIdx === null ? null : "approve"), correct: found, gained, isBoss: true });
@@ -746,6 +810,8 @@ function huntResolve(pickedIdx) {
   if (G.mode === "duel") {
     G.duel.myHunt = { found, timeLeft: Math.round(timeLeft) };
     Net.send("huntResult", G.duel.myHunt);
+  } else if (G.variant === "klasse") {
+    ClassNet.reportSelf({ hr: found ? 1 : 0 });
   }
   showOverlay("overlay-reveal", true);
 }
@@ -754,7 +820,7 @@ function afterHuntReveal() {
   showOverlay("overlay-reveal", false);
   if (G.mode === "solo") {
     if (G.index <= 0) G.crisis = true;
-    return showResult();
+    return finishSoloRun();
   }
   if (G.duel.oppHunt || G.duel.dropped) finishDuel();
   else { $("wait-text").textContent = "Warte, ob dein Fake beim Gegner unentdeckt bleibt…"; showOverlay("overlay-wait", true); }
@@ -1340,27 +1406,36 @@ function wireClassNet() {
     if (active === "screen-class-lobby") renderClassLobby(st);
     if (active === "screen-case" && G && G.variant === "klasse") updateHud();
     if (active === "screen-class-result") renderClassResult(st);
+
+    if (G && G.variant === "klasse") { classTryAssign(); classFakeBonus(st); }
   };
 }
 
 function renderClassLobby(st) {
   const players = (st.players || []);
+  const cfg = st.cfg || {};
   $("class-count").textContent = players.length + " von " + ClassNet.MAX_PLAYERS + " Spieler:innen im Raum";
   $("class-players").innerHTML = players.map(p =>
     `<span class="t-name-pill">${p.g === st.host ? "🎓 " : ""}${esc(p.n)}</span>`).join("");
+  const rules = `${cfg.cases || 10} Fälle · ${cfg.timer || 35}s pro Fall · Showdown ${cfg.showdown ? "an 🧪" : "aus"}`;
   const startBtn = $("btn-class-start");
   if (ClassNet.isHost) {
     startBtn.classList.remove("hidden");
     startBtn.disabled = players.length < 2;
     startBtn.textContent = players.length < 2 ? "🚀 Runde starten (mind. 2)" : `🚀 Runde starten (${players.length} Spieler:innen)`;
-    $("class-lobby-hint").textContent = "Starte, sobald alle drin sind – Nachzügler können nicht mehr beitreten.";
+    $("class-lobby-hint").textContent = rules + " · Starte, sobald alle drin sind – Nachzügler können nicht mehr beitreten.";
   } else {
     startBtn.classList.add("hidden");
+    $("class-lobby-hint").textContent = rules + " · Warte, bis der Host die Runde startet…";
   }
 }
 
 async function classCreate() {
-  const cfg = { cases: chipVal("ccfg-cases") || 10, timer: chipVal("ccfg-timer") || 35 };
+  const cfg = {
+    cases: chipVal("ccfg-cases") || 10,
+    timer: chipVal("ccfg-timer") || 35,
+    showdown: chipVal("ccfg-showdown") === 1 ? 1 : 0,
+  };
   $("class-error").classList.add("hidden");
   const ok = await ClassNet.create(cfg);
   if (!ok) return;
@@ -1386,9 +1461,173 @@ function startClassGame(seed, cfg) {
   const name = myName || localStorage.getItem("ww_name") || "Anonym";
   G = freshState("solo", name, seed);
   G.variant = "klasse";
-  const { deck, sections } = buildMixedDeck(seed, { cases: cfg.cases || 10, timer: cfg.timer || 35, hard: 0 }, "KLASSENRAUM " + ClassNet.code);
+  G.class = {
+    cfg: { cases: cfg.cases || 10, timer: cfg.timer || 35, showdown: !!cfg.showdown },
+    myBuild: null, assigned: false, donorGid: null, donorName: null,
+    waitStart: 0, stagger: 0, finished: false, bonusDone: false, bonusPts: 0, bonusDeadline: 0,
+  };
+  const { deck, sections } = buildMixedDeck(seed, { cases: G.class.cfg.cases, timer: G.class.cfg.timer, hard: 0 }, "KLASSENRAUM " + ClassNet.code);
   G.deck = deck; G.sections = sections;
+  if (G.class.cfg.showdown) {
+    sections[sections.length - 1].intro += " Danach: der Showdown – jede:r baut einen eigenen Fake für jemand anderen aus der Klasse.";
+  }
   showSectionIntro();
+}
+
+/* =========================================================================
+   KLASSENRAUM-SHOWDOWN
+
+   Jede:r baut einen Fake und legt ihn in den gemeinsamen Raum-Zustand.
+   Verteilung (jede:r rechnet sie selbst aus, ohne Server-Logik):
+
+     1. RING: Alle Raum-Mitglieder werden nach ihrer Spieler-ID sortiert;
+        jede:r nimmt den Fake der nächsten Person im Ring. Das ist eine
+        reine Funktion der Teilnehmerliste – ohne Absprache, ohne Rennen,
+        und es geht mathematisch perfekt auf: jeder Fake genau einmal,
+        niemand bekommt den eigenen. Gilt, sobald die Person abgegeben hat
+        und noch niemand sonst ihren Fake genommen hat.
+     2. SONST der Fake mit den WENIGSTEN bisherigen Zuteilungen (jede:r
+        trägt seine Zuteilung als "ta" ein, alle sehen sie). Gleichstand
+        wird pro Person unterschiedlich aufgelöst (Hash). Ein bereits
+        vergebener Fake wird nur als letzte Option genommen.
+     3. Nach CLASS_FAKE_WAIT_MS ohne freien Fake baut HYDRA einen
+        -> niemand wartet auf Trödler, keine Downtime.
+
+   Dazu zwei Kleinigkeiten gegen Rennen: ein kurzer, pro Person
+   unterschiedlicher Versatz vor der Zuteilung und schnelleres Polling
+   während des Showdowns (Zuteilungen müssen zügig sichtbar sein).
+   Simuliert mit 30 Spieler:innen: ~25 von 30 Fakes gehen an genau eine
+   Person, praktisch nie derselbe Fake an drei, Wartezeit im Schnitt ~2 s.
+   ========================================================================= */
+const CLASS_FAKE_WAIT_MS = 30000;    // so lange auf einen Fake aus der Klasse warten
+const CLASS_STAGGER_MS = 4000;       // Spanne des Versatzes vor der Zuteilung
+const CLASS_BONUS_WAIT_MS = 150000;  // so lange auf das Urteil des Gegenübers warten
+const CLASS_FAKE_BONUS = 200;        // Punkte, wenn der eigene Fake unentdeckt bleibt
+
+/* Bauplan platzsparend als Index-Liste ablegen (der Raum-Zustand ist EIN Wert
+   für bis zu 30 Spieler:innen – Kürze ist hier Funktion, nicht Kosmetik). */
+function packBuild(spec) {
+  const sab = DATA.sabotage;
+  return [
+    sab.themes.findIndex(t => t.id === spec.themeId),
+    sab.formats.findIndex(f => f.id === spec.formatId),
+  ].concat((spec.cloakIds || []).map(id => sab.cloaks.findIndex(c => c.id === id)));
+}
+function unpackBuild(arr) {
+  const sab = DATA.sabotage;
+  if (!Array.isArray(arr) || arr.length < 3) return randomBuild(mulberry32(randomSeed()));
+  const at = (list, i) => list[i] || list[0];
+  return {
+    themeId: at(sab.themes, arr[0]).id,
+    formatId: at(sab.formats, arr[1]).id,
+    cloakIds: arr.slice(2, 2 + sab.maxCloaks).map(i => at(sab.cloaks, i).id),
+  };
+}
+
+let classWaitTimer = null;
+function classStopWaitTicker() { clearInterval(classWaitTimer); classWaitTimer = null; }
+
+function classSubmitBuild(spec) {
+  const cl = G.class;
+  cl.myBuild = spec;
+  cl.waitStart = Date.now();
+  cl.bonusDeadline = Date.now() + CLASS_BONUS_WAIT_MS;
+  cl.stagger = strHash(ClassNet.gid || "x") % CLASS_STAGGER_MS;
+  ClassNet.reportSelf({ bd: packBuild(spec) });
+  ClassNet.setPace(ClassNet.POLL_FAST_MS);   // Zuteilungen müssen jetzt zügig ankommen
+  showOverlay("overlay-wait", true);
+  classWaitTick(false);
+  if (!classWaitTimer) classWaitTimer = setInterval(classTryAssign, 1000);
+  classTryAssign();
+}
+
+function classWaitTick(onlyTaken) {
+  const cl = G && G.class;
+  if (!cl || cl.assigned) return;
+  const left = Math.max(0, Math.ceil((CLASS_FAKE_WAIT_MS - (Date.now() - cl.waitStart)) / 1000));
+  $("wait-text").textContent = "Dein Fake ist unterwegs – du bekommst gleich den Fake einer anderen Person.";
+  $("wait-sub").textContent = left <= 0
+    ? "HYDRA übernimmt…"
+    : onlyTaken
+      ? "Noch " + left + " s: Die vorhandenen Fakes sind schon vergeben – wir warten kurz auf einen frischen, damit sie sich gleichmäßig verteilen."
+      : "Noch " + left + " s. Ist bis dahin niemand fertig, baut HYDRA automatisch einen – damit du nicht warten musst.";
+}
+
+function classTryAssign() {
+  const cl = G && G.variant === "klasse" ? G.class : null;
+  if (!cl || !cl.myBuild || cl.assigned) return classStopWaitTicker();
+
+  const players = (ClassNet.state && ClassNet.state.players) || [];
+  const me = ClassNet.gid;
+  const waited = Date.now() - cl.waitStart;
+  const last = waited >= CLASS_FAKE_WAIT_MS;
+
+  if (waited < cl.stagger) return classWaitTick(false);
+
+  const claims = {};
+  players.forEach(p => { if (p.ta && p.g !== me) claims[p.ta] = (claims[p.ta] || 0) + 1; });
+  const cands = players.filter(p => p.g !== me && p.bd);
+  let pick = null;
+
+  // 1. Ring-Partner:in (siehe Kommentar oben) – wenn abgegeben und noch frei
+  const ring = players.map(p => p.g).sort();
+  const ringDonor = ring.length > 1 ? ring[(ring.indexOf(me) + 1) % ring.length] : null;
+  const ringCand = cands.find(p => p.g === ringDonor);
+  if (ringCand && !claims[ringDonor]) pick = ringCand;
+
+  // 2. Sonst der am wenigsten beanspruchte vorhandene Fake
+  if (!pick && cands.length) {
+    const best = cands.slice().sort((a, b) =>
+      ((claims[a.g] || 0) - (claims[b.g] || 0)) ||
+      (strHash(me + a.g) - strHash(me + b.g)))[0];
+    if (!claims[best.g] || last) pick = best;
+    else return classWaitTick(true);         // alles vergeben -> kurz auf einen frischen warten
+  }
+
+  // 3. Noch gar nichts da -> warten, danach übernimmt HYDRA
+  if (!pick && !last) return classWaitTick(false);
+
+  cl.assigned = true;
+  classStopWaitTicker();
+  ClassNet.setPace(ClassNet.POLL_MS);
+  const spec = pick ? unpackBuild(pick.bd) : randomBuild(mulberry32((G.seed ^ strHash(me)) >>> 0));
+  cl.donorGid = pick ? pick.g : null;
+  cl.donorName = pick ? pick.n : "HYDRA";
+  ClassNet.reportSelf({ ta: pick ? pick.g : "auto" });
+
+  showOverlay("overlay-wait", false);
+  $("wait-sub").textContent = "";
+  startHunt(craftFake(spec), "SHOWDOWN · KLASSENRAUM", pick
+    ? `In diesem Feed steckt der Fake, den <strong>${esc(pick.n)}</strong> gebaut hat. Eine Markierung, keine zweite Chance.`
+    : "Niemand war rechtzeitig fertig – <strong>HYDRA</strong> hat selbst einen Fake gebaut und hier versteckt. Eine Markierung, keine zweite Chance.");
+}
+
+function classReportFinal() {
+  computeFinal();
+  const cl = G.class;
+  if (cl) cl.finished = true;
+  const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
+  ClassNet.reportSelf({ f: 1, s: G.finalScore, a: acc, x: G.index });
+}
+
+/* Bonus, wenn der eigene Fake beim Gegenüber unentdeckt geblieben ist.
+   Wird erst nach dem eigenen Rundenende ausgewertet (das Gegenüber ist
+   oft später fertig) – notfalls nach Ablauf der Wartefrist ohne Urteil. */
+function classFakeBonus(st) {
+  const cl = G && G.variant === "klasse" ? G.class : null;
+  if (!cl || !cl.myBuild || !cl.finished || cl.bonusDone) return;
+  const victims = ((st && st.players) || []).filter(p => p.ta === ClassNet.gid);
+  const expired = Date.now() > cl.bonusDeadline;
+  if (!expired && (!victims.length || victims.some(p => p.hr == null))) return;
+
+  cl.bonusDone = true;
+  const missed = victims.filter(p => p.hr === 0).length;
+  if (!missed) return;
+  cl.bonusPts = CLASS_FAKE_BONUS * missed;
+  G.score += cl.bonusPts;
+  classReportFinal();
+  netBanner("🎭 Dein Fake blieb unentdeckt: +" + cl.bonusPts + " Punkte!");
+  if (document.querySelector(".screen.active").id === "screen-class-result") renderClassResult(st);
 }
 
 function showClassResult() {
@@ -1406,6 +1645,7 @@ function renderClassResult(st) {
     ? `⏳ ${done.length} von ${players.length} fertig – ${playing.length} spielen noch… (aktualisiert sich automatisch)`
     : `🏁 Alle ${players.length} Spieler:innen sind fertig!`;
   $("class-result-headline").textContent = playing.length ? "🏁 Zwischenstand" : "🏁 Endstand";
+  $("class-showdown-info").innerHTML = classShowdownInfo(players);
 
   const medals = ["🥇", "🥈", "🥉"];
   const sorted = done.sort((a, b) => (b.s || 0) - (a.s || 0));
@@ -1418,10 +1658,36 @@ function renderClassResult(st) {
   html += playing.map(p => `
     <div class="board-row pending">
       <span class="pos">…</span>
-      <span class="bname">${esc(p.n)} <span class="bmeta">spielt noch · Fall ${p.c || 0}</span></span>
+      <span class="bname">${esc(p.n)} <span class="bmeta class-phase">${classPhaseLabel(p)}</span></span>
       <span class="bscore">${p.s || 0}</span>
     </div>`).join("");
   $("class-result-list").innerHTML = html || `<div class="board-empty">Noch keine Ergebnisse.</div>`;
+}
+
+function classPhaseLabel(p) {
+  if (p.hr != null) return "🎯 im Showdown-Finale";
+  if (p.bd) return "🧪 Fake gebaut – auf der Jagd";
+  return "spielt noch · Fall " + (p.c || 0);
+}
+
+/* Was ist mit meinem eigenen Fake passiert? */
+function classShowdownInfo(players) {
+  const cl = G && G.variant === "klasse" ? G.class : null;
+  if (!cl || !cl.myBuild) return "";
+  const victims = players.filter(p => p.ta === ClassNet.gid);
+  const judged = victims.filter(p => p.hr != null);
+  const missed = victims.filter(p => p.hr === 0).length;
+
+  let line;
+  if (!victims.length) line = "Dein Fake liegt bereit – er wird der nächsten Person zugeteilt, die den Showdown erreicht.";
+  else if (!judged.length) line = `Dein Fake liegt im Feed von <strong>${esc(victims.map(v => v.n).join(", "))}</strong> – Urteil steht noch aus.`;
+  else if (missed) line = `🎭 <strong>Unentdeckt geblieben!</strong> ${esc(judged.filter(p => p.hr === 0).map(v => v.n).join(", "))} hat deinen Fake übersehen.${cl.bonusPts ? " Bonus: +" + cl.bonusPts + " Punkte." : ""}`;
+  else line = `Dein Fake wurde von <strong>${esc(judged.map(v => v.n).join(", "))}</strong> enttarnt – kein Bonus. Perfekte Tarnung gibt es eben nicht.`;
+
+  const got = cl.donorName
+    ? ` Du hast den Fake von <strong>${esc(cl.donorName)}</strong> bekommen.`
+    : "";
+  return `<div class="tut-callout">${line}${got}</div>`;
 }
 
 /* =========================================================================
@@ -1431,22 +1697,34 @@ function init() {
   $("player-name").value = localStorage.getItem("ww_name") || "";
   myName = localStorage.getItem("ww_name") || "";
 
-  $("btn-solo").addEventListener("click", () => { if (getPlayerName()) showScreen("screen-solomode"); });
+  $("btn-solo").addEventListener("click", () => beginMode(() => showScreen("screen-solomode")));
   $("btn-mode-classic").addEventListener("click", () => startSolo("klassisch"));
   $("btn-mode-endless").addEventListener("click", () => startSolo("endlos"));
-  $("btn-daily").addEventListener("click", startDaily);
-  $("btn-duel").addEventListener("click", openLobby);
-  $("btn-class").addEventListener("click", openClass);
+  $("btn-daily").addEventListener("click", () => beginMode(startDaily));
+  $("btn-duel").addEventListener("click", () => beginMode(openLobby));
+  $("btn-class").addEventListener("click", () => beginMode(openClass));
   $("btn-board").addEventListener("click", renderBoard);
   $("btn-profile").addEventListener("click", renderProfile);
   $("btn-howto").addEventListener("click", () => showScreen("screen-howto"));
   $("btn-legal").addEventListener("click", () => showScreen("screen-legal"));
 
+  // Interaktive Einweisung
+  $("btn-tutorial").addEventListener("click", () => Tutorial.open(null));
+  $("btn-howto-tutorial").addEventListener("click", () => Tutorial.open(null));
+  $("btn-firsttime").addEventListener("click", () => Tutorial.open(null));
+  $("btn-tut-next").addEventListener("click", () => Tutorial.next());
+  $("btn-tut-back").addEventListener("click", () => Tutorial.back());
+  $("btn-tut-skip").addEventListener("click", () => Tutorial.skip());
+  $("player-name").addEventListener("change", (e) => checkProfileKnown(e.target.value.trim()));
+  refreshFirstTimeCard();
+  checkProfileKnown(myName);
+
   document.querySelectorAll("[data-goto]").forEach(b =>
     b.addEventListener("click", () => showScreen(b.dataset.goto)));
 
   // Einstellungs-Chips
-  ["cfg-cases", "cfg-timer", "cfg-hard", "cfg-showdown", "ccfg-cases", "ccfg-timer"].forEach(initChipGroup);
+  ["cfg-cases", "cfg-timer", "cfg-hard", "cfg-showdown",
+   "ccfg-cases", "ccfg-timer", "ccfg-showdown"].forEach(initChipGroup);
 
   // Duell-Lobby
   $("btn-create-room").addEventListener("click", () => {
@@ -1488,8 +1766,8 @@ function init() {
     try { await ClassNet.start(randomSeed()); }
     catch (e) { $("btn-class-start").disabled = false; netBanner("⚠️ Start fehlgeschlagen – bitte erneut versuchen."); }
   });
-  $("btn-class-leave").addEventListener("click", () => { ClassNet.close(); showScreen("screen-start"); });
-  $("btn-class-menu").addEventListener("click", () => { ClassNet.close(); showScreen("screen-start"); });
+  $("btn-class-leave").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); showScreen("screen-start"); });
+  $("btn-class-menu").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); showScreen("screen-start"); });
   $("btn-class-review").addEventListener("click", () => showReview("screen-class-result"));
 
   // Spiel

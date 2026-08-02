@@ -396,6 +396,65 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 }
 .real-ref b { color: var(--amber); display: block; margin-bottom: 3px; font-size: .76rem; letter-spacing: .06em; }
 
+/* ---------- Erstspieler-Hinweis auf dem Startbildschirm ---------- */
+.firsttime-card {
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  max-width: 380px; margin: 0 auto 16px; padding: 14px 16px;
+  background: rgba(55,214,224,.07); border: 1px solid var(--cyan-dim); border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+.firsttime-card .ft-icon { font-size: 1.9rem; }
+.firsttime-card .ft-body { flex: 1; min-width: 160px; }
+.firsttime-card .ft-body b { display: block; }
+.firsttime-card .ft-body p { margin-top: 2px; }
+.firsttime-card .btn { width: 100%; }
+
+/* ---------- Interaktive Einweisung (Tutorial) ---------- */
+.tut-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tut-head h2 { margin: 0; }
+.tut-progress { height: 6px; background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; margin: 12px 0 5px; }
+.tut-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan-dim), var(--cyan)); transition: width .35s ease; }
+.tut-steplabel { font-family: Consolas, monospace; font-size: .72rem; color: var(--muted); letter-spacing: .12em; margin-bottom: 14px; }
+.tut-text p { margin-bottom: 10px; font-size: .95rem; }
+.tut-text .tut-formula {
+  font-family: Consolas, monospace; text-align: center; color: var(--cyan);
+  background: rgba(55,214,224,.06); border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+}
+.tut-list { list-style: none; margin: 4px 0 12px; display: flex; flex-direction: column; gap: 5px; font-size: .92rem; }
+.tut-list li { padding-left: 2px; }
+.tut-hint {
+  margin: 14px 0 0; padding: 12px 16px; font-size: .9rem;
+  border-left: 3px solid var(--amber); background: rgba(255,182,72,.08); border-radius: 0 10px 10px 0;
+}
+.tut-hint b { color: var(--amber); }
+.tut-nav { margin-top: 18px; }
+.tut-nav .btn { flex: 1; }
+.tut-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 6px 0; }
+.tut-cards.wide { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.tut-card { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.tut-card b { display: block; margin: 4px 0 2px; color: #fff; }
+.tut-card-icon { font-size: 1.7rem; }
+.tut-callout { margin-top: 14px; padding: 12px 16px; border: 1px solid var(--cyan-dim); background: rgba(55,214,224,.06); border-radius: 12px; font-size: .9rem; }
+.tut-callout .tut-open { color: var(--amber); }
+.tut-energy { font-family: Consolas, monospace; color: var(--amber); font-size: .86rem; margin-bottom: 8px; }
+.tut-energy b { color: var(--cyan); }
+.tut-evidence-recap { margin-bottom: 12px; display: flex; flex-direction: column; gap: 7px; }
+.tut-reveal { margin-top: 16px; background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+.tut-reveal .reveal-verdict { font-size: 1.4rem; }
+.tut-gut { margin-top: 12px; }
+.tut-table { max-width: none; }
+.tut-slider-box { background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.tut-slider-box input[type=range] { width: 100%; accent-color: var(--cyan); height: 28px; }
+.tut-slider-out { display: flex; gap: 14px; flex-wrap: wrap; justify-content: space-around; text-align: center; margin-top: 6px; }
+.tut-slider-out b { display: block; font-family: Consolas, monospace; font-size: 1.5rem; color: var(--cyan); }
+.tut-rules { margin: 6px 0 0 20px; display: flex; flex-direction: column; gap: 8px; font-size: .95rem; }
+.tut-rules b { color: var(--cyan); }
+#screen-tutorial .case-layout { margin-bottom: 12px; }
+#screen-tutorial .dilemma-card.selected { border-color: var(--amber); background: rgba(255,182,72,.08); }
+
+/* ---------- Klassenraum: Showdown-Status ---------- */
+.class-phase { color: var(--amber); }
+
 /* ---------- Touch & Tablet ---------- */
 button, .btn, .tool-btn, .mini-tool, .chip, .bracket-player, .mode-card, .dilemma-card, .build-card { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .timerbar.sticky { position: sticky; top: 6px; z-index: 20; box-shadow: 0 4px 14px rgba(0,0,0,.45); }
@@ -418,4 +477,6 @@ button, .btn, .tool-btn, .mini-tool, .chip, .bracket-player, .mode-card, .dilemm
   .duel-side { max-width: none; width: 100%; }
   .dossier-reach { display: none; }
   .hunt-tools .mini-flag { margin-left: 0; width: 100%; }
+  .tut-nav { flex-direction: column; }
+  .tut-slider-out b { font-size: 1.2rem; }
 }
