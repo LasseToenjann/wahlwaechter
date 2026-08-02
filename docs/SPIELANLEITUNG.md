@@ -1,6 +1,11 @@
 # 📖 WAHLWÄCHTER – Spielanleitung
 
-Vollständige Anleitung zum Nachschlagen. **Wenn du das Spiel zum ersten Mal spielst, nimm die interaktive 🎓 Einweisung im Spiel** – dort probierst du in ca. 5 Minuten jede Funktion einmal selbst aus. Sie wird Erstspieler:innen automatisch angeboten und ist danach jederzeit im Hauptmenü erreichbar.
+Die vollständige schriftliche Fassung der Spielregeln – gedacht zum Vorbereiten, Ausdrucken und Nachschlagen.
+
+Im Spiel selbst gibt es dafür zwei getrennte Anlaufstellen, die sich bewusst **nicht** überschneiden:
+
+- **🎓 Einweisung** – erklärt das Spiel, indem man in ca. 5 Minuten jede Funktion einmal selbst ausprobiert. Erstspieler:innen bekommen sie automatisch angeboten.
+- **❓ Hilfe & Nachschlagen** – erklärt nichts, sondern listet nur Zahlen, Tabellen und Antworten auf Probleme.
 
 - [Worum es geht](#worum-es-geht)
 - [Der Spielablauf](#der-spielablauf)
@@ -141,9 +146,13 @@ Bei bis zu 30 Spieler:innen soll niemand den eigenen Fake bekommen und möglichs
 
 1. Alle Raum-Mitglieder bilden einen festen **Ring**. Du bekommst den Fake der nächsten Person im Ring – das geht mathematisch perfekt auf.
 2. Ist diese Person noch nicht fertig (oder ihr Fake schon vergeben), bekommst du den Fake, der bisher am **seltensten** vergeben wurde.
-3. Ist nach **30 Sekunden** noch gar nichts verfügbar, baut **HYDRA** automatisch einen Fake für dich. So wartet niemand auf Trödler.
+3. Ist nach **60 Sekunden** noch gar nichts verfügbar, baut **HYDRA** automatisch einen Fake für dich. So wartet niemand auf Trödler.
 
-Während des Wartens siehst du einen Countdown. In der Auswertung steht anschließend, wessen Fake du bekommen hast und wie es deinem eigenen ergangen ist.
+Während des Wartens siehst du einen Countdown und live, wie viele aus der Klasse ihren Fake schon abgegeben haben. In der Auswertung steht anschließend, wessen Fake du bekommen hast und wie es deinem eigenen ergangen ist.
+
+### Wenn du zu langsam bist
+
+Sobald der Großteil der Klasse im Showdown angekommen ist, läuft für die Übrigen eine Frist von 45 Sekunden. Danach wirst du aus den Fällen **herausgeholt** und direkt in den Showdown gesetzt – mit dem Hinweis „Du warst zu langsam". Deine restlichen Fälle entfallen, damit niemand auf dich warten muss; der Showdown zählt für dich ganz normal.
 
 ## Die Spielmodi
 
@@ -157,12 +166,16 @@ Schicht für Schicht weniger Zeit, weniger Energie, subtilere Fälle. **Ab Schic
 Jeden Tag ein neuer, **für alle identischer** Fallsatz. **Ein Versuch pro Tag und Gerät.** Der fairste Klassenvergleich – eigene Tages-Rangliste („Heute").
 
 ### ⚔️ Online-Duell 1 vs 1
-Wer den Raum erstellt, legt die Regeln fest: Fallzahl (6/10/14), Tempo (45/35/24 s), Schwierigkeit (gemischt / nur schwere Fälle) und Showdown an/aus. Der Raum-Code (5 Zeichen) geht an die Gegenspielerin oder den Gegenspieler – beide erhalten **exakt dieselben Fälle** und sehen den gegnerischen Punktestand live. Der Raum-Code gilt ca. 15 Minuten.
+Wer den Raum erstellt, ist **Host**. Der Raum-Code (5 Zeichen) geht an die Gegenspielerin oder den Gegenspieler; sobald sie beitritt, landen beide in der **Lobby**: Dort stehen beide Namen, der Host stellt die Regeln ein – Fallzahl (6/10/14), Tempo (45/35/24 s), Schwierigkeit (gemischt / nur schwere Fälle), Showdown an/aus – und jede Änderung ist beim Gegenüber sofort zu sehen. Losgehen kann es erst, wenn der Host auf **Duell starten** drückt.
+
+Beide erhalten dann **exakt dieselben Fälle** und sehen den gegnerischen Punktestand live. Der Raum-Code gilt ca. 15 Minuten.
 
 Funktioniert in jedem Netz, in dem die Website lädt (WLAN, Handynetz, Schulnetz – auch gemischt).
 
 ### 🏟️ Klassenraum
-Bis **30 Spieler:innen** in einer Runde. Der Host öffnet den Raum (Fallzahl, Tempo, Showdown an/aus) und zeigt den Code auf dem Beamer. Alle spielen dieselben Fälle gleichzeitig, oben im HUD läuft 👑 der Live-Spitzenreiter mit. Am Ende: gemeinsame Auswertung mit Podium, die sich live aktualisiert, während Nachzügler:innen fertig spielen.
+Bis **30 Spieler:innen** in einer Runde. Der Host öffnet den Raum und zeigt den Code auf dem Beamer. In der **Lobby** sehen alle, wer schon da ist; der Host stellt dort die Regeln ein (Fallzahl, Tempo, Showdown an/aus) – alle sehen die Änderung sofort. Gestartet wird über den Start-Knopf, den nur der Host hat.
+
+Danach spielen alle dieselben Fälle gleichzeitig, oben im HUD läuft 👑 der Live-Spitzenreiter mit. Am Ende: gemeinsame Auswertung mit Podium, die sich live aktualisiert, während Nachzügler:innen fertig spielen.
 
 Nach dem Start kann niemand mehr beitreten – erst alle sammeln, dann starten.
 
@@ -209,7 +222,10 @@ Der Code ist 5 Zeichen lang und gilt beim Duell ca. 15 Minuten, im Klassenraum 2
 Im Klassenraum kann nach dem Start niemand mehr beitreten. Der Host öffnet einen neuen Raum.
 
 **Ich hänge im Showdown im Wartebildschirm.**
-Höchstens 30 Sekunden – danach baut HYDRA automatisch einen Fake für dich. Der Countdown läuft sichtbar mit.
+Höchstens 60 Sekunden – danach baut HYDRA automatisch einen Fake für dich. Der Countdown läuft sichtbar mit, daneben siehst du, wie viele Fakes schon vorliegen.
+
+**Ich wurde mitten aus den Fällen gerissen.**
+Dann war der Großteil der Klasse schon im Showdown und die 45-Sekunden-Frist ist abgelaufen. Das ist Absicht: So wartet niemand auf Einzelne. Deine restlichen Fälle entfallen, der Showdown zählt normal.
 
 **Ich finde meine Klassenraum-Runde nicht in der Rangliste.**
 Klassenraum-Ergebnisse stehen sowohl unter „Alle" als auch unter dem Filter „Klassenraum". Wenn der Showdown gespielt wurde, kann der Eintrag noch einen Moment brauchen: Der Bonus für einen unentdeckt gebliebenen Fake wird erst verrechnet, wenn das Gegenüber sein Urteil gefällt hat – der Eintrag aktualisiert sich dann von selbst.

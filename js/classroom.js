@@ -142,6 +142,17 @@ const ClassNet = {
     return true;
   },
 
+  /* ---------- Host ändert die Regeln in der Lobby ---------- */
+  async setCfg(cfg) {
+    if (!this.isHost || !this.code) return;
+    try {
+      await this._merge(
+        (cur) => (cur && !cur.started) ? Object.assign({}, cur, { cfg, players: this._upsertSelf(cur) }) : null,
+        (check) => JSON.stringify(check.cfg) === JSON.stringify(cfg)
+      );
+    } catch (e) { /* nächster Versuch beim nächsten Klick */ }
+  },
+
   /* ---------- Host startet die Runde ---------- */
   async start(seed) {
     if (!this.isHost) return;

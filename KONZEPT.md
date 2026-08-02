@@ -128,7 +128,7 @@ Alternativ: **♾️ Endlos-Modus** — Schicht um Schicht steigende Schwierigke
 
 ### 6.2 Online-Duell 1 vs 1
 
-Zwei Spieler:innen verbinden sich über einen **kostenlosen HTTP-Spielserver** (Nachrichten-Postfächer mit Sekundentakt-Abruf – bewusst kein WebRTC, damit es auch in Schul-WLANs und Mobilnetzen zuverlässig funktioniert): Spieler:in A erstellt ein Duell und erhält einen **Raum-Code**, B tritt damit bei. Der Host legt vorher die **Regeln** fest: Fallzahl (6/10/14), Tempo (45/35/24 s), Schwierigkeit (gemischt/Profi) und Showdown an/aus.
+Zwei Spieler:innen verbinden sich über einen **kostenlosen HTTP-Spielserver** (Nachrichten-Postfächer mit Sekundentakt-Abruf – bewusst kein WebRTC, damit es auch in Schul-WLANs und Mobilnetzen zuverlässig funktioniert): Spieler:in A erstellt ein Duell und erhält einen **Raum-Code**, B tritt damit bei. Beide landen dann in einer **Lobby** mit beiden Namen; dort legt der Host die **Regeln** fest — Fallzahl (6/10/14), Tempo (45/35/24 s), Schwierigkeit (gemischt/Profi) und Showdown an/aus — und jede Änderung ist beim Gegenüber sofort sichtbar. Gestartet wird erst auf Knopfdruck des Hosts.
 
 - **Phase 1 – Wettermitteln:** Beide erhalten (per geteiltem Zufalls-Seed) **exakt dieselben Fälle** (2 Wellen) und spielen simultan. Der Punktestand des Gegners ist live sichtbar — Nervenkitzel durch direkten Vergleich.
 - **Phase 2 – Showdown mit Rollentausch:** Jede:r baut **verdeckt in 75 Sekunden einen eigenen KI-Fake** aus Bausteinen (Thema × Format × Tarnmaßnahmen). Jede Tarnung löscht eine Beweisspur, aber das Budget ist knapp — perfekte Tarnung ist unmöglich, irgendeine Spur bleibt. Der gebaute Fake wird in einen Mini-Feed aus echten Beiträgen **beim Gegner** eingeschleust: Wer den gegnerischen Fake schneller findet, gewinnt die Showdown-Punkte.
@@ -144,13 +144,17 @@ Jeden Tag ein neuer, **für alle identischer Fallsatz** (Datums-Seed) — genau 
 
 Bis zu **30 Spieler:innen** treten gleichzeitig in einer Runde an: ein Raum-Code für alle, identische Fälle, der/die Spitzenreiter:in ist live im Spiel sichtbar (👑). Zum Abschluss eine gemeinsame **Auswertung mit Podium**, die sich live aktualisiert, während Nachzügler:innen fertig spielen. Ideal für den Kurseinsatz auf iPads.
 
+Auch hier gibt es eine **Lobby**: Alle sehen, wer schon da ist, der Host stellt die Regeln ein, und nur er startet die Runde.
+
 **Showdown in der Klasse.** Auf Wunsch des Hosts endet die Runde wie im Duell damit, dass jede:r einen eigenen KI-Fake baut — nur eben mit bis zu 30 Fakes gleichzeitig. Damit das im Unterricht funktioniert, muss die Verteilung drei Bedingungen erfüllen: niemand darf den eigenen Fake bekommen, die Fakes sollen sich gleichmäßig verteilen (nicht alle jagen denselben), und niemand darf auf Langsamere warten müssen.
 
 Gelöst wird das ohne zentrale Instanz — jedes Gerät rechnet die Zuteilung selbst aus:
 
 1. **Ring:** Alle Teilnehmenden bilden eine feste Reihenfolge; jede:r bekommt den Fake der nächsten Person darin. Das geht mathematisch perfekt auf und braucht keinerlei Absprache.
 2. **Ausweichregel:** Ist diese Person noch nicht fertig, greift der Fake, der bisher am seltensten vergeben wurde.
-3. **Auto-Fill gegen Leerlauf:** Ist nach 30 Sekunden noch nichts verfügbar, baut HYDRA automatisch einen Fake — mit sichtbarem Countdown. Der Unterricht steht nie still, auch wenn einzelne trödeln oder abbrechen.
+3. **Auto-Fill gegen Leerlauf:** Ist nach 60 Sekunden noch nichts verfügbar, baut HYDRA automatisch einen Fake — mit sichtbarem Countdown. Der Unterricht steht nie still, auch wenn einzelne trödeln oder abbrechen.
+
+Umgekehrt gilt dasselbe für die andere Richtung: Sobald der Großteil der Klasse im Showdown angekommen ist, werden die Übrigen nach kurzer Frist **aus den Fällen geholt** und mit einem klaren Hinweis („Du warst zu langsam") in die Bauphase gesetzt. Auslöser ist bewusst nicht die erste fertige Person — sonst würde eine einzelne schnelle Person die halbe Klasse mitten aus der Runde reißen. So bleibt die Klasse zusammen, ohne dass jemand auf Einzelne warten muss.
 
 Bleibt der eigene Fake beim Gegenüber unentdeckt, gibt es Bonuspunkte. In der Auswertung steht anschließend, wessen Fake man bekommen hat und wie es dem eigenen ergangen ist — ein natürlicher Gesprächsanlass darüber, welche Tarnung funktioniert hat und welche verraten wurde.
 

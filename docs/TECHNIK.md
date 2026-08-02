@@ -28,7 +28,7 @@ Alles, was man wissen muss, um am Code weiterzuarbeiten. Spielregeln stehen in d
 Ladereihenfolge der Skripte (wichtig, weil ohne Modulsystem gearbeitet wird):
 
 ```
-rng.js → data.js → net.js → gen.js → classroom.js → tutorial.js → game.js
+anim.js → rng.js → data.js → net.js → gen.js → classroom.js → tutorial.js → game.js
 ```
 
 `game.js` startet auf `DOMContentLoaded` mit `init()`.
@@ -37,6 +37,7 @@ rng.js → data.js → net.js → gen.js → classroom.js → tutorial.js → ga
 
 | Datei | Zuständig für |
 |---|---|
+| `js/anim.js` | `Anim` – Animations-Helfer (Staffelung, Puls, Hochzählen, Stempel) |
 | `js/rng.js` | `mulberry32` (deterministischer RNG), `seededShuffle`, `randomSeed`, `randomRoomCode` |
 | `js/data.js` | Alle Inhalte: `cases`, `realRefs`, `weeks`, `ranks`, `tools`, `dilemmas`, `sabotage`, `feedReals`, `gen`, `scoring`, `endless` |
 | `js/gen.js` | `randomBuild` (budgetkonformer Bauplan), `craftFake` (Bauplan → Fake-Karte mit Beweislage), `generateCase` (Endlos-Generator) |
@@ -105,7 +106,9 @@ Beides läuft über **textdb.online**, einen kostenlosen öffentlichen Key-Value
 
 Zwei Postfächer pro Raum: `wahlwaechter_room_<code>_h` (Host) und `_g` (Gast). Jede Seite schreibt **nur** in ihr eigenes Postfach und liest das der Gegenseite alle 1,8 s. Nachrichten tragen eine laufende Nummer (`q`), damit nichts doppelt verarbeitet wird.
 
-Nachrichtentypen: `hello`, `start`, `progress`, `sabotage`, `huntResult`, `final`.
+Nachrichtentypen: `hello`, `lobbyInfo`, `cfg`, `start`, `progress`, `sabotage`, `huntResult`, `final`.
+
+**Lobby-Ablauf:** Der Host erstellt den Raum und wartet. Der Gast tritt bei und sendet `hello` mit seinem Namen. Der Host antwortet mit `lobbyInfo` (eigener Name + Regeln) – beide sind jetzt in der Lobby. Ändert der Host eine Regel, geht sofort ein `cfg` an den Gast; beim Gast sind die Regeln nur lesbar und der Start-Knopf fehlt. Erst der Start-Knopf des Hosts sendet `start` mit Seed und Regeln, und beide beginnen. (Vor v4.2 startete das Duell automatisch, sobald der Gast beitrat.)
 
 Zwei Fallstricke, die im Code adressiert sind:
 
@@ -128,7 +131,10 @@ Felder pro Spieler:in (bewusst einbuchstabig – der ganze Raum ist **ein** Wert
 | `b` | Zeitstempel des letzten Lebenszeichens |
 | `bd` | gebauter Fake als Index-Liste `[thema, format, tarnung1, tarnung2]` |
 | `ta` | zugeteilter Fake: Spieler-ID der Urheberin bzw. `"auto"` |
+| `sd` | `1` = im Showdown angekommen (zählt für die Nachzügler-Frist) |
 | `hr` | Showdown-Ergebnis: `1` gefunden, `0` nicht gefunden |
+
+Die Regeln stehen als `cfg` im Raum-Zustand. In der Lobby kann nur der Host sie ändern (`ClassNet.setCfg`); alle anderen sehen sofort die neue Fassung und haben keinen Start-Knopf.
 
 Die Abrufrate ist normal 2,6 s und während des Showdowns 1,3 s (`ClassNet.setPace`) – dort müssen Zuteilungen zügig sichtbar sein.
 
@@ -138,7 +144,7 @@ Die Anforderung: bis zu 30 selbstgebaute Fakes gleichmäßig verteilen, niemand 
 
 1. **Ring.** Alle Raum-Mitglieder werden nach Spieler-ID sortiert; jede:r nimmt den Fake der nächsten Person im Ring. Das ist eine reine Funktion der Teilnehmerliste – kein Rennen, keine Absprache – und geht mathematisch perfekt auf: jeder Fake genau einmal, niemand bekommt den eigenen. Gilt, sobald diese Person abgegeben hat und ihren Fake noch niemand sonst genommen hat.
 2. **Sonst der am wenigsten beanspruchte Fake.** Jede:r trägt seine Zuteilung als `ta` ein, alle sehen sie. Gleichstand wird pro Person unterschiedlich aufgelöst (Hash aus eigener und fremder ID). Ein bereits vergebener Fake wird nur als letzte Option genommen.
-3. **Auto-Fill.** Ist nach `CLASS_FAKE_WAIT_MS` (30 s) noch nichts verfügbar, baut HYDRA per `randomBuild` einen Fake – deterministisch aus Raum-Seed und eigener ID. Der Wartebildschirm zeigt den Countdown.
+3. **Auto-Fill.** Ist nach `CLASS_FAKE_WAIT_MS` (60 s) noch nichts verfügbar, baut HYDRA per `randomBuild` einen Fake – deterministisch aus Raum-Seed und eigener ID. Der Wartebildschirm zeigt den Countdown und daneben live, wie viele Fakes schon vorliegen.
 
 Dazu zwei Kleinigkeiten gegen Rennen: ein kurzer, pro Person unterschiedlicher **Versatz** (0–4 s, `CLASS_STAGGER_MS`) vor der Zuteilung und das erwähnte schnellere Polling.
 
@@ -153,7 +159,17 @@ Dazu zwei Kleinigkeiten gegen Rennen: ein kurzer, pro Person unterschiedlicher *
 
 „Eigener Fake" trat in keinem Durchlauf auf – das ist strukturell ausgeschlossen.
 
-Der **Bonus für unentdeckte Fakes** (`classFakeBonus`) wird erst nach dem eigenen Rundenende ausgewertet, weil das Gegenüber oft später fertig ist. Nach `CLASS_BONUS_WAIT_MS` (150 s) wird auch ohne dessen Urteil abgeschlossen, damit die Auswertung nicht hängt.
+### Nachzügler in den Showdown holen
+
+Damit die Klasse nicht auf Einzelne wartet, werden Nachzügler aus den Fällen geholt und in den Showdown gesetzt (`classCheckPull`). Der Auslöser ist bewusst **nicht** die erste fertige Person – sonst würde eine einzelne schnelle Person die halbe Klasse mitten aus der Runde reißen. Stattdessen:
+
+1. Sobald **`CLASS_PULL_SHARE`** (60 %) der Raum-Mitglieder im Showdown sind (Feld `sd`, `bd` oder `f`), startet die Frist.
+2. Die Frist läuft ab dem Moment, in dem das **eigene** Gerät den Schwellwert sieht – dadurch ist sie unabhängig davon, ob die Uhren der Geräte gleich gehen.
+3. Nach **`CLASS_PULL_MS`** (45 s) wird der Timer gestoppt, die Bauphase geöffnet und ein Hinweis „Du warst zu langsam" eingeblendet (`#build-notice`). Die restlichen Fälle entfallen; der Showdown zählt normal.
+
+Wird der Schwellwert nie erreicht (z. B. viele haben den Tab geschlossen), wird niemand herausgeholt – der Auto-Fill verhindert Downtime dann allein.
+
+Der **Bonus für unentdeckte Fakes** (`classFakeBonus`) wird erst nach dem eigenen Rundenende ausgewertet, weil das Gegenüber oft später fertig ist. Nach `CLASS_BONUS_WAIT_MS` (150 s) wird auch ohne dessen Urteil abgeschlossen, damit die Auswertung nicht hängt. Kommt später noch ein zweites Opfer dazu (seltener Rennfall), zahlt `bonusCounted` die Differenz nach.
 
 ## Einweisung (`tutorial.js`)
 
@@ -266,4 +282,4 @@ Mindestens abdecken: Solo klassisch **bis ins Boss-Finale** (dazu muss man richt
 
 - **Smoke-Test auf GitHub Pages** nach jedem größeren Update. Achtung: Pages cacht JavaScript ca. 10 Minuten – vor dem Test hart neu laden. Sinnvoll: Konsole offen lassen, ein Duell und einen Klassenraum mit 2–3 Tabs kurz durchspielen.
 - **Klassenraum unter Volllast** (30 Geräte gleichzeitig) ist noch nicht unter Realbedingungen gemessen worden, nur simuliert und mit kleinen Gruppen getestet.
-- Das Handout `ANLEITUNG.pdf` kennt die interaktive Einweisung und den Klassenraum-Showdown noch nicht. Beim nächsten Neusatz ergänzen.
+- Das Handout `ANLEITUNG.pdf` kennt die interaktive Einweisung, die Lobbys und den Klassenraum-Showdown noch nicht. Beim nächsten Neusatz ergänzen.

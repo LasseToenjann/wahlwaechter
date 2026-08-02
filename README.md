@@ -16,7 +16,7 @@ Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippe
 | **spielen und verstehen, wie es geht** | Im Spiel: **🎓 Einweisung** (interaktiv, ca. 5 Min) · zum Nachschlagen: [docs/SPIELANLEITUNG.md](docs/SPIELANLEITUNG.md) |
 | **das Spiel im Unterricht einsetzen** | [docs/SPIELANLEITUNG.md → Für Lehrkräfte](docs/SPIELANLEITUNG.md#für-lehrkräfte-und-kursleitung) · Handout zum Ausdrucken: [ANLEITUNG.pdf](ANLEITUNG.pdf) |
 | **wissen, warum das Spiel so gebaut ist** (Abgabe-Dokument) | [KONZEPT.md](KONZEPT.md) |
-| **am Code arbeiten** | [docs/TECHNIK.md](docs/TECHNIK.md) |
+| **am Code arbeiten** | [CLAUDE.md](CLAUDE.md) für Arbeitsweise und Stand · [docs/TECHNIK.md](docs/TECHNIK.md) für die Architektur |
 | **sehen, was sich geändert hat** | [docs/AENDERUNGEN.md](docs/AENDERUNGEN.md) |
 
 ## Was das Spiel kann
@@ -33,10 +33,12 @@ Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippe
 | 🛡️ **Solo klassisch** | 3 Wochen × 6 Fälle, 2 Dilemma-Upgrades, Boss-Finale gegen HYDRA (ca. 15–20 Min) |
 | ♾️ **Endlos** | Schicht um Schicht härter; ab Schicht 3 erzeugt der Fall-Generator laufend neue, nie gesehene Fälle |
 | 📅 **Tages-Challenge** | Täglich neuer, für alle identischer Fallsatz – 1 Versuch pro Tag, eigene Tages-Rangliste |
-| ⚔️ **Online-Duell 1 vs 1** | Raum-Code, gleiche Fälle, Punktestand des Gegners live. Host legt Fallzahl, Tempo, Schwierigkeit und Showdown fest |
+| ⚔️ **Online-Duell 1 vs 1** | Raum-Code, Lobby mit beiden Namen, gleiche Fälle, Punktestand des Gegners live |
 | 🏟️ **Klassenraum** | Bis 30 Spieler:innen gleichzeitig, 👑 Spitzenreiter live im HUD, Podium am Ende – **auf Wunsch mit Showdown** |
 
-**🧪 Showdown (Duell & Klassenraum):** Jede:r baut selbst einen KI-Fake aus Thema × Format × Tarnungen. Das Budget reicht nie für perfekte Tarnung – irgendein Beweiskanal bleibt immer offen. Im Klassenraum werden die gebauten Fakes **gleichmäßig reihum verteilt**: niemand bekommt den eigenen, möglichst jeder Fake geht an genau eine Person, und wer zu lange braucht, wird nicht abgewartet – dann springt ein automatisch gebauter HYDRA-Fake ein.
+Duell und Klassenraum haben beide eine **Lobby**: Spielerliste, Regeln nur beim Host änderbar (Änderungen sind sofort bei allen sichtbar), Start-Knopf nur beim Host.
+
+**🧪 Showdown (Duell & Klassenraum):** Jede:r baut selbst einen KI-Fake aus Thema × Format × Tarnungen. Das Budget reicht nie für perfekte Tarnung – irgendein Beweiskanal bleibt immer offen. Im Klassenraum werden die gebauten Fakes **gleichmäßig reihum verteilt**: niemand bekommt den eigenen, möglichst jeder Fake geht an genau eine Person, und wer zu lange braucht, wird nicht abgewartet – nach 60 Sekunden springt ein automatisch gebauter HYDRA-Fake ein. Wer beim Start des Showdowns noch in den Fällen steckt, wird nach kurzer Frist herausgeholt („Du warst zu langsam"), damit die Klasse nicht auf Einzelne wartet.
 
 **Drumherum:** 📋 Fall-Auswertung nach jeder Runde (jeder Fall mit Auflösung und **realem Vorbild**) · 🌐 globale Rangliste über **alle** Modi inklusive Klassenraum, mit Filtern und Offline-Fallback · 👤 Profil mit Duell-Bilanz und Ø-Genauigkeit · ℹ️ Rechtliches & Datenschutz im Spiel.
 
@@ -77,6 +79,7 @@ js/classroom.js       Klassenraum-Netzwerk (bis 30 Spieler:innen auf einem Raum-
 js/tutorial.js        interaktive Einweisung (eigene Übungsfälle)
 js/game.js            Spiellogik, State-Machine, Ranglisten, Profile
 ANLEITUNG.pdf         Handout mit QR-Code zum Ausdrucken
+CLAUDE.md             Arbeitsanleitung: Projekt, Konventionen, Teststrategie, Stand
 KONZEPT.md            Spielkonzept (Abgabe-Dokument)
 docs/                 Spielanleitung, Technik-Doku, Änderungsverlauf
 ```

@@ -1,5 +1,25 @@
 # Änderungsverlauf
 
+## v4.2 – Lobbys, Showdown-Timing, Hilfe entflochten
+
+**Lobbys für Duell und Klassenraum**
+- Das **Online-Duell** startet nicht mehr automatisch, sobald jemand beitritt. Stattdessen landen beide in einer Lobby: Spielerliste, Raum-Code, Regeln. Nur der Host kann die Regeln ändern (jede Änderung ist beim Gegenüber sofort sichtbar) und nur der Host hat den Start-Knopf.
+- Im **Klassenraum** sind die Regeln aus dem Erstellen-Dialog in die Lobby gewandert – dort ändert sie der Host, während sich der Raum füllt. Alle anderen sehen die Regeln als Nur-Lese-Zeile und haben keinen Start-Knopf.
+- Neue Duell-Nachrichten `lobbyInfo` und `cfg`; im Klassenraum schreibt `ClassNet.setCfg` die Regeln in den Raum-Zustand.
+
+**Showdown im Klassenraum**
+- Wartezeit bis zum automatisch gebauten HYDRA-Fake von 30 auf **60 Sekunden** verlängert, damit man den Feed in Ruhe lesen kann.
+- **Nachzügler werden hineingeholt:** Sobald 60 % der Klasse im Showdown sind, läuft für die Übrigen eine Frist von 45 Sekunden; danach werden sie aus den Fällen geholt und mit dem Hinweis „Du warst zu langsam" in die Bauphase gesetzt. Auslöser ist bewusst nicht die erste fertige Person – sonst würde eine einzelne schnelle Person die halbe Klasse mitten aus der Runde reißen.
+- **Live-Anzeige**, wie viele Fakes schon abgegeben wurden – in der Bauphase im HUD und im Wartebildschirm.
+- Bonus für unentdeckte Fakes wird jetzt nachgezahlt, wenn später noch ein zweites Opfer dazukommt.
+
+**Hilfe und Einweisung entflochten**
+- Die In-Game-„Anleitung" heißt jetzt **„❓ Hilfe & Nachschlagen"** und erklärt bewusst **nichts** mehr: Sie enthält nur noch Nachschlage-Tabellen (Punkte, Ränge, Tarnungskosten, Modi-Kennzahlen), Antworten auf konkrete Probleme und den Fiktionshinweis.
+- Alles, was die Einweisung vermittelt, ist dort entfernt. Oben steht ein Knopf zur Einweisung, damit die Rollenverteilung klar ist: Einweisung = lernen, Hilfe = nachschlagen.
+
+**Doku**
+- Neu: `CLAUDE.md` als Einstieg für neue Sitzungen (Projekt, Arbeitsweise, Teststrategie, Fallstricke, Stand).
+
 ## v4.1 – Animationskonzept, Rangliste, Profil
 
 **Animationskonzept „Lagezentrum" (neu: `js/anim.js`)**

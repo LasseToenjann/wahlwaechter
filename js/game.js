@@ -659,7 +659,21 @@ function startBuildPhase() {
   build.theme = null; build.format = null; build.cloaks = [];
   const sab = DATA.sabotage;
 
-  const target = G.variant === "klasse"
+  const klasse = G.variant === "klasse";
+  const notice = $("build-notice");
+  notice.classList.toggle("hidden", !(klasse && G.class && G.class.wasPulled));
+  if (klasse && G.class && G.class.wasPulled) {
+    notice.innerHTML = "<b>⏱️ Du warst zu langsam.</b> Der Großteil der Klasse ist schon im Showdown – " +
+      "deine restlichen Fälle entfallen, damit niemand warten muss. Der Showdown zählt für dich ganz normal.";
+  }
+  if (klasse) {
+    ClassNet.reportSelf({ sd: 1 });     // „ich bin im Showdown" – zählt für die Nachzügler-Frist
+    updateClassLive();
+  } else {
+    $("build-live-item").classList.add("hidden");
+  }
+
+  const target = klasse
     ? "Er wird in den Feed einer <strong>anderen Person aus der Klasse</strong> geschleust – zugeteilt wird reihum, deinen eigenen Fake bekommst du nie."
     : "Er wird in den Feed deines Gegners geschleust.";
   $("build-intro").innerHTML = target + ` Wähle <strong>1 Thema, 1 Format und genau ${sab.maxCloaks} Tarnungen</strong>. ` +
@@ -1262,7 +1276,8 @@ function renderProfileTable(name) {
 /* =========================================================================
    ONLINE-DUELL
    ========================================================================= */
-let hostDuelCfg = null;
+let duelCfg = null;          // die Regeln des Raums (der Host legt sie fest)
+let duelPeerName = "";       // Name der Gegenseite
 
 function readDuelCfg() {
   return {
@@ -1271,6 +1286,46 @@ function readDuelCfg() {
     hard: chipVal("cfg-hard") === 1,
     showdown: chipVal("cfg-showdown") === 1,
   };
+}
+
+const DEFAULT_DUEL_CFG = { cases: 10, timer: 35, hard: false, showdown: true };
+
+function cfgSummary(cfg) {
+  const c = cfg || DEFAULT_DUEL_CFG;
+  return `${c.cases} Fälle · ${c.timer}s pro Fall · ${c.hard ? "Profi (nur schwere Fälle)" : "Gemischt"} · Showdown ${c.showdown ? "an 🧪" : "aus"}`;
+}
+
+/* ---------- Duell-Lobby: beide verbunden, Host stellt ein und startet ---------- */
+function showDuelLobby() {
+  $("lobby-choice").classList.add("hidden");
+  $("lobby-wait").classList.add("hidden");
+  $("lobby-error").classList.add("hidden");
+  $("lobby-ready").classList.remove("hidden");
+  renderDuelLobby();
+}
+
+function renderDuelLobby() {
+  const host = Net.isHost;
+  const me = myName || localStorage.getItem("ww_name") || "Ich";
+  $("duel-players").innerHTML =
+    `<span class="t-name-pill">${host ? "🎓 " : ""}${esc(me)} (du)</span>` +
+    `<span class="t-name-pill">${host ? "" : "🎓 "}${esc(duelPeerName || "…")}</span>`;
+  $("duel-settings").classList.toggle("hidden", !host);
+  $("duel-settings-readonly").classList.toggle("hidden", host);
+  $("duel-settings-readonly").textContent = "Regeln des Hosts: " + cfgSummary(duelCfg);
+  $("btn-duel-start").classList.toggle("hidden", !host);
+  $("btn-duel-start").disabled = false;
+  $("duel-lobby-hint").textContent = host
+    ? "Du legst die Regeln fest – Änderungen sieht dein Gegner sofort. Starte, wenn ihr beide bereit seid."
+    : "Der Host legt die Regeln fest und startet das Duell.";
+}
+
+/* Host hat an den Regeln gedreht -> sofort zur Gegenseite spiegeln */
+function pushDuelCfg() {
+  if (!Net.isHost || !Net.active) return;
+  duelCfg = readDuelCfg();
+  Net.send("cfg", { cfg: duelCfg });
+  renderDuelLobby();
 }
 
 function lobbyError(msg) {
@@ -1288,7 +1343,9 @@ function lobbyStep(stepId, done, text) {
 function resetLobbyUI() {
   $("lobby-choice").classList.remove("hidden");
   $("lobby-wait").classList.add("hidden");
+  $("lobby-ready").classList.add("hidden");
   $("lobby-error").classList.add("hidden");
+  duelPeerName = "";
   ["step-server", "step-room", "step-peer"].forEach(id => $(id).classList.remove("done"));
   lobbyStep("step-server", false, "Spielserver…");
   lobbyStep("step-room", false, "Raum öffnen…");
@@ -1308,6 +1365,7 @@ function wireNet() {
 
   Net.onRoomReady = (code) => {
     $("room-code-display").textContent = code;
+    $("duel-code-display").textContent = code;
     $("lobby-choice").classList.add("hidden");
     $("lobby-wait").classList.remove("hidden");
     $("lobby-error").classList.add("hidden");
@@ -1324,25 +1382,34 @@ function wireNet() {
     if (!Net.isHost) {
       $("lobby-choice").classList.add("hidden");
       $("lobby-wait").classList.remove("hidden");
-      $("room-code-display").textContent = "✓";
-      Net.onStatus("Verbunden! Starte Duell");
+      Net.onStatus("Verbunden – warte auf die Lobby");
       Net.send("hello", { name: myName || "Gast" });
     } else {
-      Net.onStatus("Gegner verbunden! Starte Duell");
+      Net.onStatus("Gegner verbunden");
     }
   };
 
   Net.onMessage = (msg) => {
     switch (msg.type) {
-      case "hello": {
-        const seed = randomSeed();
-        const cfg = hostDuelCfg || { cases: 10, timer: 35, hard: false, showdown: true };
-        Net.send("start", { seed, name: myName || "Host", cfg });
-        startDuel(seed, msg.name, cfg);
+      // Der Gast meldet sich -> Host schickt Namen und Regeln, beide in die Lobby
+      case "hello":
+        duelPeerName = msg.name || "Gast";
+        duelCfg = readDuelCfg();
+        Net.send("lobbyInfo", { name: myName || "Host", cfg: duelCfg });
+        showDuelLobby();
         break;
-      }
+      case "lobbyInfo":
+        duelPeerName = msg.name || "Host";
+        duelCfg = msg.cfg || DEFAULT_DUEL_CFG;
+        $("duel-code-display").textContent = $("room-code-display").textContent;
+        showDuelLobby();
+        break;
+      case "cfg":                       // Host hat die Regeln geändert
+        duelCfg = msg.cfg || DEFAULT_DUEL_CFG;
+        renderDuelLobby();
+        break;
       case "start":
-        startDuel(msg.seed, msg.name, msg.cfg || { cases: 10, timer: 35, hard: false, showdown: true });
+        startDuel(msg.seed, msg.name, msg.cfg || DEFAULT_DUEL_CFG);
         break;
       case "progress":
         if (G && G.duel) { G.duel.oppScore = msg.score; G.duel.oppIndex = msg.index; updateHud(); }
@@ -1499,38 +1566,62 @@ function wireClassNet() {
     if (active === "screen-case" && G && G.variant === "klasse") updateHud();
     if (active === "screen-class-result") renderClassResult(st);
 
-    if (G && G.variant === "klasse") { classTryAssign(); classFakeBonus(st); }
+    if (G && G.variant === "klasse") {
+      classCheckPull(st);
+      classTryAssign();
+      classFakeBonus(st);
+      if (active === "screen-build" || overlayOpen("overlay-wait")) updateClassLive();
+    }
   };
 }
 
 function renderClassLobby(st) {
   const players = (st.players || []);
   const cfg = st.cfg || {};
+  const host = ClassNet.isHost;
   $("class-count").textContent = players.length + " von " + ClassNet.MAX_PLAYERS + " Spieler:innen im Raum";
   const before = $("class-players").childElementCount;
   $("class-players").innerHTML = players.map(p =>
     `<span class="t-name-pill">${p.g === st.host ? "🎓 " : ""}${esc(p.n)}</span>`).join("");
   // nur neu Hinzugekommene einlaufen lassen, sonst zappelt die Liste bei jedem Poll
   Array.from($("class-players").children).slice(before).forEach(el => el.classList.add("anim-in"));
+
   const rules = `${cfg.cases || 10} Fälle · ${cfg.timer || 35}s pro Fall · Showdown ${cfg.showdown ? "an 🧪" : "aus"}`;
+  $("class-settings").classList.toggle("hidden", !host);
+  $("class-settings-readonly").classList.toggle("hidden", host);
+  $("class-settings-readonly").textContent = "Regeln des Hosts: " + rules;
+
   const startBtn = $("btn-class-start");
-  if (ClassNet.isHost) {
+  if (host) {
     startBtn.classList.remove("hidden");
     startBtn.disabled = players.length < 2;
     startBtn.textContent = players.length < 2 ? "🚀 Runde starten (mind. 2)" : `🚀 Runde starten (${players.length} Spieler:innen)`;
-    $("class-lobby-hint").textContent = rules + " · Starte, sobald alle drin sind – Nachzügler können nicht mehr beitreten.";
+    $("class-lobby-hint").textContent = "Stell die Regeln ein – alle sehen die Änderung sofort. Starte, sobald alle drin sind; Nachzügler können danach nicht mehr beitreten.";
   } else {
     startBtn.classList.add("hidden");
-    $("class-lobby-hint").textContent = rules + " · Warte, bis der Host die Runde startet…";
+    $("class-lobby-hint").textContent = "Warte, bis der Host die Runde startet…";
   }
 }
 
-async function classCreate() {
-  const cfg = {
+function readClassCfg() {
+  return {
     cases: chipVal("ccfg-cases") || 10,
     timer: chipVal("ccfg-timer") || 35,
     showdown: chipVal("ccfg-showdown") === 1 ? 1 : 0,
   };
+}
+
+/* Host hat in der Lobby an den Regeln gedreht -> in den Raum schreiben */
+function pushClassCfg() {
+  if (!ClassNet.isHost || !ClassNet.code) return;
+  const cfg = readClassCfg();
+  if (ClassNet.state) ClassNet.state.cfg = cfg;      // sofort anzeigen, Server zieht nach
+  renderClassLobby(ClassNet.state || { players: [], cfg });
+  ClassNet.setCfg(cfg);
+}
+
+async function classCreate() {
+  const cfg = readClassCfg();
   $("class-error").classList.add("hidden");
   const ok = await ClassNet.create(cfg);
   if (!ok) return;
@@ -1560,7 +1651,8 @@ function startClassGame(seed, cfg) {
     roomCode: ClassNet.code,
     cfg: { cases: cfg.cases || 10, timer: cfg.timer || 35, showdown: !!cfg.showdown },
     myBuild: null, assigned: false, donorGid: null, donorName: null,
-    waitStart: 0, stagger: 0, finished: false, bonusDone: false, bonusPts: 0, bonusDeadline: 0,
+    waitStart: 0, stagger: 0, finished: false, bonusPts: 0, bonusCounted: 0, bonusClosed: false, bonusDeadline: 0,
+    pullSeenAt: 0, pulled: false, wasPulled: false,
   };
   const { deck, sections } = buildMixedDeck(seed, { cases: G.class.cfg.cases, timer: G.class.cfg.timer, hard: 0 }, "KLASSENRAUM " + ClassNet.code);
   G.deck = deck; G.sections = sections;
@@ -1595,10 +1687,17 @@ function startClassGame(seed, cfg) {
    Simuliert mit 30 Spieler:innen: ~25 von 30 Fakes gehen an genau eine
    Person, praktisch nie derselbe Fake an drei, Wartezeit im Schnitt ~2 s.
    ========================================================================= */
-const CLASS_FAKE_WAIT_MS = 30000;    // so lange auf einen Fake aus der Klasse warten
+const CLASS_FAKE_WAIT_MS = 60000;    // so lange auf einen Fake aus der Klasse warten
 const CLASS_STAGGER_MS = 4000;       // Spanne des Versatzes vor der Zuteilung
 const CLASS_BONUS_WAIT_MS = 150000;  // so lange auf das Urteil des Gegenübers warten
 const CLASS_FAKE_BONUS = 200;        // Punkte, wenn der eigene Fake unentdeckt bleibt
+
+/* Nachzügler in den Showdown holen.
+   Trigger ist NICHT die erste fertige Person – sonst würde eine einzelne
+   schnelle Person die halbe Klasse mitten aus der Runde reißen. Erst wenn
+   der überwiegende Teil im Showdown ist, läuft für die Übrigen eine Frist. */
+const CLASS_PULL_SHARE = 0.6;        // ab diesem Anteil im Showdown läuft die Frist
+const CLASS_PULL_MS = 45000;         // danach werden Nachzügler hineingeholt
 
 /* Bauplan platzsparend als Index-Liste ablegen (der Raum-Zustand ist EIN Wert
    für bis zu 30 Spieler:innen – Kürze ist hier Funktion, nicht Kosmetik). */
@@ -1632,6 +1731,7 @@ function classSubmitBuild(spec) {
   ClassNet.reportSelf({ bd: packBuild(spec) });
   ClassNet.setPace(ClassNet.POLL_FAST_MS);   // Zuteilungen müssen jetzt zügig ankommen
   showOverlay("overlay-wait", true);
+  updateClassLive();
   classWaitTick(false);
   if (!classWaitTimer) classWaitTimer = setInterval(classTryAssign, 1000);
   classTryAssign();
@@ -1693,9 +1793,48 @@ function classTryAssign() {
 
   showOverlay("overlay-wait", false);
   $("wait-sub").textContent = "";
+  $("wait-live").textContent = "";
   startHunt(craftFake(spec), "SHOWDOWN · KLASSENRAUM", pick
     ? `In diesem Feed steckt der Fake, den <strong>${esc(pick.n)}</strong> gebaut hat. Eine Markierung, keine zweite Chance.`
     : "Niemand war rechtzeitig fertig – <strong>HYDRA</strong> hat selbst einen Fake gebaut und hier versteckt. Eine Markierung, keine zweite Chance.");
+}
+
+/* ---------- Live-Anzeige: wie viele Fakes liegen schon vor? ---------- */
+function updateClassLive() {
+  const cl = G && G.variant === "klasse" ? G.class : null;
+  if (!cl || !cl.cfg.showdown) return;
+  const players = (ClassNet.state && ClassNet.state.players) || [];
+  const done = players.filter(p => p.bd).length;
+  const total = players.length || 1;
+  $("build-live-item").classList.remove("hidden");
+  $("build-live").textContent = done + "/" + total;
+  $("wait-live").textContent = `🧪 ${done} von ${total} Spieler:innen haben ihren Fake abgegeben.`;
+}
+
+/* ---------- Nachzügler in den Showdown holen ---------- */
+function classCheckPull(st) {
+  const cl = G && G.variant === "klasse" ? G.class : null;
+  if (!cl || !cl.cfg.showdown || cl.pulled || cl.myBuild) return;
+  const active = document.querySelector(".screen.active");
+  if (!active || (active.id !== "screen-case" && active.id !== "screen-week")) return;
+
+  const players = (st && st.players) || [];
+  if (players.length < 2) return;
+  const ready = players.filter(p => p.sd || p.bd || p.f === 1).length;
+  const need = Math.max(2, Math.ceil(players.length * CLASS_PULL_SHARE));
+
+  if (ready < need) { cl.pullSeenAt = 0; return; }
+  // Die Frist läuft ab dem Moment, in dem ICH den Schwellwert sehe – so ist
+  // sie unabhängig davon, ob die Uhren der Geräte gleich gehen.
+  if (!cl.pullSeenAt) { cl.pullSeenAt = Date.now(); return; }
+  if (Date.now() - cl.pullSeenAt < CLASS_PULL_MS) return;
+
+  cl.pulled = true;
+  cl.wasPulled = true;
+  stopTimer();
+  showOverlay("overlay-reveal", false);
+  netBanner("⏱️ Du warst zu langsam – die Klasse ist schon im Showdown.");
+  startBuildPhase();
 }
 
 function classReportFinal() {
@@ -1708,22 +1847,28 @@ function classReportFinal() {
 
 /* Bonus, wenn der eigene Fake beim Gegenüber unentdeckt geblieben ist.
    Wird erst nach dem eigenen Rundenende ausgewertet (das Gegenüber ist
-   oft später fertig) – notfalls nach Ablauf der Wartefrist ohne Urteil. */
+   oft später fertig) – notfalls nach Ablauf der Wartefrist ohne Urteil.
+   Kommt später noch jemand dazu (in seltenen Fällen bekommen zwei denselben
+   Fake), wird die Differenz nachgezahlt – deshalb bonusCounted. */
 function classFakeBonus(st) {
   const cl = G && G.variant === "klasse" ? G.class : null;
-  if (!cl || !cl.myBuild || !cl.finished || cl.bonusDone) return;
+  if (!cl || !cl.myBuild || !cl.finished || cl.bonusClosed) return;
   const victims = ((st && st.players) || []).filter(p => p.ta === ClassNet.gid);
   const expired = Date.now() > cl.bonusDeadline;
-  if (!expired && (!victims.length || victims.some(p => p.hr == null))) return;
+  const pending = victims.some(p => p.hr == null);
+  if (!expired && (pending || !victims.length)) return;
+  if (expired) cl.bonusClosed = true;
 
-  cl.bonusDone = true;
   const missed = victims.filter(p => p.hr === 0).length;
-  if (!missed) return;
-  cl.bonusPts = CLASS_FAKE_BONUS * missed;
-  G.score += cl.bonusPts;
+  if (missed <= cl.bonusCounted) return;
+
+  const add = (missed - cl.bonusCounted) * CLASS_FAKE_BONUS;
+  cl.bonusCounted = missed;
+  cl.bonusPts += add;
+  G.score += add;
   classReportFinal();
   storeEntry(null);                 // Ranglisten-Eintrag auf den Bonus nachziehen
-  netBanner("🎭 Dein Fake blieb unentdeckt: +" + cl.bonusPts + " Punkte!");
+  netBanner("🎭 Dein Fake blieb unentdeckt: +" + add + " Punkte!");
   if (document.querySelector(".screen.active").id === "screen-class-result") renderClassResult(st);
 }
 
@@ -1780,8 +1925,14 @@ function classShowdownInfo(players) {
   let line;
   if (!victims.length) line = "Dein Fake liegt bereit – er wird der nächsten Person zugeteilt, die den Showdown erreicht.";
   else if (!judged.length) line = `Dein Fake liegt im Feed von <strong>${esc(victims.map(v => v.n).join(", "))}</strong> – Urteil steht noch aus.`;
-  else if (missed) line = `🎭 <strong>Unentdeckt geblieben!</strong> ${esc(judged.filter(p => p.hr === 0).map(v => v.n).join(", "))} hat deinen Fake übersehen.${cl.bonusPts ? " Bonus: +" + cl.bonusPts + " Punkte." : ""}`;
-  else line = `Dein Fake wurde von <strong>${esc(judged.map(v => v.n).join(", "))}</strong> enttarnt – kein Bonus. Perfekte Tarnung gibt es eben nicht.`;
+  else if (missed) {
+    const blind = judged.filter(p => p.hr === 0);
+    line = `🎭 <strong>Unentdeckt geblieben!</strong> ${esc(blind.map(v => v.n).join(", "))} ` +
+      `${blind.length > 1 ? "haben" : "hat"} deinen Fake übersehen.${cl.bonusPts ? " Bonus: +" + cl.bonusPts + " Punkte." : ""}`;
+  } else {
+    const seher = judged.map(v => v.n);
+    line = `Dein Fake wurde von <strong>${esc(seher.join(", "))}</strong> enttarnt – kein Bonus. Perfekte Tarnung gibt es eben nicht.`;
+  }
 
   const got = cl.donorName
     ? ` Du hast den Fake von <strong>${esc(cl.donorName)}</strong> bekommen.`
@@ -1828,12 +1979,24 @@ function init() {
 
   // Duell-Lobby
   $("btn-create-room").addEventListener("click", () => {
-    hostDuelCfg = readDuelCfg();
+    duelCfg = readDuelCfg();
     $("lobby-error").classList.add("hidden");
     $("lobby-choice").classList.add("hidden");
     $("lobby-wait").classList.remove("hidden");
     $("room-code-display").textContent = "·····";
     Net.createRoom();
+  });
+  // Host dreht an den Regeln -> sofort zur Gegenseite spiegeln
+  ["cfg-cases", "cfg-timer", "cfg-hard", "cfg-showdown"].forEach(id =>
+    document.querySelectorAll("#" + id + " .chip").forEach(c =>
+      c.addEventListener("click", pushDuelCfg)));
+  $("btn-duel-start").addEventListener("click", () => {
+    if (!Net.isHost) return;
+    $("btn-duel-start").disabled = true;
+    const seed = randomSeed();
+    duelCfg = readDuelCfg();
+    Net.send("start", { seed, name: myName || "Host", cfg: duelCfg });
+    startDuel(seed, duelPeerName, duelCfg);
   });
   const doJoin = () => {
     const code = $("join-code").value.trim().toUpperCase();
@@ -1858,6 +2021,10 @@ function init() {
 
   // Klassenraum
   $("btn-class-create").addEventListener("click", classCreate);
+  // Host stellt die Regeln in der Lobby ein -> in den Raum schreiben
+  ["ccfg-cases", "ccfg-timer", "ccfg-showdown"].forEach(id =>
+    document.querySelectorAll("#" + id + " .chip").forEach(c =>
+      c.addEventListener("click", pushClassCfg)));
   $("btn-class-join").addEventListener("click", classJoin);
   $("class-join-code").addEventListener("keydown", (e) => { if (e.key === "Enter") classJoin(); });
   $("class-join-code").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); });
