@@ -701,7 +701,7 @@ Tutorial.steps = [
           <li><b>Energie ist Strategie.</b> Was du sparst, wird am Ende zu Punkten.</li>
           <li><b>Der Index ist dein Multiplikator.</b> Man gewinnt nicht, indem man die Demokratie opfert.</li>
         </ol>
-        <p class="muted small">Die Einweisung findest du jederzeit im Hauptmenü unter <strong>🎓 Einweisung</strong>, die Kurzfassung zum Nachschlagen unter <strong>📖 Anleitung</strong>.</p>`;
+        <p class="muted small">Die Einweisung findest du jederzeit im Hauptmenü unter <strong>🎓 Einweisung</strong>. Zahlen und Tabellen zum Nachschlagen stehen unter <strong>❓ Hilfe</strong>.</p>`;
     },
   },
 ];

@@ -92,8 +92,15 @@ Die Browser-Konsole muss dabei leer bleiben.
    dem das eigene Gerät einen Zustand *sieht* – nicht ab einem fremden Zeitstempel.
 6. **ReportLab-PDFs:** nie den `Tc`-Operator verwenden (Zeichenabstand überlebt
    Textobjekte und wird von manchen Viewern nicht zurückgesetzt).
+7. **iOS ist der strengere Browser.** Drei Dinge, die nur dort auffielen:
+   Beschriftungen als reiner Textknoten in einem Flex-Knopf werden mit Emoji
+   falsch gemessen und abgeschnitten (deshalb sind `.btn` bewusst kein Flexbox);
+   Zahlenbereiche wie „2900–3599" werden ohne `format-detection`-Meta zu
+   Anruf-Links; und ohne `env(safe-area-inset-*)` liegt die erste Zeile hinter
+   der Uhr. Nach Layout-Änderungen einmal bei 320 px und 390 px auf
+   horizontalen Überlauf prüfen.
 
-## Stand (Februar-Update v4.2)
+## Stand (Februar-Update v4.3)
 
 Fertig und getestet:
 
@@ -108,6 +115,8 @@ Fertig und getestet:
 - Durchgängiges Animationskonzept („Lagezentrum", `js/anim.js`)
 - In-Game-Hilfe ist reines Nachschlagewerk und überschneidet sich bewusst **nicht**
   mit der Einweisung
+- Auf dem Handy geprüft: keine Überläufe bei 320 px und 390 px, Safe-Area
+  berücksichtigt, keine automatischen Telefonnummer-Links
 
 Offen (siehe `docs/TECHNIK.md` → „Offene Punkte"):
 

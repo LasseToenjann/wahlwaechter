@@ -1,5 +1,17 @@
 # Änderungsverlauf
 
+## v4.3 – Mobile-Fehlerbehebungen
+
+Nach dem ersten Test auf einem iPhone gemeldet und behoben:
+
+- **Zahlen wurden als Telefonnummern erkannt.** iOS Safari hat Bereiche wie „2900–3599" in den Hilfe-Tabellen automatisch in blaue Anruf-Links verwandelt. Behoben mit `<meta name="format-detection" content="telephone=no,…">`, dazu eine CSS-Regel als Rückfallebene, falls doch etwas verlinkt wird.
+- **Beschriftungen wurden abgeschnitten** („🚀 Los geht's!" erschien als „Los geht"). Ursache: Die Beschriftung stand als reiner Textknoten im Knopf und war damit ein *anonymes Flex-Item* – Safari misst so ein Item falsch, sobald ein Emoji darin vorkommt. Knöpfe verwenden jetzt kein Flexbox mehr, sondern Block-Layout mit `text-align: center`.
+- **Erste Textzeile lag hinter der Uhr.** Die Seite nutzt `viewport-fit=cover`, hatte aber keine Safe-Area-Abstände. `#app`, die klebende Timer-Leiste, das Verbindungs-Banner und die Overlays berücksichtigen jetzt `env(safe-area-inset-*)`.
+- **Titel „WAHLWÄCHTER" lief über den Rand** – auf dem Handy sichtbar abgeschnitten, auf dem Desktop unbemerkt über den Container hinaus. Schriftgröße so gewählt, dass das Wort in jeder Breite in eine Zeile passt.
+- **Weitere Überläufe beseitigt:** lange URLs im Rechtliches-Screen, der Raum-Code auf sehr schmalen Geräten, die Kopfzeile des Dossiers und die Spaltenbreite der Fall-Ansicht. Ein Prüfskript geht jetzt alle Screens bei 320 px und 390 px durch – beide Breiten sind frei von horizontalem Überlauf.
+- **Nachschlage-Tabellen** stapeln sich auf dem Handy untereinander statt zweispaltig zu quetschen.
+- Verweis auf die „Anleitung" am Ende der Einweisung auf „Hilfe" korrigiert.
+
 ## v4.2 – Lobbys, Showdown-Timing, Hilfe entflochten
 
 **Lobbys für Duell und Klassenraum**
