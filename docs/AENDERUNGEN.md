@@ -24,8 +24,9 @@
 - Damit entfallen auch die Erzeugungs-Skripte (`tools/`) und die dazugehörigen Screenshots.
 
 **Offene Punkte geschlossen**
-- Live-Smoke-Test: läuft gegen eine lokale Kopie von `origin/main` (aus dieser Umgebung ist `github.io` gesperrt) – ohne Befund.
-- Der Lasttest mit 30 echten Geräten ist nach Absprache **gestrichen**.
+- Der Lasttest mit 30 echten Geräten ist nach Absprache **gestrichen**; die Begründung steht in `docs/TECHNIK.md` unter „Bekannte Grenzen".
+- Damit gibt es keine offenen Punkte mehr. Das Kapitel „Offene Punkte" in `docs/TECHNIK.md` ist entfallen – ein leeres Kapitel, das jede neue Sitzung liest, stiftet nur Verwirrung.
+- Das Prüfrezept, das dort stand (ausgelieferten Stand über `git archive origin/main` lokal servieren, weil `github.io` aus der Entwicklungsumgebung gesperrt ist), steht jetzt dort, wo man es sucht: im Kapitel „Testen".
 
 ## v4.3 – Mobile-Fehlerbehebungen
 

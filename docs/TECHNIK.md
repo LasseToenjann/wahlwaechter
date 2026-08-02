@@ -309,6 +309,13 @@ python -m http.server 8123        # dann alle Modi einmal durchklicken
 
 Mindestens abdecken: Solo klassisch **bis ins Boss-Finale** (dazu muss man richtig antworten – sonst endet der Lauf vorher in der Vertrauenskrise), Endlos, Tages-Challenge, Duell mit Showdown, Klassenraum mit Showdown (inklusive des Falls, dass jemand nicht abgibt), Einweisung von vorn bis hinten.
 
+**Den ausgelieferten Stand prüfen.** GitHub Pages cacht JavaScript rund 10 Minuten – wer die Live-Seite im Browser kontrolliert, muss vorher hart neu laden. Aus der Entwicklungsumgebung heraus ist `github.io` durch die Netz-Richtlinie gesperrt; dieselbe Prüfung geht gegen eine lokale Kopie des ausgelieferten Dateistands:
+
+```bash
+git archive origin/main | tar -x -C /tmp/livecopy
+cd /tmp/livecopy && python -m http.server 8124
+```
+
 ## Erweitern
 
 **Neuen Fall hinzufügen:** Objekt in `DATA.cases` ergänzen, Eintrag in `DATA.realRefs` mit demselben `id`. Sonst nichts – Decks werden aus `week` gebaut.
@@ -325,15 +332,3 @@ Mindestens abdecken: Solo klassisch **bis ins Boss-Finale** (dazu muss man richt
 - Die Zuteilung im Klassenraum-Showdown ist ein **Best-Effort-Verfahren**: In seltenen Fällen (viele Abgaben in derselben Sekunde) kann ein Fake an zwei Personen gehen. Das ist unschädlich – niemand bekommt je den eigenen, und niemand wartet.
 - Ranglisten sind öffentlich beschreibbar. Für ein Schulprojekt vertretbar, für einen echten Wettbewerb nicht.
 - Der Klassenraum-Zustand ist **ein** JSON-Wert in einer URL. Deshalb sind die Feldnamen so kurz. Wer Felder ergänzt, sollte das im Blick behalten.
-
-## Offene Punkte
-
-- **Live-Kontrolle nach größeren Updates.** GitHub Pages cacht JavaScript rund 10 Minuten – vor dem Prüfen hart neu laden. Aus der Entwicklungsumgebung heraus ist `github.io` durch die Netz-Richtlinie gesperrt; der Smoke-Test läuft deshalb gegen eine lokale Kopie des ausgelieferten Stands:
-
-  ```bash
-  git archive origin/main | tar -x -C /tmp/livecopy
-  cd /tmp/livecopy && python -m http.server 8124
-  ```
-
-  Das prüft denselben Dateistand, den Pages ausliefert. Der letzte Durchlauf war ohne Befund: alle Skripte geladen, keine fehlenden Dateien, leere Konsole.
-- **Ein Lasttest mit 30 echten Geräten ist gestrichen.** Der Aufwand steht in keinem Verhältnis zum Nutzen; das Verteilungsverfahren ist simuliert belegt (Tabelle oben), die Grenzen von textdb.online stehen unter „Bekannte Grenzen".

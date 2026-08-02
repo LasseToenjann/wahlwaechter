@@ -21,7 +21,7 @@ beim Schreiben neuer Inhalte nicht aufweichen.
 | Überblick, Einstieg, Projektstruktur | `README.md` |
 | Warum das Spiel so gebaut ist (Abgabe-Dokument) | `KONZEPT.md` |
 | Vollständige Spielregeln, Teil für Lehrkräfte | `docs/SPIELANLEITUNG.md` |
-| Architektur, Protokolle, Datenmodell, offene Punkte | `docs/TECHNIK.md` |
+| Architektur, Protokolle, Datenmodell, bekannte Grenzen | `docs/TECHNIK.md` |
 | Was sich wann geändert hat | `docs/AENDERUNGEN.md` |
 
 **Bei jeder Änderung mitpflegen:** `docs/AENDERUNGEN.md` immer, dazu die betroffene
@@ -137,13 +137,6 @@ Fertig und getestet:
 - Mobile geprüft: kein Überlauf bei 320 px und 390 px, Safe-Area berücksichtigt,
   keine automatischen Telefonnummer-Links
 
-Offen:
-
-- **Nichts Blockierendes.** Nach größeren Updates die Live-Seite einmal im Browser
-  aufrufen (GitHub Pages cacht JS ~10 Min, also hart neu laden). Aus dieser
-  Arbeitsumgebung heraus ist `github.io` durch die Netz-Richtlinie gesperrt; der
-  Smoke-Test läuft deshalb gegen eine lokale Kopie von `origin/main`
-  (`git archive origin/main`), was inhaltlich dasselbe prüft.
-- Ein Lasttest mit 30 echten Geräten ist **bewusst gestrichen** – der Aufwand steht
-  in keinem Verhältnis; das Verfahren ist stattdessen simuliert belegt
-  (siehe `docs/TECHNIK.md`).
+Offen: nichts. Der Lasttest mit 30 echten Geräten ist bewusst gestrichen – der
+Aufwand steht in keinem Verhältnis, das Verteilungsverfahren ist simuliert belegt
+(Begründung in `docs/TECHNIK.md` → „Bekannte Grenzen").
