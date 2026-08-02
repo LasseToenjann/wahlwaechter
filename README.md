@@ -38,7 +38,9 @@ Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippe
 
 **🧪 Showdown (Duell & Klassenraum):** Jede:r baut selbst einen KI-Fake aus Thema × Format × Tarnungen. Das Budget reicht nie für perfekte Tarnung – irgendein Beweiskanal bleibt immer offen. Im Klassenraum werden die gebauten Fakes **gleichmäßig reihum verteilt**: niemand bekommt den eigenen, möglichst jeder Fake geht an genau eine Person, und wer zu lange braucht, wird nicht abgewartet – dann springt ein automatisch gebauter HYDRA-Fake ein.
 
-**Drumherum:** 📋 Fall-Auswertung nach jeder Runde (jeder Fall mit Auflösung und **realem Vorbild**) · 🌐 globale Rangliste mit Modus-Filtern und Offline-Fallback · 👤 Profil mit Duell-Bilanz und Ø-Genauigkeit · ℹ️ Rechtliches & Datenschutz im Spiel.
+**Drumherum:** 📋 Fall-Auswertung nach jeder Runde (jeder Fall mit Auflösung und **realem Vorbild**) · 🌐 globale Rangliste über **alle** Modi inklusive Klassenraum, mit Filtern und Offline-Fallback · 👤 Profil mit Duell-Bilanz und Ø-Genauigkeit · ℹ️ Rechtliches & Datenschutz im Spiel.
+
+Das Ganze ist durchgehend animiert – nach einem festen Konzept („Lagezentrum"), das in [js/anim.js](js/anim.js) beschrieben und in [docs/TECHNIK.md](docs/TECHNIK.md#animationen) eingeordnet ist. Wer im System „Bewegung reduzieren" eingeschaltet hat, bekommt alles ohne Animation.
 
 > **Fiktiv, aber belegt:** Alle Parteien, Personen, Medien und Beiträge sind **frei erfunden** (FIKTIV-Badge im Dossier). Die dargestellten Manipulations*techniken* sind real – jede Auflösung nennt das dokumentierte Vorbild samt Quelle.
 
@@ -66,6 +68,7 @@ Solo, Endlos, Tages-Challenge und die Einweisung laufen **offline**. Für Duell,
 ```
 index.html            alle Screens
 css/style.css         „Lagezentrum"-Design
+js/anim.js            Animations-System (Konzept „Lagezentrum")
 js/rng.js             deterministischer Zufall (Mulberry32), Raum-Codes
 js/data.js            Fall-Dossiers, Dilemmas, Showdown-Baukasten (alles fiktiv)
 js/gen.js             Fall-Generator + Fake-Baukasten (craftFake / randomBuild)

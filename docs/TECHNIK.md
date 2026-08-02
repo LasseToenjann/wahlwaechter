@@ -10,6 +10,7 @@ Alles, was man wissen muss, um am Code weiterzuarbeiten. Spielregeln stehen in d
 - [Klassenraum-Showdown: Verteilung der Fakes](#klassenraum-showdown-verteilung-der-fakes)
 - [Einweisung](#einweisung-tutorialjs)
 - [Ranglisten und Profile](#ranglisten-und-profile)
+- [Animationen](#animationen)
 - [Wichtige Entscheidungen](#wichtige-entscheidungen-und-warum)
 - [Testen](#testen)
 - [Erweitern](#erweitern)
@@ -180,13 +181,46 @@ Schlüssel (öffentlich schreibbar – für ein Schulprojekt vertretbar):
 | Rangliste Endlos | `wahlwaechter_el_x7k2m9` |
 | Rangliste Duell | `wahlwaechter_du_x7k2m9` |
 | Rangliste Tages-Challenge | `wahlwaechter_tc_x7k2m9` |
+| Rangliste Klassenraum | `wahlwaechter_kr_x7k2m9` |
 | Profile | `wahlwaechter_pr_x7k2m9` |
 | Duell-Räume | `wahlwaechter_room_<code>_h` / `_g` |
 | Klassenräume | `wahlwaechter_class_<code>` |
 
 Pro Modus werden maximal 30 Einträge gehalten, Profile maximal 120; bei Überlauf fallen die schlechtesten bzw. ältesten heraus. Schreibzugriffe laufen überall über Lesen → Mergen → Schreiben → Verifizieren mit Wiederholungen. Ohne Internet greift ein `localStorage`-Fallback (`ww_board_v1`).
 
+Der Filter „Alle" liest alle Modus-Schlüssel und mischt sie – Klassenraum-Ergebnisse eingeschlossen. Ausgenommen sind nur Tages-Challenge-Ergebnisse älterer Tage: Sie stammen aus einem anderen Fallsatz und wären nicht vergleichbar.
+
+Jeder Lauf bekommt eine **stabile Ergebnis-ID** (`G.entryId`). `pushGlobalScore` legt den Eintrag entweder neu an oder aktualisiert ihn, wenn er schon dort steht. Nötig ist das für den Klassenraum: Der Bonus für unentdeckte Fakes kann erst eintreffen, wenn das Ergebnis längst gespeichert ist – dann zieht `storeEntry` den vorhandenen Eintrag nach, statt einen zweiten anzulegen.
+
+Die Profil-Ansicht zeigt die Duell-Bilanz standardmäßig auf **Top 10** gekürzt; `renderProfileTable` klappt den Rest über den „Mehr sehen"-Knopf auf.
+
 > ⚠️ **Daten nie eigenmächtig löschen.** Ein „frisches Leeren" der Schlüssel hat schon einmal echte Spielstände unwiederbringlich vernichtet – textdb.online hat keine Historie. Leeren nur auf ausdrückliche Anweisung: `GET https://textdb.online/update/?key=<KEY>&value={"scores":[]}` (Profile: `{"profiles":[]}`).
+
+## Animationen
+
+Das Konzept heißt **„Lagezentrum"** und steht ausführlich im Kopf von `js/anim.js`; die Umsetzung liegt im Abschnitt „Animationen" von `css/style.css`. Kurzfassung:
+
+**Drei Regeln.** (1) Jede Bewegung beantwortet eine Frage – woher kam das, was hat sich geändert, was passiert gerade, war das richtig. (2) Kurz (120–320 ms), außer es ist ein bewusster Moment. (3) Nur `transform` und `opacity`, damit es auf alten iPads flüssig bleibt.
+
+**Sechs Ebenen:**
+
+| Ebene | Umsetzung |
+|---|---|
+| Screen | `showScreen(id, dir)` – vorwärts steigt der Screen auf, `goBack(id)` lässt ihn sinken. Alle Zurück-/Hauptmenü-Wege nutzen `goBack` |
+| Overlay | Backdrop blendet, Karte skaliert mit leichtem Überschwingen; beim Schließen 150 ms Ausblendung |
+| Inhalt | `Anim.stagger(container, selector)` setzt `--i` und die Klasse `anim-in`. Statische Screens brauchen kein JS: die Klasse `stagger-css` staffelt per `nth-child` |
+| Zustand | `hudSet()` vergleicht mit dem letzten Wert und pulst: Punkte grün, Index-Schaden rot zitternd, Energie amber |
+| Feedback | Knopfdruck, Chip-Einrasten, Scan-Streifen über benutzte Werkzeuge, Beweise gleiten von links ein |
+| Ambiente | Driftendes Raster (`body::before`, GPU-Transform), glimmender Titel, atmender Raum-Code, pulsierender Timer unter 22 % |
+
+**Signature-Momente:** Das Urteil wird gestempelt (`Anim.stamp`), die Endpunktzahl zählt hoch (`Anim.countUp`), das Klassenraum-Podium läuft gestaffelt ein.
+
+**Zwei Fallstricke, die im Code adressiert sind:**
+
+1. Overlays sind während der 150 ms Ausblendung noch im DOM, aber schon „zu". Deshalb prüft man Offenheit mit **`overlayOpen(id)`**, nicht mit `classList.contains("hidden")` – sonst wartet die Duell-Logik auf ein Overlay, das gerade verschwindet.
+2. Das Hintergrundraster liegt auf einer eigenen `position: fixed`-Ebene und wird per `transform` bewegt. Ein animiertes `background-position` auf `<body>` würde bei jedem Bild neu gemalt.
+
+`prefers-reduced-motion: reduce` schaltet alles ab (CSS-Regel plus `Anim.reduced`, das auch die JS-seitigen Effekte überspringt). Die Einstellung wird live ausgewertet, nicht nur beim Laden.
 
 ## Wichtige Entscheidungen (und warum)
 

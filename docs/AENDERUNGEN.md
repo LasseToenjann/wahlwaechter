@@ -1,5 +1,28 @@
 # Änderungsverlauf
 
+## v4.1 – Animationskonzept, Rangliste, Profil
+
+**Animationskonzept „Lagezentrum" (neu: `js/anim.js`)**
+- Durchgängiges Konzept statt Einzeleffekten: Jede Bewegung beantwortet eine Frage (woher kam das / was hat sich geändert / was passiert gerade / war das richtig), dauert 120–320 ms und nutzt nur `transform` und `opacity`.
+- Sechs Ebenen: Screen (mit Richtung – vorwärts steigt auf, zurück sinkt), Overlay (Ein- **und** Ausblendung), Inhalt (gestaffeltes Einlaufen von Listen), Zustand (geänderte HUD-Werte pulsen, Index-Schaden zittert rot), Feedback (Knopfdruck, Chip-Einrasten, Scan-Streifen über benutzte Werkzeuge, Beweise gleiten von links ein), Ambiente (driftendes Raster, glimmender Titel, atmender Raum-Code, pulsierender Timer unter 22 %).
+- Signature-Momente: Das Urteil wird gestempelt, die Endpunktzahl zählt hoch, das Klassenraum-Podium läuft gestaffelt ein.
+- Umgesetzt in allen Modi, in der Einweisung und auf allen Nebenscreens. Statische Screens staffeln rein deklarativ über die Klasse `stagger-css`.
+- `prefers-reduced-motion: reduce` schaltet alles ab – live ausgewertet, nicht nur beim Laden.
+- Hintergrundraster liegt jetzt auf einer eigenen `position: fixed`-Ebene und wird per `transform` bewegt (GPU statt Neuzeichnen).
+
+**Rangliste**
+- Klassenraum-Ergebnisse landen in der globalen Rangliste (neuer Schlüssel `wahlwaechter_kr_x7k2m9`) und erscheinen unter „Alle" sowie unter dem neuen Filter „Klassenraum". „Alle" zeigt damit wirklich alle Modi.
+- Ergebnis-Einträge haben eine stabile ID und werden aktualisiert statt doppelt angelegt – nötig, weil der Klassenraum-Bonus für unentdeckte Fakes erst nach dem Speichern eintreffen kann.
+- Modusnamen werden ausgeschrieben („Klassisch" statt „klassisch"), Klassenraum-Einträge nennen den Raum-Code.
+- Emoji aus dem Aktualisieren-Knopf und den Statuszeilen entfernt.
+
+**Profil**
+- Duell-Bilanz zeigt die **Top 10**, darunter ein „Mehr sehen"-Knopf (klappt auf und wieder zu).
+- Emoji aus Aktualisieren-Knopf, Statuszeile, Profilnamen und Zwischenüberschrift entfernt.
+
+**Knöpfe**
+- Beschriftungen sind jetzt auch mehrzeilig mittig ausgerichtet (`text-align: center` statt nur Flex-Zentrierung).
+
 ## v4 – Einweisung & Klassenraum-Showdown
 
 **Interaktive Einweisung (`js/tutorial.js`)**

@@ -35,7 +35,7 @@
         <button class="btn btn-primary" id="btn-firsttime">▶ Einweisung starten</button>
       </div>
 
-      <div class="menu-buttons">
+      <div class="menu-buttons stagger-css">
         <button class="btn btn-primary btn-big" id="btn-solo">🛡️ Solo-Kampagne <small>Klassisch oder Endlos</small></button>
         <button class="btn btn-daily btn-big" id="btn-daily">📅 Tages-Challenge <small>Gleiche Fälle für alle – 1 Versuch pro Tag</small></button>
         <button class="btn btn-accent btn-big" id="btn-duel">⚔️ Online-Duell <small>1 vs 1 mit Raum-Code &amp; eigenen Regeln</small></button>
@@ -56,7 +56,7 @@
     <div class="panel narrow center">
       <div class="week-kicker">SOLO-KAMPAGNE</div>
       <h2>Wähle deinen Modus</h2>
-      <div class="mode-grid">
+      <div class="mode-grid stagger-css">
         <button class="mode-card" id="btn-mode-classic">
           <span class="mode-icon">🛡️</span>
           <h3>Klassisch</h3>
@@ -172,7 +172,7 @@
       <h2>⚔️ Online-Duell</h2>
 
       <div id="lobby-choice">
-        <div class="lobby-cards">
+        <div class="lobby-cards stagger-css">
           <div class="lobby-card">
             <h3>🎲 Duell erstellen</h3>
             <p class="muted small">Du legst die Regeln fest und bekommst einen Raum-Code für deinen Gegner.</p>
@@ -218,7 +218,7 @@
           <div class="room-code" id="room-code-display">·····</div>
           <button class="btn btn-ghost btn-copy" id="btn-copy-code">📋 Code kopieren</button>
         </div>
-        <ul class="conn-steps" id="conn-steps">
+        <ul class="conn-steps stagger-css" id="conn-steps">
           <li id="step-server">Spielserver…</li>
           <li id="step-room">Raum öffnen…</li>
           <li id="step-peer">Auf Gegner warten…</li>
@@ -236,7 +236,7 @@
     <div class="panel narrow">
       <div class="week-kicker">MEHRSPIELER · GANZE KLASSE</div>
       <h2>🏟️ Klassenraum</h2>
-      <div class="lobby-cards">
+      <div class="lobby-cards stagger-css">
         <div class="lobby-card">
           <h3>🎓 Raum erstellen (Host)</h3>
           <p class="muted small">Alle spielen gleichzeitig dieselben Fälle. Bis zu 30 Spieler:innen.</p>
@@ -313,7 +313,7 @@
       <div class="week-kicker" id="week-kicker">LAGEBERICHT</div>
       <h2 id="week-title">Woche 1</h2>
       <p id="week-intro" class="week-intro"></p>
-      <div class="week-stats" id="week-stats"></div>
+      <div class="week-stats stagger-css" id="week-stats"></div>
       <button class="btn btn-primary btn-big" id="btn-week-start">Schicht beginnen ▶</button>
     </div>
   </section>
@@ -490,12 +490,13 @@
         <button class="chip" data-filter="klassisch">🛡️ Klassisch</button>
         <button class="chip" data-filter="endlos">♾️ Endlos</button>
         <button class="chip" data-filter="duell">⚔️ Duell</button>
+        <button class="chip" data-filter="klasse">🏟️ Klassenraum</button>
         <button class="chip" data-filter="tages">📅 Heute</button>
       </div>
       <div class="board-sync" id="board-sync">Lade globale Rangliste…</div>
       <div id="board-list"></div>
       <div class="menu-row">
-        <button class="btn btn-ghost" id="btn-board-refresh">🔄 Aktualisieren</button>
+        <button class="btn btn-ghost" id="btn-board-refresh">Aktualisieren</button>
         <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
       </div>
     </div>
@@ -507,10 +508,11 @@
       <h2>👤 Profil &amp; Duell-Bilanz</h2>
       <div class="board-sync" id="profile-sync">Lade Profile…</div>
       <div class="profile-card" id="profile-card"></div>
-      <h3 class="profile-subhead">⚔️ Duell-Bilanz aller Spieler:innen</h3>
+      <h3 class="profile-subhead">Duell-Bilanz aller Spieler:innen</h3>
       <div id="profile-table"></div>
+      <button class="btn btn-ghost btn-more hidden" id="btn-profile-more">Mehr sehen</button>
       <div class="menu-row">
-        <button class="btn btn-ghost" id="btn-profile-refresh">🔄 Aktualisieren</button>
+        <button class="btn btn-ghost" id="btn-profile-refresh">Aktualisieren</button>
         <button class="btn btn-primary" data-goto="screen-start">Hauptmenü</button>
       </div>
     </div>
@@ -520,6 +522,7 @@
   <div class="net-banner hidden" id="net-banner"></div>
 </div>
 
+<script src="js/anim.js"></script>
 <script src="js/rng.js"></script>
 <script src="js/data.js"></script>
 <script src="js/net.js"></script>

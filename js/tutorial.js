@@ -100,7 +100,7 @@ const Tutorial = {
     const after = this.after;
     this.after = null;
     if (typeof after === "function") after();
-    else showScreen("screen-start");
+    else goBack("screen-start");
   },
 
   skip() {
@@ -109,7 +109,7 @@ const Tutorial = {
     this.after = null;
     netBanner("🎓 Einweisung übersprungen – du findest sie jederzeit im Hauptmenü unter „Einweisung“.");
     if (typeof after === "function") after();
-    else showScreen("screen-start");
+    else goBack("screen-start");
   },
 
   /* ---------------- Navigation ---------------- */
@@ -131,7 +131,7 @@ const Tutorial = {
     this.render();
   },
   back() {
-    if (this.idx === 0) return showScreen("screen-start");
+    if (this.idx === 0) return goBack("screen-start");
     this.idx--;
     this.stepDone[this.idx] = true;   // schon einmal erledigt
     this.render();
@@ -150,7 +150,11 @@ const Tutorial = {
     $("btn-tut-back").textContent = this.idx === 0 ? "Abbrechen" : "◀ Zurück";
     $("btn-tut-next").textContent = this.idx === n - 1 ? "🚀 Los geht's!" : "Weiter ▶";
     $("btn-tut-next").disabled = !this.stepDone[this.idx];
-    if (step.stage) step.stage($("tut-stage"));
+    const stage = $("tut-stage");
+    if (step.stage) step.stage(stage);
+    // Jeder Schritt läuft von oben nach unten ein – man liest in der Reihenfolge,
+    // in der die Elemente erscheinen.
+    Anim.stagger(stage, ":scope > *", 60);
     window.scrollTo(0, 0);
   },
 };
@@ -232,13 +236,15 @@ function tutToolbox(host, c, energyKey, onProbe) {
 /* Auflösungs-Karte (inline statt Overlay, damit sie in der Einweisung stehen bleibt) */
 function tutReveal(host, ok, headline, lines, text, ref) {
   const div = document.createElement("div");
-  div.className = "tut-reveal";
+  div.className = "tut-reveal anim-in";
   div.innerHTML = `
     <div class="reveal-verdict ${ok ? "good" : "bad"}">${esc(headline)}</div>
     <div class="reveal-points">${esc(lines.join("\n"))}</div>
     <p class="reveal-text">${esc(text)}</p>
     ${ref ? `<div class="real-ref"><b>📚 Reales Vorbild (Spielinhalt fiktiv):</b> ${esc(ref)}</div>` : ""}`;
   host.appendChild(div);
+  Anim.stamp(div.querySelector(".reveal-verdict"));
+  Anim.flash(div, ok ? "good" : "bad");
   div.scrollIntoView({ block: "nearest", behavior: "smooth" });
   return div;
 }

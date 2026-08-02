@@ -10,12 +10,40 @@
 const $ = (id) => document.getElementById(id);
 const S = DATA.scoring;
 
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  $(id).classList.add("active");
+/* Screens haben eine Richtung: vorwärts steigen sie auf, zurück sinken sie.
+   „back" setzen alle Zurück-/Hauptmenü-Wege (siehe goBack). */
+function showScreen(id, dir) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active", "nav-back"));
+  const el = $(id);
+  el.classList.toggle("nav-back", dir === "back");
+  el.classList.add("active");
   window.scrollTo(0, 0);
 }
-function showOverlay(id, on) { $(id).classList.toggle("hidden", !on); }
+function goBack(id) { showScreen(id, "back"); }
+
+/* Overlays blenden auch beim Schließen aus. Weil an mehreren Stellen geprüft
+   wird, ob ein Overlay offen ist, gibt es dafür overlayOpen() – während der
+   Ausblendung gilt es bereits als geschlossen. */
+function showOverlay(id, on) {
+  const el = $(id);
+  if (on) {
+    el.classList.remove("closing");
+    el.classList.remove("hidden");
+    return;
+  }
+  if (el.classList.contains("hidden") || el.classList.contains("closing")) return;
+  if (Anim.reduced) { el.classList.add("hidden"); return; }
+  el.classList.add("closing");
+  setTimeout(() => {
+    if (!el.classList.contains("closing")) return;   // zwischenzeitlich wieder geöffnet
+    el.classList.add("hidden");
+    el.classList.remove("closing");
+  }, 150);
+}
+function overlayOpen(id) {
+  const el = $(id);
+  return !el.classList.contains("hidden") && !el.classList.contains("closing");
+}
 function esc(str) {
   const d = document.createElement("div");
   d.textContent = String(str);
@@ -49,6 +77,7 @@ let myName = "";
 let reviewReturn = "screen-result";
 
 function freshState(mode, name, seed) {
+  resetHud();
   return {
     mode, name,                  // mode: "solo" | "duel"
     variant: "klassisch",        // solo: klassisch | endlos | tages | klasse
@@ -285,6 +314,7 @@ function showSectionIntro() {
     G.lastPerfectBonus = 0;
   }
   $("week-stats").innerHTML = stats;
+  Anim.stagger($("week-stats"), ".week-stat", 70);
   showScreen("screen-week");
 }
 
@@ -345,15 +375,30 @@ function showCase() {
   startTimer(sec.timer + G.effects.timerPlus, $("timer-text"), $("timerbar-fill"), () => judge(null));
 }
 
+/* Geänderte HUD-Werte melden sich selbst: Punkte pulsen grün, Index-Schaden
+   zittert rot, verbrauchte Energie blitzt amber. So sieht man die Folge einer
+   Entscheidung, ohne die Zahlen zu vergleichen. */
+let hudLast = {};
+function resetHud() { hudLast = { score: null, energy: null, index: null, oppScore: null }; }
+function hudSet(id, value, key, kindDown) {
+  const el = $(id);
+  const before = hudLast[key];
+  el.textContent = value;
+  if (before !== null && before !== undefined && before !== value) {
+    Anim.pulse(el, value < before ? (kindDown || "down") : "up");
+  }
+  hudLast[key] = value;
+}
+
 function updateHud() {
-  $("hud-score").textContent = G.score;
-  $("hud-energy").textContent = G.energy;
-  $("hud-index").textContent = G.index;
+  hudSet("hud-score", G.score, "score");
+  hudSet("hud-energy", G.energy, "energy", "flat");
+  hudSet("hud-index", G.index, "index");
   const opp = $("hud-opponent");
   if (G.mode === "duel" && G.duel) {
     opp.classList.remove("hidden");
     $("opp-name").textContent = G.duel.oppName || "Gegner";
-    $("opp-score").textContent = G.duel.oppScore;
+    hudSet("opp-score", G.duel.oppScore, "oppScore", "flat");
   } else if (G.mode === "solo" && G.variant === "klasse") {
     const lead = ClassNet.leader();
     opp.classList.remove("hidden");
@@ -387,6 +432,7 @@ function renderTools(c) {
     btn.addEventListener("click", () => useTool(t, btn));
     wrap.appendChild(btn);
   });
+  Anim.stagger(wrap, ".tool-btn", 45);
   refreshToolCosts();
 }
 
@@ -504,6 +550,8 @@ function judge(verdict) {   // "approve" | "flag" | null (Timeout)
   $("reveal-text").textContent = c.resolution;
   setRealRef(DATA.realRefs[c.id] || null);
   showOverlay("overlay-reveal", true);
+  Anim.stamp(v);                                        // das Urteil wird gestempelt
+  Anim.flash($("reveal-card"), correct ? "good" : "bad");
 }
 
 function nextCase() {
@@ -574,6 +622,7 @@ function showDilemma() {
     card.addEventListener("click", () => chooseDilemma(d));
     grid.appendChild(card);
   });
+  Anim.stagger(grid, ".dilemma-card", 60);
   showScreen("screen-dilemma");
 }
 
@@ -632,6 +681,7 @@ function startBuildPhase() {
   sab.formats.forEach(f => formats.appendChild(mkCard(f, "format")));
   const cloaks = $("build-cloaks"); cloaks.innerHTML = "";
   sab.cloaks.forEach(c => cloaks.appendChild(mkCard(c, "cloak")));
+  [themes, formats, cloaks].forEach(g => Anim.stagger(g, ".build-card", 45));
   refreshBuildUI();
 
   showScreen("screen-build");
@@ -733,6 +783,7 @@ function startHunt(fakeCard, kicker, introHtml) {
     wrap.appendChild(el);
   });
 
+  Anim.stagger(wrap, ".hunt-item", 80);
   wrap.querySelectorAll(".mini-tool[data-tool]").forEach(btn => btn.addEventListener("click", () => huntProbe(btn)));
   wrap.querySelectorAll(".mini-flag").forEach(btn => btn.addEventListener("click", () => huntResolve(parseInt(btn.dataset.flag, 10))));
 
@@ -872,8 +923,11 @@ function showResult() {
         : "Anfechtungsklagen, Demos, Misstrauen: Die Demokratie hat überlebt, aber sie blutet. Beim nächsten Mal zählt jede Entscheidung.";
   }
 
-  $("result-final").textContent = G.finalScore;
+  // Signature-Moment: die Endpunktzahl zählt hoch, der Rang kommt danach
+  Anim.countUp($("result-final"), G.finalScore);
   $("result-rank").textContent = rank.icon + " " + rank.name;
+  $("result-rank").classList.add("anim-in");
+  $("result-rank").style.setProperty("--i", 22);
   let breakdown = `
     <div><span>Rohpunkte</span><span>${G.score}</span></div>
     <div><span>Richtige Urteile</span><span>${G.correct}/${G.total} (${acc} %)</span></div>
@@ -885,6 +939,7 @@ function showResult() {
   }
   breakdown += `<div class="total"><span>Endpunktzahl</span><span>${G.finalScore}</span></div>`;
   $("result-breakdown").innerHTML = breakdown;
+  Anim.stagger($("result-breakdown"), "div");
   reviewReturn = "screen-result";
   saveResult("result-sync");
   showScreen("screen-result");
@@ -917,6 +972,7 @@ function showReview(returnScreen) {
     row.addEventListener("click", () => showReviewDetail(h, i));
     list.appendChild(row);
   });
+  Anim.stagger(list, ".review-row");
   showScreen("screen-review");
 }
 
@@ -945,7 +1001,10 @@ const BOARD_KEYS = {
   endlos:    "wahlwaechter_el_x7k2m9",
   duell:     "wahlwaechter_du_x7k2m9",
   tages:     "wahlwaechter_tc_x7k2m9",
+  klasse:    "wahlwaechter_kr_x7k2m9",
 };
+const MODE_ICON  = { klassisch: "🛡️", endlos: "♾️", duell: "⚔️", tages: "📅", klasse: "🏟️" };
+const MODE_LABEL = { klassisch: "Klassisch", endlos: "Endlos", duell: "Duell", tages: "Tages-Challenge", klasse: "Klassenraum" };
 const PROFILE_KEY = "wahlwaechter_pr_x7k2m9";
 const BOARD_MAX = 30;
 let boardFilter = "alle";
@@ -991,18 +1050,22 @@ async function fetchGlobalBoard(mode) {
   return lists.flatMap(l => l || []);
 }
 
+/* Trägt das Ergebnis ein – oder aktualisiert es, falls es schon dort steht.
+   Der Klassenraum nutzt das: dort kann der Bonus für unentdeckte Fakes erst
+   eintreffen, wenn das Ergebnis längst gespeichert ist. */
 async function pushGlobalScore(entry) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const scores = await fetchModeBoard(entry.mode);
-      if (!scores.some(e => e.id === entry.id)) {
-        scores.push(entry);
+      const idx = scores.findIndex(e => e.id === entry.id);
+      if (idx < 0 || scores[idx].score !== entry.score) {
+        if (idx >= 0) scores[idx] = entry; else scores.push(entry);
         scores.sort((a, b) => b.score - a.score);
-        if (!scores.slice(0, BOARD_MAX).some(e => e.id === entry.id)) return true;
+        if (!scores.slice(0, BOARD_MAX).some(e => e.id === entry.id)) return true;  // zu schwach für die Liste
         await tdbWrite(BOARD_KEYS[entry.mode], { scores: scores.slice(0, BOARD_MAX).map(packEntry) });
       }
-      const check = await fetchModeBoard(entry.mode);
-      if (check.some(e => e.id === entry.id)) return true;
+      const mine = (await fetchModeBoard(entry.mode)).find(e => e.id === entry.id);
+      if (mine && mine.score === entry.score) return true;
     } catch (e) { /* nächster Versuch */ }
     await new Promise(r => setTimeout(r, 400 + Math.random() * 1600));
   }
@@ -1016,10 +1079,14 @@ function makeBoardEntry() {
     : G.variant === "tages" ? "tages"
     : G.variant === "klasse" ? "klasse"
     : "klassisch";
+  // Die ID bleibt pro Lauf stabil, damit ein nachgereichter Bonus den
+  // vorhandenen Eintrag aktualisiert statt einen zweiten anzulegen.
+  if (!G.entryId) G.entryId = Math.random().toString(36).slice(2) + Date.now().toString(36);
   return {
-    id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+    id: G.entryId,
     name: G.name, score: G.finalScore, acc, index: G.index, mode,
-    extra: mode === "endlos" ? "Schicht " + Math.max(1, G.secIdx + (G.caseIdx > 0 || G.crisis ? 1 : 0)) : "",
+    extra: mode === "endlos" ? "Schicht " + Math.max(1, G.secIdx + (G.caseIdx > 0 || G.crisis ? 1 : 0))
+      : mode === "klasse" && G.class && G.class.roomCode ? "Raum " + G.class.roomCode : "",
     date: todayStr(),
   };
 }
@@ -1057,21 +1124,25 @@ function saveResult(syncElId) {
     p.bs = Math.max(p.bs || 0, acc.best);
   });
 
-  if (entry.mode === "klasse") {
-    if (syncElId) $(syncElId).textContent = "🏟️ Klassenraum – dein Ergebnis zählt in der Raum-Auswertung.";
-    return;
-  }
+  storeEntry(syncElId);
+}
 
-  const local = loadLocalBoard();
+/* Ergebnis in lokale + globale Rangliste schreiben. Wird im Klassenraum ein
+   zweites Mal aufgerufen, sobald der Bonus für unentdeckte Fakes feststeht –
+   der Eintrag wird dann aktualisiert (stabile ID, siehe makeBoardEntry). */
+function storeEntry(syncElId) {
+  const entry = makeBoardEntry();
+
+  const local = loadLocalBoard().filter(e => e.id !== entry.id);
   local.push(entry);
   local.sort((a, b) => b.score - a.score);
   saveLocalBoard(local);
 
   if (!syncElId) { pushGlobalScore(entry); return; }
   const el = $(syncElId);
-  el.textContent = "🌐 Speichere in globaler Rangliste…";
+  el.textContent = "Speichere in globaler Rangliste…";
   pushGlobalScore(entry).then(ok => {
-    el.textContent = ok ? "✓ In der globalen Rangliste gespeichert" : "⚠️ Keine Verbindung – Ergebnis nur auf diesem Gerät gespeichert";
+    el.textContent = ok ? "✓ In der globalen Rangliste gespeichert" : "Keine Verbindung – Ergebnis nur auf diesem Gerät gespeichert";
     el.classList.toggle("sync-ok", ok);
     el.classList.toggle("sync-fail", !ok);
   });
@@ -1087,7 +1158,7 @@ async function renderBoard() {
   const sync = $("board-sync");
   const list = $("board-list");
   sync.className = "board-sync";
-  sync.textContent = "🌐 Lade globale Rangliste…";
+  sync.textContent = "Lade globale Rangliste…";
   list.innerHTML = "";
 
   let entries = [];
@@ -1099,8 +1170,8 @@ async function renderBoard() {
   entries = entries.map(e => Object.assign({}, e, { mode: normMode(e.mode) }));
 
   sync.textContent = global
-    ? `🌐 Globale Rangliste · Stand ${new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`
-    : "⚠️ Offline – zeige nur Einträge dieses Geräts";
+    ? `Globale Rangliste · Stand ${new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`
+    : "Offline – zeige nur Einträge dieses Geräts";
   sync.classList.toggle("sync-fail", !global);
 
   const filtered = entries
@@ -1109,17 +1180,17 @@ async function renderBoard() {
     .sort((a, b) => b.score - a.score)
     .slice(0, 25);
 
-  const modeIcon = { klassisch: "🛡️", endlos: "♾️", duell: "⚔️", tages: "📅" };
   if (!filtered.length) {
     list.innerHTML = `<div class="board-empty">Noch keine Einträge${boardFilter !== "alle" ? " in dieser Kategorie" : ""}. Spiel eine Runde – dann steht dein Name hier.</div>`;
   } else {
     list.innerHTML = filtered.map((e, i) => `
       <div class="board-row">
         <span class="pos">${i + 1}.</span>
-        <span class="bname">${esc(e.name)} <span class="bmeta">${modeIcon[e.mode] || ""} ${esc(e.mode || "")}${e.extra ? " · " + esc(e.extra) : ""} · ${e.acc} % · Index ${e.index} · ${esc(e.date || "")}</span></span>
+        <span class="bname">${esc(e.name)} <span class="bmeta">${MODE_ICON[e.mode] || ""} ${esc(MODE_LABEL[e.mode] || e.mode || "")}${e.extra ? " · " + esc(e.extra) : ""} · ${e.acc} % · Index ${e.index} · ${esc(e.date || "")}</span></span>
         <span class="bscore">${e.score}</span>
       </div>`).join("");
   }
+  Anim.stagger(list, ".board-row");
 }
 
 /* ---------- Profil-Screen ---------- */
@@ -1128,7 +1199,7 @@ async function renderProfile() {
   showScreen("screen-profile");
   const sync = $("profile-sync");
   sync.className = "board-sync";
-  sync.textContent = "🌐 Lade Profile…";
+  sync.textContent = "Lade Profile…";
   $("profile-card").innerHTML = "";
   $("profile-table").innerHTML = "";
 
@@ -1136,9 +1207,9 @@ async function renderProfile() {
   try {
     const data = await tdbRead(PROFILE_KEY);
     profiles = (data && data.profiles) || [];
-    sync.textContent = "🌐 " + profiles.length + " Spieler:innen mit Profil";
+    sync.textContent = profiles.length + " Spieler:innen mit Profil";
   } catch (e) {
-    sync.textContent = "⚠️ Offline – Profile nicht erreichbar";
+    sync.textContent = "Offline – Profile nicht erreichbar";
     sync.classList.add("sync-fail");
     return;
   }
@@ -1149,7 +1220,7 @@ async function renderProfile() {
     const duels = (me.w || 0) + (me.l || 0) + (me.d || 0);
     const winrate = duels ? Math.round((me.w / duels) * 100) : 0;
     $("profile-card").innerHTML = `
-      <div class="profile-name">👤 ${esc(me.n)}</div>
+      <div class="profile-name">${esc(me.n)}</div>
       <div class="week-stats">
         <div class="week-stat"><b>${me.g || 0}</b>Runden gespielt</div>
         <div class="week-stat"><b>${me.w || 0}-${me.l || 0}-${me.d || 0}</b>Duelle S-N-U</div>
@@ -1157,17 +1228,35 @@ async function renderProfile() {
         <div class="week-stat"><b>${accAvg} %</b>Ø Genauigkeit</div>
         <div class="week-stat"><b>${me.bs || 0}</b>Bestleistung</div>
       </div>`;
+    Anim.stagger($("profile-card"), ".week-stat");
   } else {
     $("profile-card").innerHTML = `<div class="board-empty">Noch kein Profil für „${esc(name || "…")}“ – spiel eine Runde, dann entsteht es automatisch.</div>`;
   }
 
-  const ranked = profiles.slice().sort((a, b) => (b.w || 0) - (a.w || 0) || (b.g || 0) - (a.g || 0)).slice(0, 30);
-  $("profile-table").innerHTML = ranked.length ? ranked.map((p, i) => `
+  profileRanked = profiles.slice().sort((a, b) => (b.w || 0) - (a.w || 0) || (b.g || 0) - (a.g || 0));
+  renderProfileTable(name);
+}
+
+/* Duell-Bilanz: standardmäßig nur die Top 10, Rest auf Knopfdruck */
+const PROFILE_TOP = 10;
+let profileRanked = [];
+let profileShowAll = false;
+
+function renderProfileTable(name) {
+  const shown = profileShowAll ? profileRanked : profileRanked.slice(0, PROFILE_TOP);
+  const table = $("profile-table");
+  table.innerHTML = shown.length ? shown.map((p, i) => `
     <div class="board-row ${p.n === name ? "me" : ""}">
       <span class="pos">${i + 1}.</span>
       <span class="bname">${esc(p.n)} <span class="bmeta">${p.g || 0} Runden · Ø ${p.t ? Math.round((p.c / p.t) * 100) : 0} % · Best ${p.bs || 0}</span></span>
       <span class="bscore">${p.w || 0}-${p.l || 0}-${p.d || 0}</span>
     </div>`).join("") : `<div class="board-empty">Noch keine Duell-Bilanzen.</div>`;
+  Anim.stagger(table, ".board-row");
+
+  const more = $("btn-profile-more");
+  const rest = profileRanked.length - PROFILE_TOP;
+  more.classList.toggle("hidden", rest <= 0);
+  more.textContent = profileShowAll ? "Weniger anzeigen" : `Mehr sehen (${rest} weitere)`;
 }
 
 /* =========================================================================
@@ -1267,7 +1356,7 @@ function wireNet() {
       case "huntResult":
         if (G && G.duel) {
           G.duel.oppHunt = { found: msg.found, timeLeft: msg.timeLeft };
-          if (G.duel.myHunt && !$("overlay-wait").classList.contains("hidden")) finishDuel();
+          if (G.duel.myHunt && overlayOpen("overlay-wait")) finishDuel();
         }
         break;
       case "final":
@@ -1288,7 +1377,7 @@ function wireNet() {
     if (G.finalScore && !G.duel.waitingFinal) return;
     G.duel.dropped = true;
     netBanner("📡 " + reason + " – du spielst gegen HYDRA weiter, dein Ergebnis zählt für die Rangliste.");
-    if (!$("overlay-wait").classList.contains("hidden")) {
+    if (overlayOpen("overlay-wait")) {
       showOverlay("overlay-wait", false);
       if (G.duel.myBuild && !G.duel.oppBuild) {
         G.duel.oppBuild = randomBuild(mulberry32(randomSeed()));
@@ -1364,6 +1453,8 @@ function showDuelResult() {
     <div><span>Deine Rohpunkte</span><span>${G.score}</span></div>
     <div><span>Dein Multiplikator</span><span>× ${(G.crisis ? 0.5 : S.finalMultiplier(G.index)).toFixed(2)}</span></div>
     <div class="total"><span>Endpunktzahl</span><span>${G.finalScore}</span></div>`;
+  Anim.stagger($("duel-compare"), ".duel-side", 120);
+  Anim.stagger($("duel-breakdown"), "div");
   reviewReturn = "screen-duel-result";
   setTimeout(() => Net.close(), 4000);  // großzügig, damit die letzte Nachricht sicher gelesen wird
   showScreen("screen-duel-result");
@@ -1373,6 +1464,7 @@ function showDuelResult() {
    KLASSENRAUM
    ========================================================================= */
 let classGameStarted = false;
+let classResultShown = false;   // Podium nur beim ersten Aufbau einlaufen lassen
 
 function classError(msg) {
   const el = $("class-error");
@@ -1415,8 +1507,11 @@ function renderClassLobby(st) {
   const players = (st.players || []);
   const cfg = st.cfg || {};
   $("class-count").textContent = players.length + " von " + ClassNet.MAX_PLAYERS + " Spieler:innen im Raum";
+  const before = $("class-players").childElementCount;
   $("class-players").innerHTML = players.map(p =>
     `<span class="t-name-pill">${p.g === st.host ? "🎓 " : ""}${esc(p.n)}</span>`).join("");
+  // nur neu Hinzugekommene einlaufen lassen, sonst zappelt die Liste bei jedem Poll
+  Array.from($("class-players").children).slice(before).forEach(el => el.classList.add("anim-in"));
   const rules = `${cfg.cases || 10} Fälle · ${cfg.timer || 35}s pro Fall · Showdown ${cfg.showdown ? "an 🧪" : "aus"}`;
   const startBtn = $("btn-class-start");
   if (ClassNet.isHost) {
@@ -1462,6 +1557,7 @@ function startClassGame(seed, cfg) {
   G = freshState("solo", name, seed);
   G.variant = "klasse";
   G.class = {
+    roomCode: ClassNet.code,
     cfg: { cases: cfg.cases || 10, timer: cfg.timer || 35, showdown: !!cfg.showdown },
     myBuild: null, assigned: false, donorGid: null, donorName: null,
     waitStart: 0, stagger: 0, finished: false, bonusDone: false, bonusPts: 0, bonusDeadline: 0,
@@ -1626,12 +1722,14 @@ function classFakeBonus(st) {
   cl.bonusPts = CLASS_FAKE_BONUS * missed;
   G.score += cl.bonusPts;
   classReportFinal();
+  storeEntry(null);                 // Ranglisten-Eintrag auf den Bonus nachziehen
   netBanner("🎭 Dein Fake blieb unentdeckt: +" + cl.bonusPts + " Punkte!");
   if (document.querySelector(".screen.active").id === "screen-class-result") renderClassResult(st);
 }
 
 function showClassResult() {
   stopTimer();
+  classResultShown = false;
   reviewReturn = "screen-class-result";
   showScreen("screen-class-result");
   if (ClassNet.state) renderClassResult(ClassNet.state);
@@ -1662,6 +1760,7 @@ function renderClassResult(st) {
       <span class="bscore">${p.s || 0}</span>
     </div>`).join("");
   $("class-result-list").innerHTML = html || `<div class="board-empty">Noch keine Ergebnisse.</div>`;
+  if (!classResultShown) { classResultShown = true; Anim.stagger($("class-result-list"), ".board-row", 70); }
 }
 
 function classPhaseLabel(p) {
@@ -1719,8 +1818,9 @@ function init() {
   refreshFirstTimeCard();
   checkProfileKnown(myName);
 
+  // Alle [data-goto]-Knöpfe sind Zurück-/Hauptmenü-Wege -> Screen sinkt statt zu steigen
   document.querySelectorAll("[data-goto]").forEach(b =>
-    b.addEventListener("click", () => showScreen(b.dataset.goto)));
+    b.addEventListener("click", () => goBack(b.dataset.goto)));
 
   // Einstellungs-Chips
   ["cfg-cases", "cfg-timer", "cfg-hard", "cfg-showdown",
@@ -1754,7 +1854,7 @@ function init() {
       setTimeout(() => { $("btn-copy-code").textContent = "📋 Code kopieren"; }, 1500);
     });
   });
-  $("btn-lobby-back").addEventListener("click", () => { Net.close(); showScreen("screen-start"); });
+  $("btn-lobby-back").addEventListener("click", () => { Net.close(); goBack("screen-start"); });
 
   // Klassenraum
   $("btn-class-create").addEventListener("click", classCreate);
@@ -1766,8 +1866,8 @@ function init() {
     try { await ClassNet.start(randomSeed()); }
     catch (e) { $("btn-class-start").disabled = false; netBanner("⚠️ Start fehlgeschlagen – bitte erneut versuchen."); }
   });
-  $("btn-class-leave").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); showScreen("screen-start"); });
-  $("btn-class-menu").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); showScreen("screen-start"); });
+  $("btn-class-leave").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); goBack("screen-start"); });
+  $("btn-class-menu").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); goBack("screen-start"); });
   $("btn-class-review").addEventListener("click", () => showReview("screen-class-result"));
 
   // Spiel
@@ -1784,13 +1884,17 @@ function init() {
   // Ergebnis, Review & Rangliste
   $("btn-result-review").addEventListener("click", () => showReview("screen-result"));
   $("btn-duel-review").addEventListener("click", () => showReview("screen-duel-result"));
-  $("btn-review-back").addEventListener("click", () => showScreen(reviewReturn));
+  $("btn-review-back").addEventListener("click", () => goBack(reviewReturn));
   $("btn-result-board").addEventListener("click", renderBoard);
-  $("btn-result-menu").addEventListener("click", () => showScreen("screen-start"));
+  $("btn-result-menu").addEventListener("click", () => goBack("screen-start"));
   $("btn-duel-board").addEventListener("click", renderBoard);
-  $("btn-duel-menu").addEventListener("click", () => showScreen("screen-start"));
+  $("btn-duel-menu").addEventListener("click", () => goBack("screen-start"));
   $("btn-board-refresh").addEventListener("click", renderBoard);
-  $("btn-profile-refresh").addEventListener("click", renderProfile);
+  $("btn-profile-refresh").addEventListener("click", () => { profileShowAll = false; renderProfile(); });
+  $("btn-profile-more").addEventListener("click", () => {
+    profileShowAll = !profileShowAll;
+    renderProfileTable(myName || localStorage.getItem("ww_name") || "");
+  });
   document.querySelectorAll("#board-filters .chip").forEach(chip => {
     chip.addEventListener("click", () => {
       boardFilter = chip.dataset.filter;

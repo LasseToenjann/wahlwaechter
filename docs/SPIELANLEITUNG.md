@@ -169,8 +169,8 @@ Nach dem Start kann niemand mehr beitreten – erst alle sammeln, dann starten.
 ## Nach der Runde
 
 - **📋 Fall-Auswertung** – jeder Fall noch einmal: deine Antwort, die Wahrheit, die Auflösung und das reale Vorbild samt Quelle
-- **🏆 Rangliste** – global, mit Filtern (Klassisch / Endlos / Duell / Heute). Ohne Internet werden nur die Einträge dieses Geräts gezeigt
-- **👤 Profil** – über deinen Spielnamen: gespielte Runden, Duell-Bilanz (Siege–Niederlagen–Unentschieden), Ø-Genauigkeit, Bestleistung
+- **🏆 Rangliste** – global, mit Filtern (Klassisch / Endlos / Duell / Klassenraum / Heute). Unter **„Alle"** stehen die Ergebnisse aus **allen** Modi nebeneinander, Klassenraum-Runden eingeschlossen. Einzige Ausnahme: Tages-Challenge-Ergebnisse älterer Tage – die stammen aus einem anderen Fallsatz und wären nicht vergleichbar. Ohne Internet werden nur die Einträge dieses Geräts gezeigt
+- **👤 Profil** – über deinen Spielnamen: gespielte Runden, Duell-Bilanz (Siege–Niederlagen–Unentschieden), Ø-Genauigkeit, Bestleistung. Darunter die Duell-Bilanz aller Spieler:innen, standardmäßig die **Top 10** – der Rest lässt sich über „Mehr sehen" aufklappen
 
 ## Für Lehrkräfte und Kursleitung
 
@@ -210,6 +210,9 @@ Im Klassenraum kann nach dem Start niemand mehr beitreten. Der Host öffnet eine
 
 **Ich hänge im Showdown im Wartebildschirm.**
 Höchstens 30 Sekunden – danach baut HYDRA automatisch einen Fake für dich. Der Countdown läuft sichtbar mit.
+
+**Ich finde meine Klassenraum-Runde nicht in der Rangliste.**
+Klassenraum-Ergebnisse stehen sowohl unter „Alle" als auch unter dem Filter „Klassenraum". Wenn der Showdown gespielt wurde, kann der Eintrag noch einen Moment brauchen: Der Bonus für einen unentdeckt gebliebenen Fake wird erst verrechnet, wenn das Gegenüber sein Urteil gefällt hat – der Eintrag aktualisiert sich dann von selbst.
 
 **Die Rangliste zeigt „Offline".**
 Der Spielserver ist gerade nicht erreichbar. Dein Ergebnis wird lokal gespeichert und die Rangliste zeigt nur die Einträge dieses Geräts.

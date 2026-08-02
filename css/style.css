@@ -17,6 +17,15 @@
   --shadow: 0 10px 40px rgba(0,0,0,.5);
   --radius: 14px;
   font-size: 16px;
+
+  /* Animations-Tokens (Konzept: siehe js/anim.js) */
+  --t-fast: 120ms;      /* Feedback: Knopfdruck, Chip, Werkzeug */
+  --t: 220ms;           /* Standard: Overlays, Zustandswechsel */
+  --t-slow: 320ms;      /* Screens, Einlaufen von Inhalten */
+  --t-moment: 900ms;    /* bewusste Höhepunkte: Endpunktzahl */
+  --ease-out: cubic-bezier(.2, .8, .25, 1);      /* kommt an, bremst weich */
+  --ease-in: cubic-bezier(.5, 0, .9, .3);        /* geht weg, zieht an */
+  --ease-spring: cubic-bezier(.34, 1.4, .64, 1); /* leichtes Überschwingen */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,19 +36,33 @@ body {
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   background:
     radial-gradient(ellipse 80% 50% at 50% -10%, rgba(55,214,224,.10), transparent 60%),
-    linear-gradient(rgba(55,214,224,.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(55,214,224,.025) 1px, transparent 1px),
     var(--bg);
-  background-size: auto, 34px 34px, 34px 34px, auto;
   color: var(--text);
   line-height: 1.55;
 }
 
+/* Das Raster liegt auf einer eigenen, fest positionierten Ebene, damit es per
+   transform driften kann (GPU) statt bei jedem Bild neu gemalt zu werden. */
+body::before {
+  content: ""; position: fixed; inset: -40px; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(rgba(55,214,224,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(55,214,224,.025) 1px, transparent 1px);
+  background-size: 34px 34px, 34px 34px;
+  animation: grid-drift 26s linear infinite;
+}
+@keyframes grid-drift { to { transform: translate3d(34px, 34px, 0); } }
+
 #app { max-width: 1080px; margin: 0 auto; padding: 18px 16px 60px; }
 
 /* ---------- Screens ---------- */
-.screen { display: none; animation: fadein .35s ease; }
-.screen.active { display: block; }
+/* Ebene 1: Screens haben eine Richtung. Vorwärts steigen sie auf, zurück
+   sinken sie – dadurch weiß man immer, wo man im Spiel gerade hingeht. */
+.screen { display: none; }
+.screen.active { display: block; animation: screen-fwd var(--t-slow) var(--ease-out); }
+.screen.active.nav-back { animation-name: screen-back; }
+@keyframes screen-fwd  { from { opacity: 0; transform: translateY(12px); } }
+@keyframes screen-back { from { opacity: 0; transform: translateY(-10px); } }
 @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .hidden { display: none !important; }
 
@@ -89,11 +112,11 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
   cursor: pointer; border: 1px solid var(--line); border-radius: 12px;
   background: var(--panel2); color: var(--text);
   padding: 12px 20px; font-size: 1rem; font-weight: 600; font-family: inherit;
-  transition: transform .08s ease, box-shadow .15s ease, background .15s;
-  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  text-align: center;          /* auch mehrzeilige Beschriftungen mittig */
 }
+.btn small { text-align: center; }
 .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
-.btn:active:not(:disabled) { transform: translateY(1px); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn small { font-weight: 400; font-size: .74rem; color: var(--muted); }
 
@@ -194,16 +217,25 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 .verdict-row { display: flex; gap: 10px; margin-top: 8px; }
 
 /* ---------- Auflösung Overlay ---------- */
+/* Ebene 2: Overlays kommen aus der Mitte, mit leichtem Überschwingen –
+   sie unterbrechen, also dürfen sie sich kurz bemerkbar machen. */
 .overlay {
   position: fixed; inset: 0; background: rgba(4,8,16,.82); backdrop-filter: blur(4px);
   display: grid; place-items: center; z-index: 50; padding: 16px; overflow-y: auto;
+  animation: backdrop-in var(--t) var(--ease-out);
 }
+.overlay.closing { animation: backdrop-out 140ms var(--ease-in) forwards; pointer-events: none; }
 .overlay-card {
   background: linear-gradient(180deg, var(--panel2), var(--panel));
   border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
-  max-width: 560px; width: 100%; padding: 26px 28px; animation: pop .25s ease;
+  max-width: 560px; width: 100%; padding: 26px 28px;
+  animation: pop var(--t) var(--ease-spring);
 }
-@keyframes pop { from { transform: scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+.overlay.closing .overlay-card { animation: pop-out 140ms var(--ease-in) forwards; }
+@keyframes backdrop-in  { from { opacity: 0; } }
+@keyframes backdrop-out { to { opacity: 0; } }
+@keyframes pop     { from { transform: scale(.92) translateY(10px); opacity: 0; } }
+@keyframes pop-out { to { transform: scale(.97); opacity: 0; } }
 .reveal-verdict { font-size: 1.9rem; font-weight: 900; letter-spacing: .04em; margin-bottom: 4px; }
 .reveal-verdict.good { color: var(--green); }
 .reveal-verdict.bad { color: var(--red); }
@@ -366,6 +398,8 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 
 /* ---------- Profil ---------- */
 .profile-card { margin: 10px 0 18px; }
+.btn-more { width: 100%; margin-top: 12px; font-size: .9rem; padding: 10px 20px; color: var(--muted); }
+.btn-more:hover:not(:disabled) { color: var(--cyan); border-color: var(--cyan-dim); }
 .profile-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
 .profile-subhead { margin-top: 8px; }
 
@@ -454,6 +488,142 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 
 /* ---------- Klassenraum: Showdown-Status ---------- */
 .class-phase { color: var(--amber); }
+
+/* =========================================================================
+   ANIMATIONEN – Konzept „Lagezentrum" (Erläuterung in js/anim.js)
+   Ebenen: Screen · Overlay · Inhalt · Zustand · Feedback · Ambiente
+   ========================================================================= */
+
+/* ---------- Ebene 3: Inhalt läuft gestaffelt ein ---------- */
+/* Listen bauen sich von oben nach unten auf – das Auge folgt automatisch
+   der Reihenfolge, statt eine fertige Wand zu sehen. */
+.anim-in {
+  animation: rise-in var(--t-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * var(--step, 35ms));
+}
+@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } }
+
+/* Panels und Karten beim Screen-Wechsel */
+.screen.active .panel > h2,
+.screen.active .week-kicker { animation: rise-in var(--t-slow) var(--ease-out) backwards; }
+
+/* Statische Screens staffeln ohne JavaScript: Ein Screen wechselt von
+   display:none auf block – dabei starten CSS-Animationen neu, also läuft
+   das bei jedem Aufruf des Screens. */
+.screen.active .stagger-css > * { animation: rise-in var(--t-slow) var(--ease-out) backwards; }
+.screen.active .stagger-css > *:nth-child(1) { animation-delay: 30ms; }
+.screen.active .stagger-css > *:nth-child(2) { animation-delay: 75ms; }
+.screen.active .stagger-css > *:nth-child(3) { animation-delay: 120ms; }
+.screen.active .stagger-css > *:nth-child(4) { animation-delay: 165ms; }
+.screen.active .stagger-css > *:nth-child(5) { animation-delay: 210ms; }
+.screen.active .stagger-css > *:nth-child(6) { animation-delay: 255ms; }
+.screen.active .stagger-css > *:nth-child(7) { animation-delay: 300ms; }
+.screen.active .stagger-css > *:nth-child(n+8) { animation-delay: 340ms; }
+
+/* Verbindungsschritte in der Lobby haken sich sichtbar ab */
+.conn-steps li { transition: color var(--t), border-color var(--t); }
+.conn-steps li.done::before { animation: check-pop 380ms var(--ease-spring); }
+@keyframes check-pop { 0% { transform: scale(0); } 60% { transform: scale(1.4); } }
+
+/* ---------- Ebene 4: Zustand – geänderte Werte melden sich ---------- */
+.pulse-up   { animation: pulse-up var(--t-slow) var(--ease-out); }
+.pulse-down { animation: pulse-down 420ms var(--ease-out); }
+.pulse-flat { animation: pulse-flat var(--t-slow) var(--ease-out); }
+@keyframes pulse-up {
+  40% { transform: scale(1.22); color: var(--green); text-shadow: 0 0 16px rgba(67,217,139,.6); }
+}
+@keyframes pulse-down {
+  20% { transform: translateX(-3px) scale(1.12); color: var(--red); }
+  45% { transform: translateX(3px)  scale(1.12); color: var(--red); }
+  70% { transform: translateX(-2px); color: var(--red); }
+}
+@keyframes pulse-flat { 40% { transform: scale(1.14); color: var(--amber); } }
+
+.flash-good { animation: flash-good 600ms var(--ease-out); }
+.flash-bad  { animation: flash-bad  600ms var(--ease-out); }
+@keyframes flash-good { 0% { box-shadow: 0 0 0 0 rgba(67,217,139,.55); } 100% { box-shadow: 0 0 0 22px rgba(67,217,139,0); } }
+@keyframes flash-bad  { 0% { box-shadow: 0 0 0 0 rgba(255,93,108,.55); } 100% { box-shadow: 0 0 0 22px rgba(255,93,108,0); } }
+
+.shake { animation: shake 380ms var(--ease-out); }
+@keyframes shake {
+  20% { transform: translateX(-5px); } 40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
+}
+
+/* ---------- Signature-Moment: das Urteil wird gestempelt ---------- */
+.stamp { animation: stamp 480ms var(--ease-out); transform-origin: left center; }
+@keyframes stamp {
+  0%   { opacity: 0; transform: scale(1.45) rotate(-3.5deg); }
+  55%  { opacity: 1; transform: scale(.97) rotate(.6deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* ---------- Ebene 5: Feedback ---------- */
+.btn, .chip, .tool-btn, .mini-tool, .mode-card, .dilemma-card, .build-card, .review-row, .lobby-card {
+  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t) var(--ease-out),
+              border-color var(--t) var(--ease-out), background var(--t) var(--ease-out), opacity var(--t);
+}
+.btn:active:not(:disabled) { transform: scale(.97); }
+.chip:active { transform: scale(.95); }
+.chip.active { animation: chip-lock var(--t) var(--ease-spring); }
+@keyframes chip-lock { 40% { transform: scale(1.09); } }
+
+/* Werkzeug: kurzer Scan-Streifen beim Auslösen */
+.tool-btn { position: relative; overflow: hidden; }
+.tool-btn.used::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(55,214,224,.28), transparent);
+  animation: scan 520ms var(--ease-out);
+}
+@keyframes scan { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+/* Beweise gleiten von links ein – sie „kommen aus dem Werkzeug" */
+.evidence-item { animation: evidence-in var(--t) var(--ease-out); }
+@keyframes evidence-in { from { opacity: 0; transform: translateX(-14px); } }
+
+/* Urteils-Knöpfe: Farbe kündigt die Konsequenz an */
+.btn-approve:hover:not(:disabled) { box-shadow: 0 6px 22px rgba(42,164,92,.35); }
+.btn-flag:hover:not(:disabled)    { box-shadow: 0 6px 22px rgba(208,74,92,.35); }
+
+.hunt-item { transition: outline-color var(--t), transform var(--t) var(--ease-out); }
+.hunt-item.flagged-right { animation: found 620ms var(--ease-spring); }
+.hunt-item.flagged-wrong { animation: shake 380ms var(--ease-out); }
+@keyframes found { 30% { transform: scale(1.03); } }
+
+/* ---------- Ebene 6: Ambiente – langsam, nie ablenkend ---------- */
+/* Das driftende Raster steckt oben in body::before (GPU-Transform). */
+.game-title span { animation: title-glow 5s ease-in-out infinite; }
+@keyframes title-glow {
+  0%, 100% { text-shadow: 0 0 30px rgba(55,214,224,.45); }
+  50%      { text-shadow: 0 0 44px rgba(55,214,224,.75); }
+}
+
+/* Wartender Raum-Code atmet – sichtbares Zeichen „hier passiert noch was" */
+.room-code { animation: breathe 2.8s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .72; text-shadow: 0 0 34px rgba(55,214,224,.75); } }
+
+/* Timer: unter 22 % pulsiert die Leiste, damit Eile spürbar wird */
+.timerbar-fill.crit { animation: timer-crit .9s ease-in-out infinite; }
+@keyframes timer-crit { 50% { filter: brightness(1.5); } }
+.timerbar-fill.crit + .timerbar-text { animation: timer-tick 1s ease-in-out infinite; }
+@keyframes timer-tick { 50% { transform: scale(1.18); } }
+
+/* Verbindungs-Banner fährt von unten ein */
+.net-banner:not(.hidden) { animation: banner-in var(--t) var(--ease-spring); }
+@keyframes banner-in { from { opacity: 0; transform: translate(-50%, 20px); } }
+
+/* Fortschritt der Einweisung */
+.tut-progress-fill { transition: width var(--t-slow) var(--ease-out); }
+
+/* ---------- Bewegung reduzieren: alles aus, nichts kaputt ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* ---------- Touch & Tablet ---------- */
 button, .btn, .tool-btn, .mini-tool, .chip, .bracket-player, .mode-card, .dilemma-card, .build-card { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
