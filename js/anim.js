@@ -49,6 +49,19 @@ const Anim = {
     });
   },
 
+  /* „Das Nächste in einer Reihe" – kommt von rechts statt von unten.
+     Damit unterscheidet sich ein neuer Fall von einem neuen Screen. */
+  next(container, selector) {
+    if (!container || this.reduced) return;
+    const items = selector ? container.querySelectorAll(selector) : [container];
+    items.forEach((el, i) => {
+      el.classList.remove("next-in");
+      void el.offsetWidth;
+      el.style.setProperty("--i", i);
+      el.classList.add("next-in");
+    });
+  },
+
   /* ---------- Zustand: geänderter Wert pulst ---------- */
   pulse(el, kind) {
     if (!el || this.reduced) return;

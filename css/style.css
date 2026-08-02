@@ -354,11 +354,26 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 .board-empty { color: var(--muted); text-align: center; padding: 26px 0; }
 
 /* ---------- Netz-Banner & Spinner ---------- */
+/* Meldung am unteren Rand. Bewusst eine Karte und kein Pillen-Oval: Sobald der
+   Text zwei Zeilen braucht, wird aus border-radius:999px eine Ellipse. */
 .net-banner {
-  position: fixed; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-  background: #6e1b28; border: 1px solid var(--red); color: #ffdfe3;
-  padding: 10px 22px; border-radius: 999px; z-index: 90; box-shadow: var(--shadow); font-size: .9rem;
+  position: fixed; z-index: 90;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%);
+  width: min(420px, calc(100vw - 28px));
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 14px;
+  background: rgba(23, 34, 58, .97);
+  border: 1px solid var(--line); border-left: 3px solid var(--cyan);
+  color: var(--text); box-shadow: 0 12px 34px rgba(0,0,0,.55);
+  font-size: .88rem; line-height: 1.45; text-align: left; cursor: pointer;
+  backdrop-filter: blur(6px);
 }
+.net-banner .nb-icon { font-size: 1.05rem; line-height: 1.3; flex-shrink: 0; }
+.net-banner .nb-text { flex: 1; min-width: 0; }
+.net-banner.warn  { border-left-color: var(--amber); }
+.net-banner.error { border-left-color: var(--red); }
+.net-banner.good  { border-left-color: var(--green); }
 .spinner {
   width: 44px; height: 44px; margin: 0 auto 14px; border-radius: 50%;
   border: 4px solid var(--line); border-top-color: var(--cyan); animation: spin 1s linear infinite;
@@ -556,6 +571,23 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 /* Panels und Karten beim Screen-Wechsel */
 .screen.active .panel > h2,
 .screen.active .week-kicker { animation: rise-in var(--t-slow) var(--ease-out) backwards; }
+
+/* Zweite Richtung auf der Inhalts-Ebene: „das Nächste in einer Reihe" kommt
+   von rechts herein – so unterscheidet sich ein neuer Fall sichtbar von einem
+   neu aufgebauten Screen (der steigt auf). */
+.next-in {
+  animation: next-in var(--t-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes next-in { from { opacity: 0; transform: translateX(26px); } }
+
+/* Gewähltes Urteil bleibt kurz markiert – man sieht, worauf man gedrückt hat */
+.btn.chosen { outline: 2px solid currentColor; outline-offset: 2px; }
+.btn.chosen::after {
+  content: "▸"; position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  animation: rise-in var(--t) var(--ease-out);
+}
+.verdict-row .btn { position: relative; }
 
 /* Statische Screens staffeln ohne JavaScript: Ein Screen wechselt von
    display:none auf block – dabei starten CSS-Animationen neu, also läuft

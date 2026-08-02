@@ -3,11 +3,13 @@
 Alles, was man wissen muss, um am Code weiterzuarbeiten. Spielregeln stehen in der [Spielanleitung](SPIELANLEITUNG.md), die inhaltliche Begründung im [Konzept](../KONZEPT.md).
 
 - [Grundsätze](#grundsätze)
+- [Mobile zuerst](#mobile-zuerst)
 - [Dateien und Zuständigkeiten](#dateien-und-zuständigkeiten)
 - [Spielzustand](#spielzustand-g)
 - [Datenmodell](#datenmodell-datajs)
 - [Netzwerk](#netzwerk)
 - [Klassenraum-Showdown: Verteilung der Fakes](#klassenraum-showdown-verteilung-der-fakes)
+- [Tages-Challenge](#tages-challenge)
 - [Einweisung](#einweisung-tutorialjs)
 - [Ranglisten und Profile](#ranglisten-und-profile)
 - [Animationen](#animationen)
@@ -23,6 +25,7 @@ Alles, was man wissen muss, um am Code weiterzuarbeiten. Spielregeln stehen in d
 - **Vanilla HTML/CSS/JS, kein Build, keine Abhängigkeiten.** Die Dateien, die im Repo liegen, sind exakt die, die im Browser laufen. Das ist Absicht: Das Projekt soll ohne Toolchain wartbar bleiben.
 - **Kein eigenes Backend.** Alles Mehrspielerische läuft über einen kostenlosen öffentlichen Key-Value-Speicher.
 - **Alles auf einer Seite.** `index.html` enthält jeden Screen als `<section class="screen">`; `showScreen(id)` schaltet um.
+- **Mobile und iPad zuerst.** Gespielt wird auf Handys und Tablets; der Desktop ist die Zugabe. Layout-Entscheidungen fallen für die kleine Breite.
 - **Deutsch im Code.** Kommentare, Bezeichner in den Daten und alle Texte sind deutsch – das Projekt wird von deutschsprachigen Menschen gelesen und abgegeben.
 
 Ladereihenfolge der Skripte (wichtig, weil ohne Modulsystem gearbeitet wird):
@@ -33,11 +36,36 @@ anim.js → rng.js → data.js → net.js → gen.js → classroom.js → tutori
 
 `game.js` startet auf `DOMContentLoaded` mit `init()`.
 
+## Mobile zuerst
+
+Das Spiel läuft im Unterricht auf Handys und iPads. Deshalb ist die kleine Breite der Maßstab, nicht der Desktop:
+
+- Neue Screens zuerst bei **390 px** bauen, bei **320 px** gegenprüfen, erst dann am großen Bildschirm ansehen.
+- Tippziele mindestens 44 px hoch (`.tool-btn`, `.mini-tool`, `.btn` sind entsprechend gesetzt), keine Funktion nur über Hover.
+- `env(safe-area-inset-*)` an allen fest positionierten Elementen – sonst liegt Inhalt hinter Uhr und Home-Indikator.
+- Nach jeder Layout-Änderung auf horizontalen Überlauf prüfen. Das Prüfmuster: jeden Screen kurz aktivieren und alle Elemente vergleichen –
+
+```js
+document.querySelectorAll('.screen').forEach(scr => {
+  document.querySelector('.screen.active')?.classList.remove('active');
+  scr.classList.add('active');
+  const vw = document.documentElement.clientWidth;
+  scr.querySelectorAll('*').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.width && (r.right > vw + 1 || el.scrollWidth > el.clientWidth + 1))
+      console.warn(scr.id, el.tagName, el.className);
+  });
+  scr.classList.remove('active');
+});
+```
+
+Beide Breiten müssen ohne Treffer durchlaufen. Häufigste Ursachen in der Vergangenheit: ein zu großer `clamp()`-Mindestwert bei Überschriften, Grid-/Flex-Kinder ohne `min-width: 0`, nicht umbrechende URLs.
+
 ## Dateien und Zuständigkeiten
 
 | Datei | Zuständig für |
 |---|---|
-| `js/anim.js` | `Anim` – Animations-Helfer (Staffelung, Puls, Hochzählen, Stempel) |
+| `js/anim.js` | `Anim` – Animations-Helfer (Staffelung, Puls, Hochzählen, Stempel, Reihenfolge) |
 | `js/rng.js` | `mulberry32` (deterministischer RNG), `seededShuffle`, `randomSeed`, `randomRoomCode` |
 | `js/data.js` | Alle Inhalte: `cases`, `realRefs`, `weeks`, `ranks`, `tools`, `dilemmas`, `sabotage`, `feedReals`, `gen`, `scoring`, `endless` |
 | `js/gen.js` | `randomBuild` (budgetkonformer Bauplan), `craftFake` (Bauplan → Fake-Karte mit Beweislage), `generateCase` (Endlos-Generator) |
@@ -45,6 +73,8 @@ anim.js → rng.js → data.js → net.js → gen.js → classroom.js → tutori
 | `js/classroom.js` | `ClassNet` – Klassenraum, bis 30 Spieler:innen auf einem Raum-Key |
 | `js/tutorial.js` | `Tutorial` – interaktive Einweisung mit eigenen Übungsfällen |
 | `js/game.js` | Spiellogik, Screens, Timer, Punkte, Ranglisten, Profile, Verdrahtung |
+| `tools/shots.mjs` | nimmt Screenshots aus dem laufenden Spiel auf (für das Handout) |
+| `tools/handout.py` | baut daraus `ANLEITUNG.pdf` |
 
 ## Spielzustand (`G`)
 
@@ -171,6 +201,23 @@ Wird der Schwellwert nie erreicht (z. B. viele haben den Tab geschlossen), wird 
 
 Der **Bonus für unentdeckte Fakes** (`classFakeBonus`) wird erst nach dem eigenen Rundenende ausgewertet, weil das Gegenüber oft später fertig ist. Nach `CLASS_BONUS_WAIT_MS` (150 s) wird auch ohne dessen Urteil abgeschlossen, damit die Auswertung nicht hängt. Kommt später noch ein zweites Opfer dazu (seltener Rennfall), zahlt `bonusCounted` die Differenz nach.
 
+## Tages-Challenge
+
+Zwei Anforderungen zugleich: Der Fallsatz muss für alle Spieler:innen eines Tages **identisch** sein und sich trotzdem **jeden Tag erneuern**.
+
+- **Datum:** `todayStr()` formatiert über `Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" })`. Vorher lief alles über `toISOString()`, also UTC – die Challenge wechselte dadurch um 01:00 bzw. 02:00 Uhr statt um Mitternacht. Dasselbe Datum steuert die Ein-Versuch-Sperre und die Datumsangabe der Ranglisten-Einträge.
+- **Seed:** hängt nur am Datum, also bekommen alle denselben Satz.
+- **Handgeschriebener Teil (6 Fälle):** feste Rotation durch den ganzen Bestand. Innerhalb eines Zyklus (⌊47/6⌋ = 7 Tage) kommt kein Fall zweimal; jeder Zyklus mischt die Reihenfolge neu.
+- **Generierter Teil (4 Fälle):** derselbe `generateCase()` wie im Endlosmodus, gespeist aus dem Tages-Seed. Diese Fälle hat noch nie jemand gesehen.
+
+Gemessen über 30 Tage – vorher wurde jeden Tag frei aus allen 47 gezogen:
+
+| | vorher | jetzt |
+|---|---|---|
+| Fälle vom Vortag wiederholt | 2–4 von 10 | **0** |
+| häufigster Fall in 30 Tagen | 11× | **5×** |
+| Tage mit komplett neuem Satz | – | **alle** (dank generierter Fälle) |
+
 ## Einweisung (`tutorial.js`)
 
 Ein schrittbasierter Screen (`#screen-tutorial`) mit 12 Schritten. Jeder Schritt ist ein Objekt mit `kicker`, `title`, `text`, optionalem `stage(host)` (baut interaktiven Inhalt) und `needs: true`, wenn „Weiter" erst nach einer Aktion freigeschaltet wird (`Tutorial.unlock(hinweis)`).
@@ -204,11 +251,11 @@ Schlüssel (öffentlich schreibbar – für ein Schulprojekt vertretbar):
 
 Pro Modus werden maximal 30 Einträge gehalten, Profile maximal 120; bei Überlauf fallen die schlechtesten bzw. ältesten heraus. Schreibzugriffe laufen überall über Lesen → Mergen → Schreiben → Verifizieren mit Wiederholungen. Ohne Internet greift ein `localStorage`-Fallback (`ww_board_v1`).
 
-Der Filter „Alle" liest alle Modus-Schlüssel und mischt sie – Klassenraum-Ergebnisse eingeschlossen. Ausgenommen sind nur Tages-Challenge-Ergebnisse älterer Tage: Sie stammen aus einem anderen Fallsatz und wären nicht vergleichbar.
+**Es gibt bewusst keinen Filter „Alle" mehr.** Die Modi haben verschiedene Fallzahlen, Timer und Multiplikatoren – eine gemeinsame Liste hätte Zahlen nebeneinandergestellt, die nichts miteinander zu tun haben. Standardfilter ist „Klassisch".
+
+Die **Duell-Rangliste** führt Ergebnis und Bilanz zusammen: Die Punktzahl kommt aus dem Duell-Schlüssel, die Bilanz (S–N–U und Siegquote) aus den Profilen (`fetchDuelRecords`, `duelMeta`). Im Profil-Screen steht die Bilanz aller Spieler:innen deshalb nicht mehr – dort bleiben nur die eigenen Kennzahlen.
 
 Jeder Lauf bekommt eine **stabile Ergebnis-ID** (`G.entryId`). `pushGlobalScore` legt den Eintrag entweder neu an oder aktualisiert ihn, wenn er schon dort steht. Nötig ist das für den Klassenraum: Der Bonus für unentdeckte Fakes kann erst eintreffen, wenn das Ergebnis längst gespeichert ist – dann zieht `storeEntry` den vorhandenen Eintrag nach, statt einen zweiten anzulegen.
-
-Die Profil-Ansicht zeigt die Duell-Bilanz standardmäßig auf **Top 10** gekürzt; `renderProfileTable` klappt den Rest über den „Mehr sehen"-Knopf auf.
 
 > ⚠️ **Daten nie eigenmächtig löschen.** Ein „frisches Leeren" der Schlüssel hat schon einmal echte Spielstände unwiederbringlich vernichtet – textdb.online hat keine Historie. Leeren nur auf ausdrückliche Anweisung: `GET https://textdb.online/update/?key=<KEY>&value={"scores":[]}` (Profile: `{"profiles":[]}`).
 
@@ -228,6 +275,10 @@ Das Konzept heißt **„Lagezentrum"** und steht ausführlich im Kopf von `js/an
 | Zustand | `hudSet()` vergleicht mit dem letzten Wert und pulst: Punkte grün, Index-Schaden rot zitternd, Energie amber |
 | Feedback | Knopfdruck, Chip-Einrasten, Scan-Streifen über benutzte Werkzeuge, Beweise gleiten von links ein |
 | Ambiente | Driftendes Raster (`body::before`, GPU-Transform), glimmender Titel, atmender Raum-Code, pulsierender Timer unter 22 % |
+
+Die Inhalts-Ebene kennt **zwei Richtungen**: Neu aufgebaute Bereiche steigen auf (`anim-in`), das *nächste Element einer Reihe* kommt von rechts (`Anim.next` / `next-in`). Dadurch unterscheidet sich ein neuer Fall sichtbar von einem neuen Screen. Ergänzt sind außerdem: gewähltes Urteil bleibt markiert (`.chosen`), Budget in der Fake-Werkstatt und Energie in der Jagd pulsen bei Änderung, die Fall-Nummer pulst beim Wechsel.
+
+Meldungen am unteren Rand (`netBanner(text, art)`) sind eine Karte mit farbigem Randstreifen – `info` (Standard), `warn`, `error`, `good`. Bewusst **kein** Pillen-Oval: Sobald der Text zwei Zeilen braucht, wird aus `border-radius: 999px` eine Ellipse.
 
 **Signature-Momente:** Das Urteil wird gestempelt (`Anim.stamp`), die Endpunktzahl zählt hoch (`Anim.countUp`), das Klassenraum-Podium läuft gestaffelt ein.
 
@@ -280,6 +331,12 @@ Mindestens abdecken: Solo klassisch **bis ins Boss-Finale** (dazu muss man richt
 
 ## Offene Punkte
 
-- **Smoke-Test auf GitHub Pages** nach jedem größeren Update. Achtung: Pages cacht JavaScript ca. 10 Minuten – vor dem Test hart neu laden. Sinnvoll: Konsole offen lassen, ein Duell und einen Klassenraum mit 2–3 Tabs kurz durchspielen.
-- **Klassenraum unter Volllast** (30 Geräte gleichzeitig) ist noch nicht unter Realbedingungen gemessen worden, nur simuliert und mit kleinen Gruppen getestet.
-- Das Handout `ANLEITUNG.pdf` kennt die interaktive Einweisung, die Lobbys und den Klassenraum-Showdown noch nicht. Beim nächsten Neusatz ergänzen.
+- **Live-Kontrolle nach größeren Updates.** GitHub Pages cacht JavaScript rund 10 Minuten – vor dem Prüfen hart neu laden. Aus der Entwicklungsumgebung heraus ist `github.io` durch die Netz-Richtlinie gesperrt; der Smoke-Test läuft deshalb gegen eine lokale Kopie des ausgelieferten Stands:
+
+  ```bash
+  git archive origin/main | tar -x -C /tmp/livecopy
+  cd /tmp/livecopy && python -m http.server 8124
+  ```
+
+  Das prüft denselben Dateistand, den Pages ausliefert. Der letzte Durchlauf war ohne Befund: alle Skripte geladen, keine fehlenden Dateien, leere Konsole.
+- **Ein Lasttest mit 30 echten Geräten ist gestrichen.** Der Aufwand steht in keinem Verhältnis zum Nutzen; das Verteilungsverfahren ist simuliert belegt (Tabelle oben), die Grenzen von textdb.online stehen unter „Bekannte Grenzen".

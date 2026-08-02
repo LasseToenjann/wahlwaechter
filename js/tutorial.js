@@ -107,7 +107,7 @@ const Tutorial = {
     this.markDone();
     const after = this.after;
     this.after = null;
-    netBanner("🎓 Einweisung übersprungen – du findest sie jederzeit im Hauptmenü unter „Einweisung“.");
+    netBanner("Einweisung übersprungen – du findest sie jederzeit im Hauptmenü.", "info");
     if (typeof after === "function") after();
     else goBack("screen-start");
   },

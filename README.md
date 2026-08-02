@@ -7,6 +7,8 @@ Drei Wochen vor der Wahl 2032 flutet das KI-Netzwerk **HYDRA** die sozialen Medi
 
 Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippen, los.
 
+> **Gebaut für Handy und iPad.** Das Spiel wird im Unterricht auf kleinen Bildschirmen gespielt – jede Oberfläche entsteht zuerst für 390 px Breite und wird bei 320 px gegengeprüft. Am Desktop läuft es genauso, ist aber nicht der Maßstab.
+
 ---
 
 ## 📚 Wo steht was?
@@ -32,7 +34,7 @@ Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippe
 | 🎓 **Einweisung** | Interaktive Trainings-Schicht vor dem ersten Spiel: alle Funktionen einmal selbst ausprobiert, keine Wertung. Wird Erstspieler:innen automatisch angeboten. |
 | 🛡️ **Solo klassisch** | 3 Wochen × 6 Fälle, 2 Dilemma-Upgrades, Boss-Finale gegen HYDRA (ca. 15–20 Min) |
 | ♾️ **Endlos** | Schicht um Schicht härter; ab Schicht 3 erzeugt der Fall-Generator laufend neue, nie gesehene Fälle |
-| 📅 **Tages-Challenge** | Täglich neuer, für alle identischer Fallsatz – 1 Versuch pro Tag, eigene Tages-Rangliste |
+| 📅 **Tages-Challenge** | Täglich neuer, für alle identischer Fallsatz – Wechsel um Mitternacht deutscher Zeit, ein Teil der Fälle wird täglich frisch erzeugt |
 | ⚔️ **Online-Duell 1 vs 1** | Raum-Code, Lobby mit beiden Namen, gleiche Fälle, Punktestand des Gegners live |
 | 🏟️ **Klassenraum** | Bis 30 Spieler:innen gleichzeitig, 👑 Spitzenreiter live im HUD, Podium am Ende – **auf Wunsch mit Showdown** |
 
@@ -40,7 +42,7 @@ Duell und Klassenraum haben beide eine **Lobby**: Spielerliste, Regeln nur beim 
 
 **🧪 Showdown (Duell & Klassenraum):** Jede:r baut selbst einen KI-Fake aus Thema × Format × Tarnungen. Das Budget reicht nie für perfekte Tarnung – irgendein Beweiskanal bleibt immer offen. Im Klassenraum werden die gebauten Fakes **gleichmäßig reihum verteilt**: niemand bekommt den eigenen, möglichst jeder Fake geht an genau eine Person, und wer zu lange braucht, wird nicht abgewartet – nach 60 Sekunden springt ein automatisch gebauter HYDRA-Fake ein. Wer beim Start des Showdowns noch in den Fällen steckt, wird nach kurzer Frist herausgeholt („Du warst zu langsam"), damit die Klasse nicht auf Einzelne wartet.
 
-**Drumherum:** 📋 Fall-Auswertung nach jeder Runde (jeder Fall mit Auflösung und **realem Vorbild**) · 🌐 globale Rangliste über **alle** Modi inklusive Klassenraum, mit Filtern und Offline-Fallback · 👤 Profil mit Duell-Bilanz und Ø-Genauigkeit · ℹ️ Rechtliches & Datenschutz im Spiel.
+**Drumherum:** 📋 Fall-Auswertung nach jeder Runde (jeder Fall mit Auflösung und **realem Vorbild**) · 🌐 globale Rangliste **pro Modus** (die Modi sind zu verschieden für eine gemeinsame Liste; im Duell steht Ergebnis **und** Bilanz) · 👤 Profil mit den eigenen Kennzahlen · ℹ️ Rechtliches & Datenschutz im Spiel.
 
 Das Ganze ist durchgehend animiert – nach einem festen Konzept („Lagezentrum"), das in [js/anim.js](js/anim.js) beschrieben und in [docs/TECHNIK.md](docs/TECHNIK.md#animationen) eingeordnet ist. Wer im System „Bewegung reduzieren" eingeschaltet hat, bekommt alles ohne Animation.
 
@@ -78,7 +80,9 @@ js/net.js             Online-Duell (HTTP-Relay, Postfach-Prinzip)
 js/classroom.js       Klassenraum-Netzwerk (bis 30 Spieler:innen auf einem Raum-Key)
 js/tutorial.js        interaktive Einweisung (eigene Übungsfälle)
 js/game.js            Spiellogik, State-Machine, Ranglisten, Profile
-ANLEITUNG.pdf         Handout mit QR-Code zum Ausdrucken
+tools/shots.mjs       nimmt Screenshots aus dem laufenden Spiel auf
+tools/handout.py      baut daraus ANLEITUNG.pdf
+ANLEITUNG.pdf         bebilderte Anleitung zum Ausdrucken (QR-Code inklusive)
 CLAUDE.md             Arbeitsanleitung: Projekt, Konventionen, Teststrategie, Stand
 KONZEPT.md            Spielkonzept (Abgabe-Dokument)
 docs/                 Spielanleitung, Technik-Doku, Änderungsverlauf

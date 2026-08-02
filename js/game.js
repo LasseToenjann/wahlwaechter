@@ -50,7 +50,19 @@ function esc(str) {
   return d.innerHTML;
 }
 const MEDIUM_LABEL = { video: "🎬 Video", bild: "🖼️ Bild", artikel: "📰 Artikel", post: "💬 Post", anzeige: "📢 Anzeige" };
-const todayStr = () => new Date().toISOString().slice(0, 10);
+/* Alle Datumsangaben laufen über die deutsche Zeit, nicht über UTC – sonst
+   würde die Tages-Challenge nicht um Mitternacht wechseln, sondern um 01:00
+   bzw. 02:00 Uhr. "en-CA" liefert das Format JJJJ-MM-TT. */
+const BERLIN_FMT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit",
+});
+const todayStr = (d) => BERLIN_FMT.format(d || new Date());
+
+/* Fortlaufende Tagesnummer – Grundlage für die Rotation der Tages-Challenge */
+function dayNumber(dateStr) {
+  const [y, m, d] = (dateStr || todayStr()).split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+}
 function strHash(s) {
   let h = 0;
   for (let i = 0; i < String(s).length; i++) h = (Math.imul(h, 31) + String(s).charCodeAt(i)) >>> 0;
@@ -263,29 +275,75 @@ function startSolo(variant) {
   showSectionIntro();
 }
 
-/* ---------- Tages-Challenge ---------- */
-function dailySeed() {
-  const str = "wahlwaechter-" + todayStr();
+/* =========================================================================
+   TAGES-CHALLENGE
+
+   Der Fallsatz muss zwei Dinge zugleich erfüllen: für alle Spieler:innen
+   eines Tages **identisch** sein und sich trotzdem **jeden Tag wirklich
+   erneuern**. Deshalb:
+
+   · Der Seed hängt nur am deutschen Datum -> alle bekommen dasselbe.
+   · 6 handgeschriebene Fälle laufen in einer festen Rotation durch den
+     ganzen Bestand: Innerhalb eines Zyklus kommt kein Fall zweimal, und
+     jeder Zyklus mischt die Reihenfolge neu. (Vorher wurde jeden Tag frei
+     aus allen 47 gezogen – dabei tauchte derselbe Fall im Schnitt alle
+     fünf Tage wieder auf, teils schon am Folgetag.)
+   · 4 Fälle kommen aus demselben Generator wie im Endlosmodus. Die sind
+     jeden Tag neu – dadurch ist keine Challenge je eine Wiederholung.
+   ========================================================================= */
+const DAILY_CASES = 10;
+const DAILY_HANDWRITTEN = 6;    // Rest kommt aus dem Generator
+const DAILY_TIMER = 38;
+
+function dailySeed(dateStr) {
+  const str = "wahlwaechter-" + (dateStr || todayStr());
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) >>> 0;
   return h;
 }
 
+function buildDailyDeck(seed, dayNr) {
+  const rng = mulberry32(seed);
+  const pool = DATA.cases;
+  const perCycle = Math.max(1, Math.floor(pool.length / DAILY_HANDWRITTEN));
+  const cycle = Math.floor(dayNr / perCycle);
+  const slot = dayNr % perCycle;
+
+  // Reihenfolge des Zyklus – pro Zyklus neu gemischt, aber für alle gleich
+  const order = seededShuffle(pool, mulberry32((cycle * 2654435761) >>> 0));
+  const hand = order.slice(slot * DAILY_HANDWRITTEN, slot * DAILY_HANDWRITTEN + DAILY_HANDWRITTEN);
+
+  const fresh = [];
+  for (let i = 0; i < DAILY_CASES - hand.length; i++) fresh.push(generateCase(rng));
+
+  const all = seededShuffle(hand.concat(fresh), rng);
+  const per = Math.ceil(all.length / 2);
+  const energy = Math.max(4, Math.round(per * 1.8));
+  return {
+    deck: [all.slice(0, per), all.slice(per)],
+    sections: [
+      { title: "Welle 1 – Gleiche Fälle für alle", intro: "Heute prüft die ganze Welt denselben Satz. Genauigkeit schlägt Hektik – aber die Uhr tickt.", energy, timer: DAILY_TIMER, kicker: "TAGES-CHALLENGE · WELLE 1/2" },
+      { title: "Welle 2 – HYDRA legt nach", intro: "Die zweite Welle ist subtiler. Ein Teil der Fälle wurde heute frisch generiert – die hat noch nie jemand gesehen.", energy, timer: DAILY_TIMER, kicker: "TAGES-CHALLENGE · WELLE 2/2" },
+    ],
+  };
+}
+
 function startDaily() {
   const name = getPlayerName();
   if (!name) return;
-  if (localStorage.getItem("ww_daily_" + todayStr())) {
-    netBanner("📅 Du hast die heutige Challenge schon gespielt – morgen gibt's neue Fälle! Hier ist die Tages-Rangliste.");
+  const heute = todayStr();
+  if (localStorage.getItem("ww_daily_" + heute)) {
+    netBanner("Du hast die heutige Challenge schon gespielt – morgen gibt's neue Fälle!", "info");
     boardFilter = "tages";
     syncBoardChips();
     renderBoard();
     return;
   }
-  localStorage.setItem("ww_daily_" + todayStr(), "1");
-  const seed = dailySeed();
+  localStorage.setItem("ww_daily_" + heute, "1");
+  const seed = dailySeed(heute);
   G = freshState("solo", name, seed);
   G.variant = "tages";
-  const { deck, sections } = buildMixedDeck(seed, { cases: 10, timer: 38, hard: 0 }, "TAGES-CHALLENGE " + todayStr());
+  const { deck, sections } = buildDailyDeck(seed, dayNumber(heute));
   G.deck = deck; G.sections = sections;
   showSectionIntro();
 }
@@ -371,6 +429,10 @@ function showCase() {
   $("btn-flag").disabled = false;
 
   showScreen("screen-case");
+  // Ein neuer Fall soll sich vom Screen-Wechsel unterscheiden: er kommt von
+  // rechts herein wie die nächste Seite einer Akte.
+  Anim.next(document.querySelector(".case-layout"), ":scope > *");
+  Anim.pulse($("hud-case"), "flat");
   const sec = G.sections[G.secIdx];
   startTimer(sec.timer + G.effects.timerPlus, $("timer-text"), $("timerbar-fill"), () => judge(null));
 }
@@ -489,6 +551,8 @@ function judge(verdict) {   // "approve" | "flag" | null (Timeout)
   stopTimer();
   $("btn-approve").disabled = true;
   $("btn-flag").disabled = true;
+  ["btn-approve", "btn-flag"].forEach(id => $(id).classList.remove("chosen"));
+  if (verdict) $(verdict === "flag" ? "btn-flag" : "btn-approve").classList.add("chosen");
 
   const c = currentCase();
   G.total++;
@@ -657,6 +721,7 @@ function buildCostSum() { return build.cloaks.reduce((s, id) => s + (cloakById(i
 
 function startBuildPhase() {
   build.theme = null; build.format = null; build.cloaks = [];
+  lastBudget = null;
   const sab = DATA.sabotage;
 
   const klasse = G.variant === "klasse";
@@ -702,10 +767,14 @@ function startBuildPhase() {
   startTimer(sab.buildTime, $("build-timer"), document.createElement("div"), () => finishBuild(true));
 }
 
+let lastBudget = null;
 function refreshBuildUI() {
   const sab = DATA.sabotage;
   const spent = buildCostSum();
-  $("build-budget").textContent = (sab.budget - spent) + "/" + sab.budget;
+  const rest = sab.budget - spent;
+  $("build-budget").textContent = rest + "/" + sab.budget;
+  if (lastBudget !== null && lastBudget !== rest) Anim.pulse($("build-budget"), rest < lastBudget ? "flat" : "up");
+  lastBudget = rest;
   $("cloak-counter").textContent = `(${build.cloaks.length}/${sab.maxCloaks} gewählt · 💰 ${sab.budget - spent} übrig)`;
   document.querySelectorAll('.build-card[data-kind="cloak"]').forEach(btn => {
     const c = cloakById(btn.dataset.id);
@@ -814,6 +883,7 @@ function huntProbe(btn) {
   G.boss.energy--;
   btn.disabled = true;
   $("hunt-energy").textContent = G.boss.energy;
+  Anim.pulse($("hunt-energy"), "flat");
   const log = document.querySelectorAll(".hunt-item")[idx].querySelector(".hunt-evidence");
   const div = document.createElement("div");
   div.className = "evidence-item";
@@ -1021,7 +1091,7 @@ const MODE_ICON  = { klassisch: "🛡️", endlos: "♾️", duell: "⚔️", ta
 const MODE_LABEL = { klassisch: "Klassisch", endlos: "Endlos", duell: "Duell", tages: "Tages-Challenge", klasse: "Klassenraum" };
 const PROFILE_KEY = "wahlwaechter_pr_x7k2m9";
 const BOARD_MAX = 30;
-let boardFilter = "alle";
+let boardFilter = "klassisch";   // „Alle" gibt es nicht mehr: Die Modi sind nicht vergleichbar
 
 function normMode(m) { return m === "solo" ? "klassisch" : m === "duel" ? "duell" : m; }
 function packEntry(e) { return { i: e.id, n: e.name, s: e.score, a: e.acc, x: e.index, m: e.mode, e: e.extra || "", d: e.date }; }
@@ -1189,22 +1259,52 @@ async function renderBoard() {
   sync.classList.toggle("sync-fail", !global);
 
   const filtered = entries
-    .filter(e => boardFilter === "alle" ? e.mode !== "tages" || e.date === todayStr() : e.mode === boardFilter)
+    .filter(e => e.mode === boardFilter)
     .filter(e => boardFilter !== "tages" || e.date === todayStr())
     .sort((a, b) => b.score - a.score)
     .slice(0, 25);
 
+  // Im Duell zählt nicht nur die Punktzahl, sondern auch die Bilanz.
+  const bilanz = boardFilter === "duell" ? await fetchDuelRecords() : null;
+
   if (!filtered.length) {
-    list.innerHTML = `<div class="board-empty">Noch keine Einträge${boardFilter !== "alle" ? " in dieser Kategorie" : ""}. Spiel eine Runde – dann steht dein Name hier.</div>`;
+    list.innerHTML = `<div class="board-empty">Noch keine Einträge in dieser Kategorie. Spiel eine Runde – dann steht dein Name hier.</div>`;
   } else {
-    list.innerHTML = filtered.map((e, i) => `
-      <div class="board-row">
+    list.innerHTML = filtered.map((e, i) => {
+      const meta = boardFilter === "duell"
+        ? duelMeta(bilanz && bilanz[e.name], e)
+        : `${MODE_ICON[e.mode] || ""} ${esc(MODE_LABEL[e.mode] || e.mode || "")}${e.extra ? " · " + esc(e.extra) : ""} · ${e.acc} % · Index ${e.index} · ${esc(e.date || "")}`;
+      return `
+      <div class="board-row${e.name === myName ? " me" : ""}">
         <span class="pos">${i + 1}.</span>
-        <span class="bname">${esc(e.name)} <span class="bmeta">${MODE_ICON[e.mode] || ""} ${esc(MODE_LABEL[e.mode] || e.mode || "")}${e.extra ? " · " + esc(e.extra) : ""} · ${e.acc} % · Index ${e.index} · ${esc(e.date || "")}</span></span>
+        <span class="bname">${esc(e.name)} <span class="bmeta">${meta}</span></span>
         <span class="bscore">${e.score}</span>
-      </div>`).join("");
+      </div>`;
+    }).join("");
   }
   Anim.stagger(list, ".board-row");
+}
+
+/* ---------- Duell-Rangliste: Ergebnis + Bilanz in einer Zeile ---------- */
+async function fetchDuelRecords() {
+  try {
+    const data = await tdbRead(PROFILE_KEY);
+    const map = {};
+    ((data && data.profiles) || []).forEach(p => { map[p.n] = p; });
+    return map;
+  } catch (e) { return null; }
+}
+
+function duelMeta(p, e) {
+  const teile = [];
+  if (p) {
+    const duelle = (p.w || 0) + (p.l || 0) + (p.d || 0);
+    teile.push(`<b class="rec">${p.w || 0}–${p.l || 0}–${p.d || 0}</b> S-N-U`);
+    if (duelle) teile.push(Math.round(((p.w || 0) / duelle) * 100) + " % gewonnen");
+  }
+  teile.push(e.acc + " % richtig");
+  teile.push("Index " + e.index);
+  return teile.join(" · ");
 }
 
 /* ---------- Profil-Screen ---------- */
@@ -1215,7 +1315,6 @@ async function renderProfile() {
   sync.className = "board-sync";
   sync.textContent = "Lade Profile…";
   $("profile-card").innerHTML = "";
-  $("profile-table").innerHTML = "";
 
   let profiles = [];
   try {
@@ -1246,31 +1345,6 @@ async function renderProfile() {
   } else {
     $("profile-card").innerHTML = `<div class="board-empty">Noch kein Profil für „${esc(name || "…")}“ – spiel eine Runde, dann entsteht es automatisch.</div>`;
   }
-
-  profileRanked = profiles.slice().sort((a, b) => (b.w || 0) - (a.w || 0) || (b.g || 0) - (a.g || 0));
-  renderProfileTable(name);
-}
-
-/* Duell-Bilanz: standardmäßig nur die Top 10, Rest auf Knopfdruck */
-const PROFILE_TOP = 10;
-let profileRanked = [];
-let profileShowAll = false;
-
-function renderProfileTable(name) {
-  const shown = profileShowAll ? profileRanked : profileRanked.slice(0, PROFILE_TOP);
-  const table = $("profile-table");
-  table.innerHTML = shown.length ? shown.map((p, i) => `
-    <div class="board-row ${p.n === name ? "me" : ""}">
-      <span class="pos">${i + 1}.</span>
-      <span class="bname">${esc(p.n)} <span class="bmeta">${p.g || 0} Runden · Ø ${p.t ? Math.round((p.c / p.t) * 100) : 0} % · Best ${p.bs || 0}</span></span>
-      <span class="bscore">${p.w || 0}-${p.l || 0}-${p.d || 0}</span>
-    </div>`).join("") : `<div class="board-empty">Noch keine Duell-Bilanzen.</div>`;
-  Anim.stagger(table, ".board-row");
-
-  const more = $("btn-profile-more");
-  const rest = profileRanked.length - PROFILE_TOP;
-  more.classList.toggle("hidden", rest <= 0);
-  more.textContent = profileShowAll ? "Weniger anzeigen" : `Mehr sehen (${rest} weitere)`;
 }
 
 /* =========================================================================
@@ -1443,7 +1517,7 @@ function wireNet() {
     }
     if (G.finalScore && !G.duel.waitingFinal) return;
     G.duel.dropped = true;
-    netBanner("📡 " + reason + " – du spielst gegen HYDRA weiter, dein Ergebnis zählt für die Rangliste.");
+    netBanner(reason + " – du spielst gegen HYDRA weiter, dein Ergebnis zählt für die Rangliste.", "error");
     if (overlayOpen("overlay-wait")) {
       showOverlay("overlay-wait", false);
       if (G.duel.myBuild && !G.duel.oppBuild) {
@@ -1463,11 +1537,14 @@ function wireNet() {
   };
 }
 
+/* Meldung am unteren Rand. `art` steuert nur die Farbe des Randstreifens:
+   info (Standard) · warn · error · good. Antippen schließt sofort. */
 let bannerTimer = null;
-function netBanner(text) {
+function netBanner(text, art) {
   const b = $("net-banner");
-  b.textContent = text;
-  b.classList.remove("hidden");
+  const icon = { warn: "⚠️", error: "📡", good: "✓" }[art] || "ℹ️";
+  b.className = "net-banner" + (art ? " " + art : "");
+  b.innerHTML = `<span class="nb-icon">${icon}</span><span class="nb-text">${esc(text)}</span>`;
   clearTimeout(bannerTimer);
   bannerTimer = setTimeout(() => b.classList.add("hidden"), 8000);
 }
@@ -1486,7 +1563,7 @@ function finishDuel() {
   showOverlay("overlay-wait", false);
   if (G.duel.oppHunt && !G.duel.oppHunt.found) {
     G.score += 250;
-    netBanner("🎭 Dein Fake blieb unentdeckt: +250 Punkte!");
+    netBanner("Dein Fake blieb unentdeckt: +250 Punkte!", "good");
   }
   computeFinal();
   const acc = G.total ? Math.round((G.correct / G.total) * 100) : 0;
@@ -1550,7 +1627,7 @@ function openClass() {
 
 function wireClassNet() {
   ClassNet.onFailed = (reason) => { showScreen("screen-class"); classError(reason); };
-  ClassNet.onLost = (reason) => netBanner("📡 " + reason);
+  ClassNet.onLost = (reason) => netBanner(reason, "error");
 
   ClassNet.onUpdate = (st) => {
     const active = document.querySelector(".screen.active").id;
@@ -1833,7 +1910,7 @@ function classCheckPull(st) {
   cl.wasPulled = true;
   stopTimer();
   showOverlay("overlay-reveal", false);
-  netBanner("⏱️ Du warst zu langsam – die Klasse ist schon im Showdown.");
+  netBanner("Du warst zu langsam – die Klasse ist schon im Showdown.", "warn");
   startBuildPhase();
 }
 
@@ -1868,7 +1945,7 @@ function classFakeBonus(st) {
   G.score += add;
   classReportFinal();
   storeEntry(null);                 // Ranglisten-Eintrag auf den Bonus nachziehen
-  netBanner("🎭 Dein Fake blieb unentdeckt: +" + add + " Punkte!");
+  netBanner("Dein Fake blieb unentdeckt: +" + add + " Punkte!", "good");
   if (document.querySelector(".screen.active").id === "screen-class-result") renderClassResult(st);
 }
 
@@ -1966,6 +2043,7 @@ function init() {
   $("btn-tut-back").addEventListener("click", () => Tutorial.back());
   $("btn-tut-skip").addEventListener("click", () => Tutorial.skip());
   $("player-name").addEventListener("change", (e) => checkProfileKnown(e.target.value.trim()));
+  $("net-banner").addEventListener("click", () => $("net-banner").classList.add("hidden"));
   refreshFirstTimeCard();
   checkProfileKnown(myName);
 
@@ -2031,7 +2109,7 @@ function init() {
   $("btn-class-start").addEventListener("click", async () => {
     $("btn-class-start").disabled = true;
     try { await ClassNet.start(randomSeed()); }
-    catch (e) { $("btn-class-start").disabled = false; netBanner("⚠️ Start fehlgeschlagen – bitte erneut versuchen."); }
+    catch (e) { $("btn-class-start").disabled = false; netBanner("Start fehlgeschlagen – bitte erneut versuchen.", "warn"); }
   });
   $("btn-class-leave").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); goBack("screen-start"); });
   $("btn-class-menu").addEventListener("click", () => { classStopWaitTicker(); ClassNet.close(); goBack("screen-start"); });
@@ -2057,11 +2135,8 @@ function init() {
   $("btn-duel-board").addEventListener("click", renderBoard);
   $("btn-duel-menu").addEventListener("click", () => goBack("screen-start"));
   $("btn-board-refresh").addEventListener("click", renderBoard);
-  $("btn-profile-refresh").addEventListener("click", () => { profileShowAll = false; renderProfile(); });
-  $("btn-profile-more").addEventListener("click", () => {
-    profileShowAll = !profileShowAll;
-    renderProfileTable(myName || localStorage.getItem("ww_name") || "");
-  });
+  $("btn-profile-refresh").addEventListener("click", renderProfile);
+  $("btn-profile-toboard").addEventListener("click", () => { boardFilter = "duell"; syncBoardChips(); renderBoard(); });
   document.querySelectorAll("#board-filters .chip").forEach(chip => {
     chip.addEventListener("click", () => {
       boardFilter = chip.dataset.filter;

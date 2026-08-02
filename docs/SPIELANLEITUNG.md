@@ -165,6 +165,8 @@ Schicht für Schicht weniger Zeit, weniger Energie, subtilere Fälle. **Ab Schic
 ### 📅 Tages-Challenge
 Jeden Tag ein neuer, **für alle identischer** Fallsatz. **Ein Versuch pro Tag und Gerät.** Der fairste Klassenvergleich – eigene Tages-Rangliste („Heute").
 
+Der Wechsel passiert **um Mitternacht deutscher Zeit**. Und die Challenge wiederholt sich nicht: Sechs Fälle laufen in fester Rotation durch den Bestand (kein Fall zweimal innerhalb einer Woche), vier weitere werden jeden Tag **frisch erzeugt** – die hat vorher noch nie jemand gesehen.
+
 ### ⚔️ Online-Duell 1 vs 1
 Wer den Raum erstellt, ist **Host**. Der Raum-Code (5 Zeichen) geht an die Gegenspielerin oder den Gegenspieler; sobald sie beitritt, landen beide in der **Lobby**: Dort stehen beide Namen, der Host stellt die Regeln ein – Fallzahl (6/10/14), Tempo (45/35/24 s), Schwierigkeit (gemischt / nur schwere Fälle), Showdown an/aus – und jede Änderung ist beim Gegenüber sofort zu sehen. Losgehen kann es erst, wenn der Host auf **Duell starten** drückt.
 
@@ -182,8 +184,8 @@ Nach dem Start kann niemand mehr beitreten – erst alle sammeln, dann starten.
 ## Nach der Runde
 
 - **📋 Fall-Auswertung** – jeder Fall noch einmal: deine Antwort, die Wahrheit, die Auflösung und das reale Vorbild samt Quelle
-- **🏆 Rangliste** – global, mit Filtern (Klassisch / Endlos / Duell / Klassenraum / Heute). Unter **„Alle"** stehen die Ergebnisse aus **allen** Modi nebeneinander, Klassenraum-Runden eingeschlossen. Einzige Ausnahme: Tages-Challenge-Ergebnisse älterer Tage – die stammen aus einem anderen Fallsatz und wären nicht vergleichbar. Ohne Internet werden nur die Einträge dieses Geräts gezeigt
-- **👤 Profil** – über deinen Spielnamen: gespielte Runden, Duell-Bilanz (Siege–Niederlagen–Unentschieden), Ø-Genauigkeit, Bestleistung. Darunter die Duell-Bilanz aller Spieler:innen, standardmäßig die **Top 10** – der Rest lässt sich über „Mehr sehen" aufklappen
+- **🏆 Rangliste** – eine Liste **pro Modus** (Klassisch / Endlos / Duell / Klassenraum / Heute). Eine gemeinsame Liste „Alle" gibt es bewusst nicht: Die Modi haben verschiedene Fallzahlen, Timer und Multiplikatoren, ihre Punktzahlen sind schlicht nicht vergleichbar. In der **Duell-Rangliste** steht neben der Punktzahl auch die Bilanz: Siege–Niederlagen–Unentschieden und die Siegquote. Ohne Internet werden nur die Einträge dieses Geräts gezeigt
+- **👤 Profil** – deine eigenen Kennzahlen über den Spielnamen: gespielte Runden, eigene Duell-Bilanz, Ø-Genauigkeit, Bestleistung
 
 ## Für Lehrkräfte und Kursleitung
 
@@ -229,6 +231,9 @@ Dann war der Großteil der Klasse schon im Showdown und die 45-Sekunden-Frist is
 
 **Ich finde meine Klassenraum-Runde nicht in der Rangliste.**
 Klassenraum-Ergebnisse stehen sowohl unter „Alle" als auch unter dem Filter „Klassenraum". Wenn der Showdown gespielt wurde, kann der Eintrag noch einen Moment brauchen: Der Bonus für einen unentdeckt gebliebenen Fake wird erst verrechnet, wenn das Gegenüber sein Urteil gefällt hat – der Eintrag aktualisiert sich dann von selbst.
+
+**Bekomme ich in der Tages-Challenge jeden Tag wirklich neue Fälle?**
+Ja. Ein Teil des Satzes wird täglich neu erzeugt, der Rest rotiert so durch die handgeschriebenen Fälle, dass sich innerhalb einer Woche keiner wiederholt. Der Wechsel ist um Mitternacht deutscher Zeit.
 
 **Die Rangliste zeigt „Offline".**
 Der Spielserver ist gerade nicht erreichbar. Dein Ergebnis wird lokal gespeichert und die Rangliste zeigt nur die Einträge dieses Geräts.

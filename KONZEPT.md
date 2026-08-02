@@ -138,7 +138,7 @@ Zwei Spieler:innen verbinden sich über einen **kostenlosen HTTP-Spielserver** (
 
 ### 6.3 Tages-Challenge
 
-Jeden Tag ein neuer, **für alle identischer Fallsatz** (Datums-Seed) — genau **1 Versuch pro Tag** und Gerät. Eigene Tages-Rangliste („Heute") macht den fairen Klassenvergleich möglich: Alle hatten dieselben Fälle.
+Jeden Tag ein neuer, **für alle identischer Fallsatz** (Datums-Seed) — genau **1 Versuch pro Tag** und Gerät. Eigene Tages-Rangliste („Heute") macht den fairen Klassenvergleich möglich: Alle hatten dieselben Fälle. Der Wechsel erfolgt um Mitternacht deutscher Zeit; ein Teil der Fälle wird täglich neu generiert, sodass sich kein Tag wiederholt.
 
 ### 6.4 Klassenraum
 

@@ -31,6 +31,23 @@ unfertig.
 
 ## Wie hier gearbeitet wird
 
+### Mobile und iPad zuerst
+
+**Das Spiel wird auf Handys und iPads gespielt, nicht am PC.** Jede Änderung an
+Oberfläche oder Layout wird deshalb zuerst in Handy-Breite gedacht, gebaut und
+geprüft; der große Bildschirm ist die Zugabe, nicht der Maßstab.
+
+- Neue Screens zuerst bei **390 px** entwerfen, dann bei **320 px** gegenprüfen,
+  danach erst am Desktop ansehen.
+- Alles muss mit dem Daumen bedienbar sein: Tippziele mindestens 44 px hoch,
+  wichtige Knöpfe unten, keine Hover-abhängigen Funktionen.
+- Nach jeder Layout-Änderung auf horizontalen Überlauf prüfen (Skript-Vorlage in
+  `docs/TECHNIK.md` → „Mobile zuerst"). Beide Breiten müssen sauber sein.
+- Safe-Area (`env(safe-area-inset-*)`) nicht vergessen – sonst liegt Inhalt hinter
+  Uhr und Home-Indikator.
+- Im Zweifel gilt: lieber am Desktop etwas Luft verschenken als auf dem Handy
+  quetschen.
+
 - **Vanilla HTML/CSS/JS, kein Build, keine Abhängigkeiten.** Was im Repo liegt, läuft
   im Browser. Keine Frameworks, kein Bundler, kein npm-Projekt einführen.
 - **Kein eigenes Backend.** Mehrspieler und Ranglisten laufen über den kostenlosen
@@ -64,7 +81,7 @@ node --check js/*.js          # Syntax
 python -m http.server 8123    # dann http://localhost:8123
 ```
 
-Vor jedem Push mindestens durchspielen:
+Vor jedem Push mindestens durchspielen – **in Handy-Breite**, nicht am Desktop:
 
 1. Einweisung von Schritt 1 bis 12
 2. Solo klassisch **bis ins Boss-Finale** – dazu muss man richtig antworten, sonst
@@ -73,9 +90,20 @@ Vor jedem Push mindestens durchspielen:
 4. Duell: Lobby, Regeländerung durch den Host, Start, Showdown
 5. Klassenraum: Lobby, Regeländerung, Start, Showdown, Auto-Fill (jemand gibt nicht
    ab), Nachzügler-Einzug (jemand bleibt in den Fällen stecken)
-6. Rangliste über alle Filter, Profil mit „Mehr sehen"
+6. Rangliste über alle Filter, Profil
+7. Überlauf-Prüfung bei 320 px und 390 px
 
 Die Browser-Konsole muss dabei leer bleiben.
+
+### Handout neu erzeugen
+
+`ANLEITUNG.pdf` wird aus echten Screenshots gebaut, damit es nicht veralten kann:
+
+```bash
+python -m http.server 8123 &
+node tools/shots.mjs      # Screenshots aus dem laufenden Spiel
+python tools/handout.py   # daraus ANLEITUNG.pdf
+```
 
 ## Fallstricke, die schon Zeit gekostet haben
 
@@ -100,26 +128,35 @@ Die Browser-Konsole muss dabei leer bleiben.
    der Uhr. Nach Layout-Änderungen einmal bei 320 px und 390 px auf
    horizontalen Überlauf prüfen.
 
-## Stand (Februar-Update v4.3)
+## Stand (Februar-Update v4.4)
 
 Fertig und getestet:
 
-- 47 handgeschriebene Fälle, Fall-Generator für den Endlosmodus
+- 47 handgeschriebene Fälle, Fall-Generator für Endlos **und** Tages-Challenge
 - Modi: Solo klassisch, Endlos, Tages-Challenge, Online-Duell, Klassenraum
 - Interaktive Einweisung (12 Schritte) mit Erstspieler-Erkennung über das Profil
 - Showdown (Fake bauen) im Duell **und** im Klassenraum inkl. fairer Verteilung,
   Auto-Fill nach 60 s und Nachzügler-Einzug
 - Lobbys für Duell und Klassenraum: Spielerliste, Regeln nur beim Host änderbar,
   Start-Knopf nur beim Host
-- Globale Rangliste über alle Modi, Profile mit Duell-Bilanz
+- Tages-Challenge wechselt um **Mitternacht deutscher Zeit**; ein Teil der Fälle
+  wird täglich neu erzeugt, damit sich nichts wiederholt
+- Ranglisten pro Modus (kein „Alle" mehr – die Modi sind nicht vergleichbar);
+  die Duell-Rangliste zeigt Ergebnis **und** Bilanz
 - Durchgängiges Animationskonzept („Lagezentrum", `js/anim.js`)
 - In-Game-Hilfe ist reines Nachschlagewerk und überschneidet sich bewusst **nicht**
   mit der Einweisung
-- Auf dem Handy geprüft: keine Überläufe bei 320 px und 390 px, Safe-Area
-  berücksichtigt, keine automatischen Telefonnummer-Links
+- `ANLEITUNG.pdf` als bebilderte Schritt-für-Schritt-Anleitung (`tools/`)
+- Mobile geprüft: kein Überlauf bei 320 px und 390 px, Safe-Area berücksichtigt,
+  keine automatischen Telefonnummer-Links
 
-Offen (siehe `docs/TECHNIK.md` → „Offene Punkte"):
+Offen:
 
-- Smoke-Test auf GitHub Pages nach größeren Updates (Pages cacht JS ~10 Min)
-- Klassenraum unter Volllast (30 Geräte) nur simuliert, nie real gemessen
-- `ANLEITUNG.pdf` kennt Einweisung, Lobbys und Klassenraum-Showdown noch nicht
+- **Nichts Blockierendes.** Nach größeren Updates die Live-Seite einmal im Browser
+  aufrufen (GitHub Pages cacht JS ~10 Min, also hart neu laden). Aus dieser
+  Arbeitsumgebung heraus ist `github.io` durch die Netz-Richtlinie gesperrt; der
+  Smoke-Test läuft deshalb gegen eine lokale Kopie von `origin/main`
+  (`git archive origin/main`), was inhaltlich dasselbe prüft.
+- Ein Lasttest mit 30 echten Geräten ist **bewusst gestrichen** – der Aufwand steht
+  in keinem Verhältnis; das Verfahren ist stattdessen simuliert belegt
+  (siehe `docs/TECHNIK.md`).

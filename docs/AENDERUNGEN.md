@@ -1,5 +1,32 @@
 # Änderungsverlauf
 
+## v4.4 – Mobile-First, Tages-Challenge, Ranglisten, neues Handout
+
+**Mobile und iPad zuerst – als Grundsatz festgeschrieben**
+- Gespielt wird auf kleinen Bildschirmen; der Desktop ist die Zugabe. Steht jetzt in `CLAUDE.md` und `docs/TECHNIK.md` samt Prüfmuster für horizontalen Überlauf (390 px bauen, 320 px gegenprüfen).
+
+**Tages-Challenge**
+- Der Tageswechsel läuft über **deutsche Zeit** statt UTC. Vorher wechselte die Challenge um 01:00 bzw. 02:00 Uhr, nicht um Mitternacht.
+- Der Fallsatz wiederholt sich nicht mehr: Sechs handgeschriebene Fälle rotieren so durch den Bestand, dass innerhalb einer Woche keiner zweimal drankommt; vier weitere Fälle werden täglich **neu erzeugt** (derselbe Generator wie im Endlosmodus). Gemessen über 30 Tage: vorher 2–4 Wiederholungen vom Vortag und bis zu 11 Auftritte je Fall, jetzt 0 Wiederholungen und höchstens 5.
+
+**Rangliste und Profil**
+- Der Filter **„Alle" ist entfallen**. Die Modi haben verschiedene Fallzahlen, Timer und Multiplikatoren – nebeneinandergestellt sagen die Zahlen nichts aus. Standard ist jetzt „Klassisch".
+- Die **Duell-Rangliste zeigt Ergebnis und Bilanz zusammen**: Punktzahl aus dem Duell-Schlüssel, Siege–Niederlagen–Unentschieden und Siegquote aus den Profilen.
+- Im **Profil** entfällt die Tabelle mit der Bilanz aller Spieler:innen; dort stehen nur noch die eigenen Kennzahlen, dazu ein Verweis in die Duell-Rangliste.
+
+**Meldungen und Animationen**
+- Die Meldung am unteren Rand ist keine Pille mehr, sondern eine Karte mit farbigem Randstreifen (`info` / `warn` / `error` / `good`) und Antippen zum Schließen. Als Pille wurde daraus bei zweizeiligem Text eine Ellipse.
+- Die Inhalts-Ebene kennt jetzt **zwei Richtungen**: Neues steigt auf, das *nächste Element einer Reihe* kommt von rechts. Dadurch unterscheidet sich ein neuer Fall sichtbar von einem neuen Screen.
+- Zusätzlich klarer: gewähltes Urteil bleibt markiert, Fall-Nummer pulst beim Wechsel, Budget in der Fake-Werkstatt und Energie in der Jagd pulsen bei Änderung.
+
+**Handout `ANLEITUNG.pdf` komplett neu**
+- Aus dem Infoblatt ist eine **bebilderte Schritt-für-Schritt-Anleitung** geworden, im Aufbau der interaktiven Einweisung: 12 Kapitel von „Worum es geht" bis „Fünf Sätze, die dich durchbringen", mit Kapitel für den Unterricht.
+- Alle Abbildungen sind **echte Screenshots aus dem laufenden Spiel** – erzeugt von `tools/shots.mjs`, gesetzt von `tools/handout.py`. Dadurch kann das Handout nicht unbemerkt veralten.
+
+**Offene Punkte geschlossen**
+- Live-Smoke-Test: läuft gegen eine lokale Kopie von `origin/main` (aus dieser Umgebung ist `github.io` gesperrt) – ohne Befund.
+- Der Lasttest mit 30 echten Geräten ist nach Absprache **gestrichen**.
+
 ## v4.3 – Mobile-Fehlerbehebungen
 
 Nach dem ersten Test auf einem iPhone gemeldet und behoben:
