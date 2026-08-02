@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WAHLWÄCHTER besteht aus genau einer Seite: Alle Screens sind Abschnitte in
+  index.html, die per JavaScript umgeschaltet werden. Es gibt keine Routen,
+  keine Query-Parameter, keine Unterseiten. Deshalb steht hier nur eine Adresse
+  – das ist kein Versehen.
+
+  In der Google Search Console einzureichen unter:
+  https://lassetoenjann.github.io/wahlwaechter/sitemap.xml
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://lassetoenjann.github.io/wahlwaechter/</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

@@ -4,6 +4,10 @@
 
 **Google Search Console**
 - Nachweis-Meta-Tag (`google-site-verification`) im `<head>` von `index.html`. Damit lässt sich in der Search Console sehen, wie die Seite gefunden wird. Das Tag muss dort stehen bleiben – wird es entfernt, gilt die Seite als unbestätigt.
+- `sitemap.xml` mit **einer** URL. Mehr gibt es nicht: Alle Screens sind Abschnitte in `index.html`, es existieren keine Routen, Parameter oder Raum-Links.
+- `<link rel="canonical">` ergänzt, damit `/` und `/index.html` nicht getrennt im Index landen.
+- `robots.txt` angelegt – mit dem ausdrücklichen Hinweis, dass sie im Projektpfad `/wahlwaechter/` **folgenlos** ist: Suchmaschinen lesen die Datei nur im Wurzelverzeichnis einer Domain. Sie wird erst unter einer eigenen Domain wirksam oder wenn man den Inhalt ins Wurzel-Repository kopiert. `css/` und `js/` sind darin bewusst **nicht** gesperrt, weil Google die Seite zum Indexieren rendert.
+- Neues Kapitel „Suchmaschinen" in `docs/TECHNIK.md`.
 
 **Mobile und iPad zuerst – als Grundsatz festgeschrieben**
 - Gespielt wird auf kleinen Bildschirmen; der Desktop ist die Zugabe. Steht jetzt in `CLAUDE.md` und `docs/TECHNIK.md` samt Prüfmuster für horizontalen Überlauf (390 px bauen, 320 px gegenprüfen).

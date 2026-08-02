@@ -1,0 +1,27 @@
+# WAHLWÄCHTER – https://lassetoenjann.github.io/wahlwaechter/
+#
+# ACHTUNG, damit sich niemand darauf verlässt: Suchmaschinen lesen robots.txt
+# ausschließlich im Wurzelverzeichnis einer Domain, also unter
+# https://lassetoenjann.github.io/robots.txt. Diese Datei liegt aber im
+# Projektpfad /wahlwaechter/ und wird deshalb **nicht** ausgewertet.
+#
+# Sie liegt trotzdem hier, aus zwei Gründen:
+#   1. Sobald das Spiel unter einer eigenen Domain läuft, wird sie ohne
+#      Änderung wirksam (dann allerdings die Pfade ohne /wahlwaechter/ davor).
+#   2. Wer den Ausschluss jetzt schon durchsetzen will, kopiert den Inhalt in
+#      das Wurzel-Repository „lassetoenjann.github.io".
+#
+# Praktisch ist das ohnehin unkritisch: Die Markdown-Dateien sind von der
+# Seite aus nirgends verlinkt, Suchmaschinen finden sie also nicht von allein.
+
+User-agent: *
+Allow: /
+
+# Projektdokumentation – gehört nicht in den Suchindex.
+Disallow: /wahlwaechter/*.md$
+Disallow: /wahlwaechter/docs/
+
+# CSS und JavaScript bleiben ausdrücklich erlaubt: Google rendert die Seite
+# vor dem Indexieren und braucht beides. Ein Ausschluss würde schaden.
+
+Sitemap: https://lassetoenjann.github.io/wahlwaechter/sitemap.xml

@@ -16,6 +16,7 @@ Alles, was man wissen muss, um am Code weiterzuarbeiten. Spielregeln stehen in d
 - [Wichtige Entscheidungen](#wichtige-entscheidungen-und-warum)
 - [Testen](#testen)
 - [Erweitern](#erweitern)
+- [Suchmaschinen](#suchmaschinen)
 - [Bekannte Grenzen](#bekannte-grenzen)
 
 ---
@@ -73,6 +74,8 @@ Beide Breiten müssen ohne Treffer durchlaufen. Häufigste Ursachen in der Verga
 | `js/classroom.js` | `ClassNet` – Klassenraum, bis 30 Spieler:innen auf einem Raum-Key |
 | `js/tutorial.js` | `Tutorial` – interaktive Einweisung mit eigenen Übungsfällen |
 | `js/game.js` | Spiellogik, Screens, Timer, Punkte, Ranglisten, Profile, Verdrahtung |
+| `sitemap.xml` | eine einzige URL – mehr gibt es nicht (siehe unten) |
+| `robots.txt` | liegt bereit, wirkt im Projektpfad aber nicht (siehe unten) |
 
 ## Spielzustand (`G`)
 
@@ -325,6 +328,23 @@ cd /tmp/livecopy && python -m http.server 8124
 **Neue Tarnung/Format/Thema:** in `DATA.sabotage` ergänzen. Wichtig: Jede Tarnung braucht einen `channel` (Werkzeug-ID) und `cost`; jedes Format/Thema braucht `*_dirty` und `*_clean` für die betroffenen Kanäle. Das Budget (`sabotage.budget`) muss so gesetzt bleiben, dass **nicht** alle Spuren verwischt werden können – das ist die Kernaussage des Showdowns.
 
 **Neuen Schritt in der Einweisung:** Objekt in `Tutorial.steps` einfügen; die Fortschrittsanzeige rechnet automatisch mit.
+
+## Suchmaschinen
+
+Das Spiel ist **eine einzige Seite**: Alle Screens sind `<section>`s in `index.html`, umgeschaltet per JavaScript. Es gibt kein `location.hash`, kein `location.search`, kein `pushState` und keine Raum-Links – also **keine zweite URL**, die man indexieren könnte. Räume werden über eingetippte Codes betreten, nicht über Adressen.
+
+| Datei / Tag | Zweck |
+|---|---|
+| `<meta name="google-site-verification">` | bestätigt die Property in der Google Search Console. Muss im `<head>` bleiben – ohne das Tag gilt die Seite dort als unbestätigt. |
+| `<link rel="canonical">` | verhindert, dass `/` und `/index.html` getrennt im Index landen |
+| `sitemap.xml` | enthält genau eine URL. In der Search Console einzureichen als `https://lassetoenjann.github.io/wahlwaechter/sitemap.xml` |
+| `robots.txt` | **wirkt derzeit nicht** – siehe unten |
+
+**Warum `robots.txt` hier folgenlos ist:** Suchmaschinen lesen die Datei ausschließlich im Wurzelverzeichnis einer Domain, also unter `https://lassetoenjann.github.io/robots.txt`. Das Spiel liegt aber im Projektpfad `/wahlwaechter/`; diese Wurzel gehört zum Repository `lassetoenjann.github.io`, nicht hierher. Die Datei liegt trotzdem im Repo: Unter einer eigenen Domain wird sie ohne Änderung wirksam, und wer den Ausschluss jetzt schon will, kopiert den Inhalt ins Wurzel-Repository.
+
+Praktisch ist das unkritisch. Die Markdown-Dateien (`README.md`, `KONZEPT.md`, `docs/*.md`) sind über Pages zwar abrufbar, aber von der Seite aus **nirgends verlinkt** – Suchmaschinen finden sie nicht von allein. Wer sie wirklich aus der Auslieferung nehmen will, bräuchte ein `_config.yml` mit `exclude:`; das verändert den Jekyll-Build und ist für den Nutzen zu viel Risiko.
+
+Nicht ausschließen sollte man `css/` und `js/`: Google rendert die Seite vor dem Indexieren und braucht beides. Rund 1.350 Wörter stehen fest im HTML (Start, Modi, Hilfe-Tabellen), sind also auch ohne JavaScript lesbar.
 
 ## Bekannte Grenzen
 
