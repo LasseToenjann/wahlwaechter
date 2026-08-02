@@ -2,6 +2,9 @@
 
 ## v4.4 – Mobile-First, Tages-Challenge, Ranglisten
 
+**Google Search Console**
+- Nachweis-Meta-Tag (`google-site-verification`) im `<head>` von `index.html`. Damit lässt sich in der Search Console sehen, wie die Seite gefunden wird. Das Tag muss dort stehen bleiben – wird es entfernt, gilt die Seite als unbestätigt.
+
 **Mobile und iPad zuerst – als Grundsatz festgeschrieben**
 - Gespielt wird auf kleinen Bildschirmen; der Desktop ist die Zugabe. Steht jetzt in `CLAUDE.md` und `docs/TECHNIK.md` samt Prüfmuster für horizontalen Überlauf (390 px bauen, 320 px gegenprüfen).
 
