@@ -195,9 +195,17 @@ function buildShift(s) {
 /* =========================================================================
    START & MENÜ
    ========================================================================= */
+/* Der Name geht in Ranglisten, Profile, Duell und Klassenraum - also durch
+   den Speicherdienst, der sich an "+" und "%" verschluckt (siehe js/tdb.js).
+   Bereinigt wird deshalb schon hier und sichtbar im Feld: Was dort steht,
+   steht spaeter genauso in der Rangliste. Wuerde erst beim Senden gefiltert,
+   saehe man den eigenen Namen nachher anders als eingetippt. */
 function getPlayerName() {
   const el = $("player-name");
-  const name = el.value.trim();
+  // Der Rueckfall greift nur, wenn jemand eine alte index.html im Cache hat
+  // und js/tdb.js deshalb fehlt - dann soll der Start trotzdem klappen.
+  const name = (typeof TDB !== "undefined" ? TDB.sauber(el.value) : el.value).trim();
+  if (name !== el.value.trim()) el.value = name;
   if (!name) {
     el.style.borderColor = "var(--red)";
     el.placeholder = "Bitte zuerst Namen eingeben!";
@@ -1103,25 +1111,15 @@ function loadLocalBoard() {
 }
 function saveLocalBoard(list) { localStorage.setItem("ww_board_v1", JSON.stringify(list.slice(0, 50))); }
 
-async function tdbRead(key) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 8000);
-  try {
-    const res = await fetch(BOARD_BASE + key + "?t=" + Date.now(), { signal: ctrl.signal });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const text = await res.text();
-    if (!text.trim()) return null;
-    try { return JSON.parse(text); } catch (e) { return null; }
-  } finally { clearTimeout(t); }
-}
-async function tdbWrite(key, obj) {
-  const url = BOARD_BASE + "update/?key=" + key + "&value=" + encodeURIComponent(JSON.stringify(obj));
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("HTTP " + res.status);
-  const j = await res.json();
-  if (j.status !== 1) throw new Error("write rejected");
-}
+/* Lesen und Schreiben liegen in js/tdb.js - gemeinsam mit Duell und
+   Klassenraum. Wichtig: tdbRead gibt null nur zurueck, wenn der Schluessel
+   leer ist. Unlesbares wirft, damit niemand eine kaputte Liste als leere
+   Liste missversteht und sie beim Zurueckschreiben ueberschreibt. */
+function tdbRead(key)       { return TDB.lies(key); }
+function tdbWrite(key, obj) { return TDB.schreib(key, obj); }
 
+/* Wirft weiter, wenn die Liste nicht lesbar ist - pushGlobalScore darf
+   daraus keine leere Liste machen und zurueckschreiben. */
 async function fetchModeBoard(mode) {
   const data = await tdbRead(BOARD_KEYS[mode]);
   return data && Array.isArray(data.scores) ? data.scores.map(unpackEntry) : [];

@@ -1,5 +1,60 @@
 # Änderungsverlauf
 
+## v4.6 – Der Speicherdienst verschluckt Zeichen (und hätte Ranglisten gelöscht)
+
+Beim Nachbessern des Schwesterprojekts fiel ein Fehler auf, der hier genauso
+steckte — bisher unbemerkt, weil ihn noch niemand ausgelöst hat.
+
+**textdb.online dekodiert den geschriebenen Wert zweimal.** Im zweiten Durchgang
+wird aus jedem `+` ein Leerzeichen. Nachgemessen mit einem Wegwerf-Schlüssel:
+
+| gesendet | kommt an |
+|---|---|
+| `A+B` | `A B` |
+| `%2B` | `+` |
+| `e+27` | `e 27` |
+| `&` `#` `/` `=` | unverändert |
+
+Für dieses Spiel heißt das: Ein Name mit `+` darin wird stillschweigend
+verstümmelt (`Anna+Ben` → `Anna Ben`). Ein Name mit `%` ist schlimmer — `%22`
+wird zum Anführungszeichen und zerreißt das gespeicherte JSON. Und bei einem
+Namen wie `100%ig` scheitert schon die zweite Dekodierung des Dienstes; er
+verwirft den Wert dann ganz.
+
+**Der eigentliche Schaden lag aber woanders.** Die drei Lesefunktionen
+(`game.js`, `net.js`, `classroom.js`) gaben bei unlesbarem Inhalt `null` zurück.
+Die Aufrufer machten daraus eine **leere Liste**, ergänzten den eigenen Eintrag
+und schrieben zurück. Ein einziger verstümmelter Eintrag hätte also gereicht,
+um beim nächsten Speichern
+
+- die ganze Modus-Rangliste,
+- alle 17 Profile oder
+- sämtliche Mitspielenden aus einem laufenden Klassenraum
+
+zu löschen — und textdb hat keine Historie.
+
+**Was jetzt gilt**
+
+- Neue Datei `js/tdb.js`: eine gemeinsame Schicht für alles, was auf
+  textdb.online liegt. Vorher hatte jede der drei Stellen ihre eigene Kopie von
+  Lesen und Schreiben — mit denselben zwei Fehlern.
+- Hinausgehende Werte enthalten weder `+` noch `%`. `+` wird zum Leerzeichen
+  (das täte der Dienst ohnehin, nur ist es jetzt vorhersehbar), `%` fällt weg.
+  Exponenten großer Zahlen werden ohne Vorzeichen geschrieben (`1e27`) — das
+  bleibt gültiges JSON.
+- **`null` heißt ab sofort ausschließlich „Schlüssel ist leer".** Alles, was
+  sich nicht lesen lässt, wirft einen Fehler. Die Aufrufer versuchen es erneut
+  oder brechen ab — aber sie überschreiben nichts mehr.
+- Beim Lesen wird alter Schaden repariert (`1e 27` → `1e+27`).
+- Der Name wird schon **im Eingabefeld** bereinigt und sichtbar zurückgeschrieben.
+  Was dort steht, steht später genauso in der Rangliste; würde erst beim Senden
+  gefiltert, sähe man seinen Namen hinterher anders als eingetippt.
+
+**Zustand der echten Daten:** alle sechs Schlüssel geprüft — Ranglisten und
+Profile sind unbeschädigt. Bisher hat schlicht niemand ein `+` oder `%` in
+seinen Namen geschrieben. Die Korrektur ist hier also Vorsorge, keine Reparatur.
+
+
 ## v4.5 – Favicon in der Google-Suche
 
 - Das Favicon war ein `data:`-URI mit einem Emoji. Der Browser zeigt so etwas im Tab an, **Google kann es aber nicht abrufen** — in der Suche und in der Search Console blieb das Bild deshalb leer, während andere Projekte dort ein Symbol hatten.

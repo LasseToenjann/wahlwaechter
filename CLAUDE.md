@@ -56,7 +56,8 @@ geprüft; der große Bildschirm ist die Zugabe, nicht der Maßstab.
 - **Kommentare erklären das Warum**, nicht das Was. Besonders bei allem, was gegen
   Netz-Eigenheiten abgesichert ist (gedrosselte Hintergrund-Tabs, Schreibkollisionen).
 - Skript-Ladereihenfolge in `index.html` beachten:
-  `anim → rng → data → net → gen → classroom → tutorial → game`.
+  `anim → rng → data → tdb → net → gen → classroom → tutorial → game`.
+  `tdb.js` muss vor `net.js` stehen – Duell, Klassenraum und Rangliste bauen darauf auf.
 
 ### Daten niemals eigenmächtig löschen
 
@@ -108,13 +109,29 @@ Die Browser-Konsole muss dabei leer bleiben.
    Feldnamen einbuchstabig. Beim Ergänzen die Größe im Blick behalten.
 5. **Zeitvergleiche über Geräte hinweg vermeiden.** Fristen laufen ab dem Moment, in
    dem das eigene Gerät einen Zustand *sieht* – nicht ab einem fremden Zeitstempel.
-6. **iOS ist der strengere Browser.** Drei Dinge, die nur dort auffielen:
+6. **`+` und `%` in allem, was auf textdb landet.** Der Dienst dekodiert den
+   Wert zweimal und macht dabei aus `+` ein Leerzeichen; ein `%` im Namen
+   zerreißt das JSON oder lässt den Dienst den Wert ganz verwerfen. Alles läuft
+   deshalb über `js/tdb.js` — nie wieder eine eigene Kopie von Lesen/Schreiben
+   anlegen.
+7. **Unlesbar ist nicht leer.** Wer bei einem Lesefehler eine leere Liste
+   zurückgibt, löscht beim nächsten Schreiben die ganze Rangliste. `TDB.lies()`
+   liefert `null` nur bei leerem Schlüssel und wirft sonst.
+8. **iOS ist der strengere Browser.** Drei Dinge, die nur dort auffielen:
    Beschriftungen als reiner Textknoten in einem Flex-Knopf werden mit Emoji
    falsch gemessen und abgeschnitten (deshalb sind `.btn` bewusst kein Flexbox);
    Zahlenbereiche wie „2900–3599" werden ohne `format-detection`-Meta zu
    Anruf-Links; und ohne `env(safe-area-inset-*)` liegt die erste Zeile hinter
    der Uhr. Nach Layout-Änderungen einmal bei 320 px und 390 px auf
    horizontalen Überlauf prüfen.
+
+## Stand (v4.6)
+
+Neu gegenüber v4.4/v4.5: **`js/tdb.js`** bündelt Lesen und Schreiben auf
+textdb.online für Rangliste, Duell und Klassenraum. Damit sind zwei Fehler weg,
+die hier bisher nur nicht ausgelöst worden waren: verschluckte `+`/`%` und —
+schwerer — das Überschreiben ganzer Listen, wenn sich der gespeicherte Inhalt
+nicht lesen ließ. Die echten Schlüssel wurden geprüft und sind unbeschädigt.
 
 ## Stand (Februar-Update v4.4)
 

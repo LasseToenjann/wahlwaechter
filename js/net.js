@@ -49,21 +49,11 @@ const Net = {
 
   _status(text) { if (this.onStatus) this.onStatus(text); },
 
-  async _read(key) {
-    const res = await fetch(this._BASE + key + "?t=" + Date.now());
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const text = await res.text();
-    if (!text.trim()) return null;
-    try { return JSON.parse(text); } catch (e) { return null; }
-  },
-
-  async _write(key, state) {
-    const url = this._BASE + "update/?key=" + key + "&value=" + encodeURIComponent(JSON.stringify(state));
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const j = await res.json();
-    if (j.status !== 1) throw new Error("write rejected");
-  },
+  /* Lesen und Schreiben liegen in js/tdb.js - dort wird der Wert so
+     aufbereitet, dass ihn der Dienst unveraendert zurueckgibt, und
+     Unlesbares wirft, statt als leeres Postfach durchzugehen. */
+  _read(key)         { return TDB.lies(key); },
+  _write(key, state) { return TDB.schreib(key, state); },
 
   _myState(extra) {
     return Object.assign({
@@ -248,9 +238,12 @@ const Net = {
 
   _sayBye() {
     if (!this._code) return;
-    // Bestes Bemühen: dem Gegner "tschüss" sagen (keepalive überlebt das Schließen der Seite)
+    // Bestes Bemühen: dem Gegner "tschüss" sagen (keepalive überlebt das Schließen der Seite).
+    // Bewusst nicht über TDB.schreib: das braucht keepalive und darf nicht
+    // abgebrochen werden. Den Wert baut trotzdem TDB, damit auch dieser Weg
+    // ohne "+" und "%" hinausgeht.
     const url = this._BASE + "update/?key=" + this._myKey() +
-      "&value=" + encodeURIComponent(JSON.stringify(this._myState({ bye: true })));
+      "&value=" + encodeURIComponent(TDB.baueWert(this._myState({ bye: true })));
     try { fetch(url, { keepalive: true }); } catch (e) {}
   },
 };

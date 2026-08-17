@@ -70,6 +70,7 @@ Beide Breiten müssen ohne Treffer durchlaufen. Häufigste Ursachen in der Verga
 | `js/rng.js` | `mulberry32` (deterministischer RNG), `seededShuffle`, `randomSeed`, `randomRoomCode` |
 | `js/data.js` | Alle Inhalte: `cases`, `realRefs`, `weeks`, `ranks`, `tools`, `dilemmas`, `sabotage`, `feedReals`, `gen`, `scoring`, `endless` |
 | `js/gen.js` | `randomBuild` (budgetkonformer Bauplan), `craftFake` (Bauplan → Fake-Karte mit Beweislage), `generateCase` (Endlos-Generator) |
+| `js/tdb.js` | `TDB` – Lesen und Schreiben auf textdb.online für alle drei Netzteile |
 | `js/net.js` | `Net` – Online-Duell über zwei Postfächer |
 | `js/classroom.js` | `ClassNet` – Klassenraum, bis 30 Spieler:innen auf einem Raum-Key |
 | `js/tutorial.js` | `Tutorial` – interaktive Einweisung mit eigenen Übungsfällen |
@@ -132,6 +133,53 @@ Beides läuft über **textdb.online**, einen kostenlosen öffentlichen Key-Value
 - **Lesen:** `GET https://textdb.online/<key>?t=<zeitstempel>` (der Zeitstempel umgeht den Cache)
 - **Schreiben:** `GET https://textdb.online/update/?key=<key>&value=<urlencoded JSON>`
   Schreiben per GET ist Absicht: kein CORS-Preflight, funktioniert überall.
+
+Beides läuft über **`js/tdb.js`**. Rangliste, Duell und Klassenraum hatten vorher
+je eine eigene Kopie davon — mit denselben zwei Fehlern.
+
+### Der Dienst dekodiert zweimal
+
+**Teuer erkauft, deshalb hier festgehalten.** textdb.online dekodiert den
+übergebenen Wert zwei Mal und macht dabei im zweiten Durchgang aus jedem `+` ein
+Leerzeichen. Nachgemessen mit einem Wegwerf-Schlüssel:
+
+| gesendet | kommt an |
+|---|---|
+| `A+B` | `A B` |
+| `%2B` | `+` |
+| `e+27` | `e 27` |
+| `&` `#` `/` `=` `~` | unverändert |
+
+Ein Name mit `%` wird im zweiten Durchgang als Prozent-Code gelesen: Aus `%22`
+wird ein Anführungszeichen, und das zerreißt das gespeicherte JSON. Bei `100%ig`
+scheitert die Dekodierung des Dienstes ganz und der Wert geht verloren.
+
+**Regel: Was hinausgeht, enthält weder `+` noch `%`.** Dafür sorgt
+`TDB.baueWert()`; `TDB.sauber()` macht aus `+` ein Leerzeichen und entfernt `%`.
+Angewendet wird das auf jede Zeichenkette im Datensatz — Namen, Raumcodes,
+Nachrichten. Der Spielname wird zusätzlich schon im Eingabefeld bereinigt, damit
+man ihn später so wiederfindet, wie er dort steht.
+
+### Unlesbar ist nicht leer
+
+Die alten Lesefunktionen gaben bei einem Lesefehler `null` zurück. Die Aufrufer
+machten daraus eine leere Liste, ergänzten den eigenen Eintrag und schrieben
+zurück — womit ein einziger verstümmelter Eintrag die ganze Rangliste, alle
+Profile oder einen laufenden Klassenraum gelöscht hätte.
+
+`TDB.lies()` gibt `null` deshalb **nur** zurück, wenn der Schlüssel leer ist.
+Alles, was sich nicht lesen lässt, wirft. Die Aufrufer sind darauf ausgelegt:
+
+| Stelle | Verhalten bei unlesbarem Inhalt |
+|---|---|
+| `pushGlobalScore` | drei Versuche, dann `false` → „Ergebnis nur auf diesem Gerät gespeichert" |
+| `updateProfile` | drei Versuche, dann `false` — die Profile bleiben stehen |
+| `ClassNet._merge` | vier Versuche, dann `merge failed` — der Raum bleibt stehen |
+| `Net._poll` | zählt als Lesefehler; nach sechs in Folge gilt die Verbindung als weg |
+| `Net.joinRoom` | meldet „Spielserver nicht erreichbar" statt „Raum nicht gefunden" |
+
+Bekannter Schaden aus alten Fassungen wird beim Lesen repariert
+(`1e 27` → `1e+27`), damit bestehende Einträge nicht verloren gehen.
 
 ### Online-Duell (`net.js`)
 
@@ -257,6 +305,10 @@ Pro Modus werden maximal 30 Einträge gehalten, Profile maximal 120; bei Überla
 Die **Duell-Rangliste** führt Ergebnis und Bilanz zusammen: Die Punktzahl kommt aus dem Duell-Schlüssel, die Bilanz (S–N–U und Siegquote) aus den Profilen (`fetchDuelRecords`, `duelMeta`). Im Profil-Screen steht die Bilanz aller Spieler:innen deshalb nicht mehr – dort bleiben nur die eigenen Kennzahlen.
 
 Jeder Lauf bekommt eine **stabile Ergebnis-ID** (`G.entryId`). `pushGlobalScore` legt den Eintrag entweder neu an oder aktualisiert ihn, wenn er schon dort steht. Nötig ist das für den Klassenraum: Der Bonus für unentdeckte Fakes kann erst eintreffen, wenn das Ergebnis längst gespeichert ist – dann zieht `storeEntry` den vorhandenen Eintrag nach, statt einen zweiten anzulegen.
+
+Alle Schreibzugriffe laufen über `js/tdb.js` — siehe „Der Dienst dekodiert
+zweimal" und „Unlesbar ist nicht leer" im Kapitel Netzwerk. Ein unlesbarer
+Schlüssel wird nie überschrieben.
 
 > ⚠️ **Daten nie eigenmächtig löschen.** Ein „frisches Leeren" der Schlüssel hat schon einmal echte Spielstände unwiederbringlich vernichtet – textdb.online hat keine Historie. Leeren nur auf ausdrückliche Anweisung: `GET https://textdb.online/update/?key=<KEY>&value={"scores":[]}` (Profile: `{"profiles":[]}`).
 

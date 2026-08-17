@@ -27,21 +27,12 @@ const ClassNet = {
 
   _key() { return "wahlwaechter_class_" + this.code.toLowerCase(); },
 
-  async _read() {
-    const res = await fetch(this.BASE + this._key() + "?t=" + Date.now());
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const text = await res.text();
-    if (!text.trim()) return null;
-    try { return JSON.parse(text); } catch (e) { return null; }
-  },
-
-  async _write(state) {
-    const url = this.BASE + "update/?key=" + this._key() + "&value=" + encodeURIComponent(JSON.stringify(state));
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const j = await res.json();
-    if (j.status !== 1) throw new Error("write rejected");
-  },
+  /* Lesen und Schreiben liegen in js/tdb.js. Entscheidend fuer den
+     Klassenraum: Ein unlesbarer Raum wirft jetzt, statt als leerer Raum
+     durchzugehen - sonst haette der naechste Schreibvorgang alle
+     Mitspielenden aus dem Raum geworfen. */
+  _read()       { return TDB.lies(this._key()); },
+  _write(state) { return TDB.schreib(this._key(), state); },
 
   /* Lesen -> mutieren -> schreiben -> verifizieren (3 Versuche) */
   async _merge(mutate, verify) {
