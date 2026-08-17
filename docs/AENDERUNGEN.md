@@ -1,5 +1,12 @@
 # Änderungsverlauf
 
+## v4.5 – Favicon in der Google-Suche
+
+- Das Favicon war ein `data:`-URI mit einem Emoji. Der Browser zeigt so etwas im Tab an, **Google kann es aber nicht abrufen** — in der Suche und in der Search Console blieb das Bild deshalb leer, während andere Projekte dort ein Symbol hatten.
+- Jetzt eine echte Datei unter `assets/favicon.svg`: ein gezeichneter Schild mit Haken in den Projektfarben, statt eines Emojis, dessen Darstellung von der Schriftart des jeweiligen Systems abhängt.
+- Ergänzt um `apple-touch-icon` und `mask-icon` auf dieselbe Datei.
+
+
 ## v4.4 – Mobile-First, Tages-Challenge, Ranglisten
 
 **Google Search Console**
