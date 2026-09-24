@@ -51,12 +51,14 @@ Klassisch 1, Endlos 0, Duell 2, Tages-Challenge 3, Klassenraum 2 Einträge,
 | Überlauf bei 390 px und 320 px | keine Treffer |
 | Tages-Sätze bis 30.09.2026 | bitgleich zur Fassung 4.6 (Fingerabdruck) |
 | Rauchtest mit Endstand | Konsole leer |
+| Live nach dem Push (GitHub Pages, ~60 s nach Push) | alle Skripte `?v=4.7`, Korrekturen vorhanden, Solo-Runde mit Test-Speicher bis zum Ergebnis, Konsole leer |
+| Echte Schlüssel nach allen Tests (nur lesend) | Zeichenzahl unverändert – kein Testlauf ist dort gelandet |
 
 ## Offen – ehrlich
 
 - **Nicht auf einem echten iPad geprüft.** Alle Browser-Tests liefen im
   eingebauten Browser mit Handy-Maßen; geklickt wurde teils per Konsole.
-- **Live-Prüfung nach dem Push** – siehe Nachtrag unten, sobald erledigt.
+- **Historien-Bereinigung** wartet auf Lasses Freigabe (siehe „Repo").
 - **Profil-Größe:** Alle Profile stehen in einem Wert in der Adresse (heute
   2,8 k Zeichen für 17 Profile). Nach früherer, nicht erneut gemessener Beobachtung
   endet der Dienst bei rund 7.500 Zeichen – also bei grob 40–45 Profilen, nicht bei
