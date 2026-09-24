@@ -42,6 +42,10 @@
 const TDB = {
   BASE: "https://textdb.online/",
   TIMEOUT_MS: 8000,
+  /* Gemessen am 25.09.2026 mit einem Wegwerf-Schlüssel: Adressen bis etwa
+     32.200 Zeichen gehen durch, ab ~32.270 antwortet der Dienst mit 500, ab
+     33.000 mit 414. Größeres wird gar nicht erst gesendet. */
+  MAX_URL: 32000,
 
   /* ---------- Hinausgehende Daten entschärfen ---------- */
 
@@ -92,15 +96,24 @@ const TDB = {
     } finally { clearTimeout(t); }
   },
 
+  /** Länge der Adresse, mit der schreib() diesen Datensatz senden würde. */
+  adresslaenge(key, obj) {
+    return this.schreibAdresse(key, this.baueWert(obj)).length;
+  },
+
+  schreibAdresse(key, wert) {
+    return this.BASE + "update/?key=" + key + "&value=" + encodeURIComponent(wert);
+  },
+
   async schreib(key, obj) {
     const wert = this.baueWert(obj);
     if (/[%+]/.test(wert)) throw new Error("Datensatz enthält verbotene Zeichen");
-    if (wert.length > 7000) console.warn("TDB: großer Datensatz", key, wert.length, "Zeichen");
+    const url = this.schreibAdresse(key, wert);
+    if (url.length > this.MAX_URL) throw new Error("Datensatz für " + key + " zu groß: " + url.length + " Zeichen");
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), this.TIMEOUT_MS);
     try {
-      const res = await fetch(this.BASE + "update/?key=" + key + "&value=" + encodeURIComponent(wert),
-        { signal: ctrl.signal });
+      const res = await fetch(url, { signal: ctrl.signal });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const j = await res.json();
       if (j.status !== 1) throw new Error("write rejected");

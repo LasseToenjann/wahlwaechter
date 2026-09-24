@@ -241,8 +241,7 @@ const Net = {
     // Bewusst nicht über TDB.schreib: das braucht keepalive und darf nicht
     // abgebrochen werden. Den Wert baut trotzdem TDB, damit auch dieser Weg
     // ohne "+" und "%" hinausgeht.
-    const url = TDB.BASE + "update/?key=" + this._myKey() +
-      "&value=" + encodeURIComponent(TDB.baueWert(this._myState({ bye: true })));
+    const url = TDB.schreibAdresse(this._myKey(), TDB.baueWert(this._myState({ bye: true })));
     try { fetch(url, { keepalive: true }); } catch (e) {}
   },
 };

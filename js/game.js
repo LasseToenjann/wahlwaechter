@@ -1200,6 +1200,14 @@ function makeBoardEntry() {
 const PROFILE_COUNTERS = ["g", "w", "l", "d", "c", "t", "bs"];
 let profileQueue = Promise.resolve();
 
+/* Alle Profile stehen in EINEM Wert, und der steckt beim Schreiben in der
+   Adresse (Obergrenze des Dienstes: TDB.MAX_URL). Neue Profile kommen nur
+   hinzu, solange die Adresse unter dieser Schwelle bleibt – bei heutiger
+   Profilgröße rund 145 Profile. Ist es voll, bekommt ein neuer Name kein
+   Profil; bestehende werden weiter aktualisiert, und gelöscht wird nie etwas.
+   Der Abstand zu TDB.MAX_URL fängt das Wachstum bestehender Profile ab. */
+const PROFILE_MAX_URL = 24000;
+
 function updateProfile(mutate) {
   const run = profileQueue.then(() => updateProfileNow(mutate));
   profileQueue = run.catch(() => false);
@@ -1213,11 +1221,14 @@ async function updateProfileNow(mutate) {
       const data = (await tdbRead(PROFILE_KEY)) || { profiles: [] };
       const list = Array.isArray(data.profiles) ? data.profiles : [];
       let p = list.find(x => x.n === name);
-      if (!p) { p = { n: name, g: 0, w: 0, l: 0, d: 0, bs: 0, c: 0, t: 0 }; list.push(p); }
+      const neu = !p;
+      if (neu) { p = { n: name, g: 0, w: 0, l: 0, d: 0, bs: 0, c: 0, t: 0 }; list.push(p); }
       mutate(p);
       p.u = todayStr();
+      const wert = { profiles: list };
+      if (neu && TDB.adresslaenge(PROFILE_KEY, wert) > PROFILE_MAX_URL) return false;
       const want = Object.assign({}, p);
-      await tdbWrite(PROFILE_KEY, { profiles: list.slice(0, 120) });
+      await tdbWrite(PROFILE_KEY, wert);
       const check = (await tdbRead(PROFILE_KEY)) || {};
       const mine = (check.profiles || []).find(x => x.n === name);
       // ">=" statt "===": Namensgleiche teilen sich ein Profil und dürfen
@@ -1371,7 +1382,7 @@ async function renderProfile() {
   if (me) {
     const accAvg = me.t ? Math.round((me.c / me.t) * 100) : 0;
     const duels = (me.w || 0) + (me.l || 0) + (me.d || 0);
-    const winrate = duels ? Math.round((me.w / duels) * 100) : 0;
+    const winrate = duels ? Math.round(((me.w || 0) / duels) * 100) : 0;
     $("profile-card").innerHTML = `
       <div class="profile-name">${esc(me.n)}</div>
       <div class="week-stats">
@@ -1383,7 +1394,11 @@ async function renderProfile() {
       </div>`;
     Anim.stagger($("profile-card"), ".week-stat");
   } else {
-    $("profile-card").innerHTML = `<div class="board-empty">Noch kein Profil für „${esc(name || "…")}“ – spiel eine Runde, dann entsteht es automatisch.</div>`;
+    const probe = { n: name, g: 1, w: 0, l: 0, d: 0, bs: 0, c: 0, t: 0, u: todayStr() };
+    const voll = TDB.adresslaenge(PROFILE_KEY, { profiles: profiles.concat(probe) }) > PROFILE_MAX_URL;
+    $("profile-card").innerHTML = voll
+      ? `<div class="board-empty">Die Profilliste ist voll – für „${esc(name || "…")}“ kann gerade kein neues Profil angelegt werden. Deine Ergebnisse landen trotzdem in der Rangliste.</div>`
+      : `<div class="board-empty">Noch kein Profil für „${esc(name || "…")}“ – spiel eine Runde, dann entsteht es automatisch.</div>`;
   }
 }
 
@@ -1550,7 +1565,12 @@ function wireNet() {
   };
 
   Net.onDropped = (reason) => {
-    if (!G || G.mode !== "duel" || !G.duel) {
+    // In der Lobby ist jeder Abbruch ein Lobby-Abbruch – auch wenn G noch das
+    // beendete letzte Duell hält (das würde sonst unten als „schon fertig"
+    // übergangen, und der Host säße mit einem Gegner in der Lobby, den es nicht
+    // mehr gibt).
+    const inLobby = document.querySelector(".screen.active").id === "screen-lobby";
+    if (inLobby || !G || G.mode !== "duel" || !G.duel) {
       resetLobbyUI();
       lobbyError("Verbindung verloren: " + reason);
       return;

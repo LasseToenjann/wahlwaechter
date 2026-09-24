@@ -135,6 +135,7 @@ Rangliste, Profile, Duell und Klassenraum laufen über **textdb.online**, einen 
 - **Lesen:** `GET https://textdb.online/<key>?t=<zeitstempel>` (der Zeitstempel umgeht den Cache)
 - **Schreiben:** `GET https://textdb.online/update/?key=<key>&value=<urlencoded JSON>`
   Schreiben per GET ist Absicht: kein CORS-Preflight, funktioniert überall.
+- **Größe:** Weil der ganze Wert in der Adresse steckt, begrenzt deren Länge alles. Gemessen am 25.09.2026 mit einem Wegwerf-Schlüssel: bis rund 32.200 Zeichen geht es durch, ab etwa 32.270 antwortet der Dienst mit 500, ab 33.000 mit 414. `TDB.MAX_URL` (32.000) hält das fest; `TDB.schreib` sendet Größeres gar nicht erst, sondern wirft. `TDB.adresslaenge(key, obj)` rechnet vorher nach. Zum Vergleich: Ein voller Klassenraum mit 30 Spieler:innen kommt auf rund 8.200 Zeichen (gerechnet mit 16 Zeichen langen Namen und allen Feldern gefüllt).
 
 Beides läuft ausschließlich über **`js/tdb.js`**. Rangliste, Duell und Klassenraum
 hatten früher je eine eigene Kopie davon — mit denselben zwei Fehlern. Einzige
@@ -194,10 +195,11 @@ Nachrichtentypen: `hello`, `lobbyInfo`, `cfg`, `start`, `progress`, `sabotage`, 
 
 **Lobby-Ablauf:** Der Host erstellt den Raum und wartet. Der Gast tritt bei und sendet `hello` mit seinem Namen. Der Host antwortet mit `lobbyInfo` (eigener Name + Regeln) – beide sind jetzt in der Lobby. Ändert der Host eine Regel, geht sofort ein `cfg` an den Gast; beim Gast sind die Regeln nur lesbar und der Start-Knopf fehlt. Erst der Start-Knopf des Hosts sendet `start` mit Seed und Regeln, und beide beginnen. (Vor v4.2 startete das Duell automatisch, sobald der Gast beitrat.)
 
-Zwei Fallstricke, die im Code adressiert sind:
+Drei Fallstricke, die im Code adressiert sind:
 
 - **Hintergrund-Tabs werden vom Browser auf ca. 1 Timer pro Minute gedrosselt.** Deshalb `_STALE_MS = 90 s` (nicht kürzer!) und ein Resync bei `visibilitychange`. Absichtliches Verlassen meldet über `pagehide` sofort ein `bye`.
 - **Nachrichten werden immer VOR `bye`/`stale` verarbeitet.** Sonst geht das Endergebnis verloren, wenn die Gegenseite direkt nach dem Senden die Seite schließt.
+- **Ein Abbruch in der Lobby ist immer ein Lobby-Abbruch** (`Net.onDropped` fragt den aktiven Screen ab). `G` hält nach einem Duell noch das beendete Spiel; bis v4.7 wurde ein Abbruch in der Lobby des nächsten Duells deshalb als „schon fertig" übergangen, und der Host blieb mit einem Gegner in der Lobby, den es nicht mehr gab. Mitten im Spiel spielt man nach einem Abbruch gegen HYDRA weiter.
 
 ### Klassenraum (`classroom.js`)
 
@@ -306,7 +308,9 @@ Schlüssel (öffentlich schreibbar – für ein Schulprojekt vertretbar):
 | Duell-Räume | `wahlwaechter_room_<code>_h` / `_g` |
 | Klassenräume | `wahlwaechter_class_<code>` |
 
-Pro Modus werden maximal 30 Einträge gehalten, Profile maximal 120; bei Überlauf fallen die schlechtesten bzw. ältesten heraus. Schreibzugriffe laufen überall über Lesen → Mergen → Schreiben → Verifizieren mit Wiederholungen. Ohne Internet greift ein `localStorage`-Fallback (`ww_board_v1`).
+Pro Modus werden maximal 30 Einträge gehalten; bei Überlauf fällt der schwächste heraus (ein Ergebnis, das nicht unter die besten 30 kommt, wird gar nicht erst eingetragen). Schreibzugriffe laufen überall über Lesen → Mergen → Schreiben → Verifizieren mit Wiederholungen. Ohne Internet greift ein `localStorage`-Fallback (`ww_board_v1`).
+
+**Profile haben eine Größen-, keine Anzahlgrenze.** Alle Profile stehen in einem Wert. Ein neues Profil kommt nur hinzu, solange die Schreib-Adresse unter `PROFILE_MAX_URL` (24.000 Zeichen) bleibt – bei heutiger Profilgröße (rund 165 Zeichen) etwa 140 Profile, bei langen Namen mit Emoji oder Umlauten weniger (Prüfung: mindestens 100). Ist die Liste voll, bekommt ein neuer Name kein Profil, der Profil-Screen sagt das; bestehende Profile werden weiter aktualisiert, und **gelöscht wird nie etwas**. Der Abstand zu `TDB.MAX_URL` fängt das Wachstum bestehender Profile ab (gerechnet: alle Zähler vierstellig → rund 25.700 Zeichen). Bis v4.7 stand hier eine feste Kappung auf 120, die einen neuen Namen ab dem 121. stillschweigend abschnitt.
 
 **Profil-Änderungen eines Geräts laufen nacheinander** (`updateProfile` reiht in `profileQueue` ein). Am Duell-Ende kommen zwei Änderungen fast gleichzeitig – Runde +1 aus `saveResult` und Sieg/Niederlage aus `showDuelResult`. Parallel lasen beide denselben alten Stand, die zweite überschrieb die erste, und die Kontrolle danach prüfte nur, ob das Profil „heute" geändert wurde. Im Test stand beim Verlierer nach einem Duell „0 Runden gespielt". Jetzt vergleicht die Kontrolle die Zähler (`g w l d c t bs`) mit dem, was geschrieben werden sollte, und wiederholt sonst. Gegen Schreibvorgänge *anderer* Geräte, die nach der Kontrolle eintreffen, hilft das nicht – ohne echte Transaktionen beim Dienst bleibt das ein Best-Effort-Verfahren.
 
@@ -379,6 +383,8 @@ Zwei Stufen, beide ohne Abhängigkeiten:
 | Tages-Challenge | gleicher Satz für alle, Fingerabdrücke fester Tage, 730 Tage ohne Vortags-Wiederholung, Häufigkeit, deutsche Zeit |
 | Speicherdienst | kein `+`/`%` hinaus, übersteht die doppelte Dekodierung, Reparatur von `1e 27`, Unlesbares ist nicht leer |
 | Ungenutzter Code | Funktionen, Konstanten und Methoden ohne Verwendung, HTML-IDs ohne Bezug, `$("…")` ohne Element, CSS-Klassen ohne Verwendung |
+| Profile | Platz für typische und für breite Namen, volle Liste bleibt nach Wachstum unter `TDB.MAX_URL`; mit einem Speicher-Double statt textdb: zwei gleichzeitige Änderungen kommen beide an, volle Liste weist neue Namen ab und aktualisiert bestehende |
+| Commits seit 24.09.2026 | Autor und Committer `LasseToenjann <LasseToenjann@users.noreply.github.com>`, keine Mitautoren- oder Sitzungszeilen (ohne git: übersprungen) |
 
 Wer einen neuen Fehler findet, ergänzt dort eine Gruppe.
 
@@ -431,5 +437,6 @@ Nicht ausschließen sollte man `css/` und `js/`: Google rendert die Seite vor de
 - Die Zuteilung im Klassenraum-Showdown ist ein **Best-Effort-Verfahren**: In seltenen Fällen (viele Abgaben in derselben Sekunde) kann ein Fake an zwei Personen gehen. Das ist unschädlich – niemand bekommt je den eigenen, und niemand wartet.
 - Ranglisten sind öffentlich beschreibbar. Für ein Schulprojekt vertretbar, für einen echten Wettbewerb nicht.
 - Der Klassenraum-Zustand ist **ein** JSON-Wert in einer URL. Deshalb sind die Feldnamen so kurz. Wer Felder ergänzt, sollte das im Blick behalten.
-- **Dasselbe gilt für die Profile.** Alle Profile stehen in einem Wert, der beim Schreiben in der Adresse steckt. Gemessen am 24.09.2026 (nur lesend): 17 Profile ergeben 1.355 Zeichen JSON, URL-kodiert 2.803 Zeichen – rund 165 Zeichen pro Profil. Die Obergrenze des Dienstes ist nicht genau bekannt; nach früherer Beobachtung liegt sie bei etwa 7.500 Zeichen Adresslänge (nicht erneut gemessen). Dann wäre bei grob 40–45 Profilen Schluss, lange vor der Kappung bei 120. Ist die Grenze erreicht, scheitern Profil-Schreibvorgänge (drei Versuche, dann aufgegeben); gelöscht wird dabei nichts. Abhilfe wäre, die Profile auf mehrere Schlüssel zu verteilen – die Kappung zu senken würde dagegen echte Profile löschen und braucht Lasses Zustimmung. `TDB.schreib` warnt in der Konsole ab 7.000 Zeichen JSON.
+- **Dasselbe gilt für die Profile.** Alle Profile stehen in einem Wert, der beim Schreiben in der Adresse steckt. Stand 24.09.2026 (nur lesend): 17 Profile, 1.355 Zeichen JSON, URL-kodiert 2.803 Zeichen – rund 165 Zeichen pro Profil. Mit der gemessenen Grenze des Dienstes (rund 32.200 Zeichen, siehe „Netzwerk") ist Platz für etwa 140 Profile (`PROFILE_MAX_URL`). Die frühere Annahme „~7.500 Zeichen, also 40–45 Profile" war nie gemessen und falsch. Mehr Platz bekäme man, indem man Null-Zähler wegließe (−24 %) oder die Profile auf mehrere Schlüssel verteilte; beides ändert das gespeicherte Format, und Geräte mit noch zwischengespeicherter alter Fassung würden es falsch lesen (zum Beispiel „NaN %" als Siegquote). Für einen Kurs reicht die heutige Menge – Lasse: „40–45 reichen eigentlich".
+- **Netze zwischen Gerät und Dienst** (Schul-Proxy o. Ä.) könnten kürzere Adressen erzwingen. Gemessen wurde nur vom Entwicklungsrechner aus.
 - **Spiel-Timer zählen pro Takt, nicht nach der Uhr.** In einem verborgenen Tab drosselt der Browser die Takte, der Timer läuft dann langsamer. Im Unterricht egal (das iPad pausiert die Seite ohnehin), beim Testen mit mehreren Tabs aber auffällig: Die Fake-Werkstatt eines Hintergrund-Tabs läuft nicht nach 75 s ab.

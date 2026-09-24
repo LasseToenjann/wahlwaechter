@@ -240,3 +240,6 @@ Der Spielserver ist gerade nicht erreichbar. Dein Ergebnis wird lokal gespeicher
 
 **Zwei Personen mit demselben Namen.**
 Profile werden nur über den Namen unterschieden – Namensgleiche teilen sich ein Profil. Das ist bewusst einfach gehalten.
+
+**„Die Profilliste ist voll."**
+Es passen rund 140 Profile in den Speicher (bei langen Namen mit Emoji etwas weniger). Ist er voll, bekommt ein neuer Name kein Profil mehr; wer schon eins hat, spielt ganz normal weiter, und alle Ergebnisse landen trotzdem in der Rangliste. Gelöscht wird nichts.

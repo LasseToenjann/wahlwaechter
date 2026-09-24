@@ -164,7 +164,70 @@ pruefe(zurueck && zurueck.n === "Anna Ben 100ig 22" && zurueck.s === 1e27,
 pruefe(TDB.deute('{"s":1e 27}') && TDB.deute('{"s":1e 27}').s === 1e27, "alter Schaden „1e 27“ wird beim Lesen repariert");
 pruefe(TDB.deute("{kaputt") === undefined, "Unlesbares wird als unlesbar gemeldet, nicht als leer");
 
-/* ---------- 7. Ungenutzter Code ---------- */
+/* ---------- 7. Profile: Größe und gleichzeitige Änderungen ---------- */
+async function profilPruefungen() {
+  start("Profile");
+  const MAX_URL = imSpiel("TDB.MAX_URL"), GRENZE = imSpiel("PROFILE_MAX_URL");
+  const KEY = imSpiel("PROFILE_KEY");
+  const laenge = (profile) => TDB.adresslaenge(KEY, { profiles: profile });
+  const profil = (n, g = 3) => ({ n, g, w: 1, l: 1, d: 0, bs: 2655, c: 20, t: 31, u: "2026-09-25" });
+  const kapazitaet = (mach) => { const l = []; while (laenge(l.concat(mach(l.length))) <= GRENZE) l.push(mach(l.length)); return l; };
+  const typisch = kapazitaet(i => profil("Spieler" + i));
+  const breit = kapazitaet(i => profil("🦊Ärger🦊Öl🦊Übel🦊" + i));
+  pruefe(typisch.length >= 120, "Platz für " + typisch.length + " typische Profile (mindestens 120)");
+  pruefe(breit.length >= 50, "Platz für " + breit.length + " Profile mit 16 Zeichen Emoji/Umlauten (mindestens 50)");
+  const gewachsen = typisch.map(p => Object.assign({}, p, { g: 999, w: 999, l: 999, d: 999, bs: 99999, c: 9999, t: 9999 }));
+  pruefe(laenge(gewachsen) < MAX_URL, "volle Liste bleibt auch nach Jahren Spielbetrieb unter der Grenze des Dienstes (" + laenge(gewachsen) + " < " + MAX_URL + ")");
+
+  // Speicher-Double statt textdb: speichert, was schreib() senden würde
+  imSpiel(`globalThis.__speicher = {};
+    TDB.lies = async (k) => (__speicher[k] === undefined ? null : TDB.deute(__speicher[k]));
+    TDB.schreib = async (k, o) => { if (TDB.adresslaenge(k, o) > TDB.MAX_URL) throw new Error("zu groß"); __speicher[k] = TDB.baueWert(o); };`);
+  const lege = (profile) => imSpiel("__speicher")[KEY] = JSON.stringify({ profiles: profile });
+  const hole = () => JSON.parse(imSpiel("__speicher")[KEY]).profiles;
+
+  lege([profil("Anna", 1)]);
+  imSpiel('myName = "Anna"');
+  await Promise.all([
+    imSpiel("updateProfile")(p => { p.g += 1; }),
+    imSpiel("updateProfile")(p => { p.l = (p.l || 0) + 1; }),
+  ]);
+  const anna = hole().find(p => p.n === "Anna");
+  pruefe(anna.g === 2 && anna.l === 2, "zwei gleichzeitige Änderungen kommen beide an (Runden " + anna.g + ", Niederlagen " + anna.l + ")");
+
+  // so weit füllen, dass auch ein frisches (kleines) Profil nicht mehr passt
+  const frisch = { n: "Neuling", g: 1, w: 0, l: 0, d: 0, bs: 0, c: 0, t: 0, u: "2026-09-25" };
+  const voll = typisch.slice();
+  for (let i = 0; laenge(voll.concat(frisch)) <= GRENZE; i++) voll.push({ n: "F" + i, g: 1, u: "2026-09-25" });
+  lege(voll);
+  imSpiel('myName = "Neuling"');
+  const neu = await imSpiel("updateProfile")(p => { p.g += 1; });
+  pruefe(neu === false && hole().length === voll.length, "volle Liste: neuer Name wird abgewiesen, nichts überschrieben");
+  imSpiel('myName = "Spieler0"');
+  const alt = await imSpiel("updateProfile")(p => { p.g += 1; });
+  pruefe(alt === true && hole().length === voll.length && hole()[0].g === 4, "volle Liste: bestehendes Profil wird weiter aktualisiert, keines fällt heraus");
+}
+
+/* ---------- 8. Commits unter Lasses Namen ---------- */
+function commitPruefungen() {
+  start("Commits seit 24.09.2026");
+  const { execFileSync } = require("child_process");
+  let log;
+  try {
+    log = execFileSync("git", ["log", "--since=2026-09-24T00:00:00", "--format=%H%x1f%an <%ae>%x1f%cn <%ce>%x1f%B%x1e"],
+      { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  } catch (e) { console.log("  –     übersprungen (kein git oder kein Repository)"); return; }
+  const ICH = "LasseToenjann <LasseToenjann@users.noreply.github.com>";
+  const commits = log.split("\x1e").map(s => s.trim()).filter(Boolean).map(s => s.split("\x1f"));
+  const fremd = commits.filter(([, autor, committer]) => autor !== ICH || committer !== ICH);
+  const zeilen = commits.filter(([, , , text]) => /^(co-authored-by|[\w-]+-session):/im.test(text));
+  pruefe(!fremd.length, commits.length + " Commits, alle unter " + ICH +
+    (fremd.length ? " – abweichend: " + fremd.map(c => c[0].slice(0, 7) + " " + c[1]).join(", ") : ""));
+  pruefe(!zeilen.length, "keine Mitautoren- oder Sitzungszeilen" +
+    (zeilen.length ? ": " + zeilen.map(c => c[0].slice(0, 7)).join(", ") : ""));
+}
+
+/* ---------- 9. Ungenutzter Code ---------- */
 start("Ungenutzter Code");
 const alleJs = jsDateien.map(f => lies("js/" + f)).join("\n");
 const ueberall = alleJs + "\n" + html;
@@ -196,5 +259,10 @@ const tote = [...klassen].filter(k => { const re = new RegExp("(?<![\\w-])" + k 
 pruefe(!tote.length, "jede CSS-Klasse wird benutzt" + (tote.length ? ": " + tote.join(", ") : ""));
 
 /* ---------- Ergebnis ---------- */
-console.log("\n" + (fehler ? fehler + " Prüfung(en) gescheitert." : "Alle Prüfungen bestanden."));
-process.exitCode = fehler ? 1 : 0;
+(async () => {
+  try { await profilPruefungen(); }
+  catch (e) { pruefe(false, "Profil-Prüfung abgebrochen: " + e.message); }
+  commitPruefungen();
+  console.log("\n" + (fehler ? fehler + " Prüfung(en) gescheitert." : "Alle Prüfungen bestanden."));
+  process.exitCode = fehler ? 1 : 0;
+})();

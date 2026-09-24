@@ -1,5 +1,58 @@
 # Änderungsverlauf
 
+## v4.8 – Profil-Platz gemessen statt geschätzt (25.09.2026)
+
+**Die Grenze des Speicherdienstes ist gemessen.** Bisher stand in der Doku „rund
+7.500 Zeichen Adresslänge, also 40–45 Profile" – eine nie überprüfte Annahme. Mit
+einem Wegwerf-Schlüssel nachgemessen: Adressen bis rund **32.200 Zeichen** gehen
+durch, ab etwa 32.270 antwortet der Dienst mit 500, ab 33.000 mit 414. Die echten
+Profile belegen heute 2.803 Zeichen (17 Profile, rund 165 je Profil).
+
+- **Größen- statt Anzahlgrenze für Profile.** Die feste Kappung auf 120 schnitt
+  einen neuen Namen ab dem 121. stillschweigend ab. Jetzt kommt ein neues Profil
+  hinzu, solange die Adresse unter `PROFILE_MAX_URL` (24.000 Zeichen) bleibt – bei
+  heutiger Profilgröße etwa **140 Profile**, bei 16 Zeichen langen Namen voller
+  Emoji und Umlaute noch gut 100. Ist die Liste voll, bekommt ein neuer Name kein
+  Profil; bestehende werden weiter aktualisiert, **gelöscht wird nichts**. Der
+  Profil-Screen sagt dann „Die Profilliste ist voll" statt „spiel eine Runde".
+- **`TDB.schreib` sendet zu Großes gar nicht erst** (`TDB.MAX_URL` = 32.000) und
+  meldet einen klaren Fehler. Vorher gab es nur eine Konsolen-Warnung ab 7.000
+  Zeichen JSON. Neu `TDB.adresslaenge()` zum Nachrechnen; auch das `bye` des Duells
+  baut seine Adresse jetzt über `TDB.schreibAdresse()`.
+- Siegquote im Profil zeigt bei fehlendem Siegzähler 0 % statt „NaN %".
+
+**Behoben: Duell-Lobby nach einem schon gespielten Duell.** Beim erneuten Prüfen
+aufgefallen (bestand schon vorher): Wer ein Duell zu Ende gespielt hatte und danach
+einen neuen Raum öffnete, merkte nicht, wenn der neue Gegner die Lobby verließ. Die
+Verbindung war getrennt, die Lobby zeigte aber weiter den Gegner und den
+Start-Knopf – denn die Abbruch-Behandlung sah noch das beendete letzte Duell im
+Speicher und überging den Abbruch als „schon fertig". Drückte der Host dann auf
+Start, spielte er allein und hing am Ende bei „Warte auf das Endergebnis des
+Gegners…". Jetzt gilt: Solange die Lobby offen ist, ist jeder Abbruch ein
+Lobby-Abbruch („Verbindung verloren: Der Gegner hat das Duell verlassen."). Ein
+Abbruch mitten im Spiel läuft unverändert weiter gegen HYDRA – beides im Browser
+mit zwei Tabs nachgeprüft.
+- Bewusst **nicht** gemacht: Null-Zähler weglassen (−24 % Platz) oder Profile auf
+  mehrere Schlüssel verteilen. Beides ändert das gespeicherte Format, und Geräte mit
+  noch zwischengespeicherter alter Fassung würden es falsch lesen. Lasse: „40–45
+  reichen eigentlich" – jetzt sind es rund 140.
+- Gerechnet zum Vergleich: ein voller Klassenraum (30 Spieler:innen, alle Felder,
+  16-Zeichen-Namen) belegt rund 8.200 Zeichen – weit unter der Grenze.
+
+**Prüfungen:** `tests/pruefung.js` hat jetzt 47 statt 39 Prüfungen. Neu:
+
+- Profile: Platz für typische und breite Namen, Wachstum einer vollen Liste, und
+  mit einem Speicher-Double statt textdb: zwei gleichzeitige Änderungen kommen beide
+  an (gegengeprüft: die Fassung vor v4.7 fällt hier durch, „Runden 1" statt 2), eine
+  volle Liste weist neue Namen ab und aktualisiert bestehende.
+- Commits seit 24.09.2026: nur unter Lasses Namen, keine Mitautoren- oder
+  Sitzungszeilen. Die neun älteren Commits vom 02.08.2026 mit Sitzungszeile bleiben
+  auf Lasses Entscheidung so; die Historie wird nicht umgeschrieben.
+
+**Sonstiges:** Lasse hat das Spiel auf dem iPad geprüft – funktioniert. Cache-Version
+`?v=4.8`.
+
+
 ## v4.7 – Fehlerprüfung, Aufräumen, Prüfungen im Repo (24.09.2026)
 
 Alle Modi wurden im Browser mit Test-Speicher durchgespielt (Einweisung, Solo

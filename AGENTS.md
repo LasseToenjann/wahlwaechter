@@ -83,9 +83,12 @@ geleert ist unwiederbringlich weg. Das ist hier schon einmal passiert.
    Endergebnis verloren, wenn die Gegenseite direkt nach dem Senden schließt.
 3. **Overlays sind während der Ausblendung noch im DOM.** Offenheit mit
    `overlayOpen(id)` prüfen, nie mit `classList.contains("hidden")`.
-4. **Der Klassenraum-Zustand ist EIN JSON-Wert in einer URL.** Deshalb sind die
-   Feldnamen einbuchstabig. Beim Ergänzen die Größe im Blick behalten; dasselbe gilt
-   für die Profile (siehe „Bekannte Grenzen" in `docs/TECHNIK.md`).
+4. **Jeder Schlüssel ist EIN JSON-Wert in einer URL.** Der Dienst nimmt Adressen bis
+   rund 32.200 Zeichen (gemessen 25.09.2026, `TDB.MAX_URL`); `TDB.schreib` sendet
+   Größeres gar nicht erst. Deshalb sind die Feldnamen im Klassenraum einbuchstabig,
+   und neue Profile kommen nur hinzu, solange die Profil-Liste unter
+   `PROFILE_MAX_URL` (24.000 Zeichen, rund 140 Profile) bleibt – gelöscht wird dabei
+   nie etwas. Wer Felder ergänzt, prüft die Größe (`TDB.adresslaenge`).
 5. **Zeitvergleiche über Geräte hinweg vermeiden.** Fristen laufen ab dem Moment, in
    dem das eigene Gerät einen Zustand *sieht* – nicht ab einem fremden Zeitstempel.
 6. **`+` und `%` in allem, was auf textdb landet.** Der Dienst dekodiert den Wert
@@ -104,6 +107,10 @@ geleert ist unwiederbringlich weg. Das ist hier schon einmal passiert.
 9. **Asynchrone Anzeigen, die mehrfach gestartet werden.** Die Rangliste lud bei
    schnellem Filterwechsel die Antwort des älteren Abrufs zuletzt und zeigte die
    falsche Liste. Nur der zuletzt gestartete Abruf darf anzeigen (`boardRequest`).
+   Verwandt: **`G` überlebt das Spielende.** Wer an `G` abliest, ob gerade gespielt
+   wird, sieht nach einer Runde noch die alte. Die Duell-Lobby hat deshalb einen
+   Abbruch des neuen Gegners übergangen (behoben in v4.8 über den aktiven Screen).
+   Beim Testen immer auch „zweite Runde in derselben Sitzung" durchspielen.
 10. **Tages-Challenge nicht nebenbei ändern.** Der Fallsatz eines Tages muss für alle
     gleich sein. Wer `buildDailyDeck` oder die Fall-Liste anfasst, ändert sonst den
     Satz des laufenden Tages – wer danach spielt, bekommt andere Fälle als die, die
@@ -124,15 +131,18 @@ geleert ist unwiederbringlich weg. Das ist hier schon einmal passiert.
 ## Prüfen
 
 ```
-node tests/pruefung.js        # 39 Prüfungen, unter 1 Sekunde, Rückgabewert 1 bei Fehlern
+node tests/pruefung.js        # 47 Prüfungen, unter 1 Sekunde, Rückgabewert 1 bei Fehlern
 python -m http.server 8123    # dann http://localhost:8123 – Test-Speicher einfügen!
 ```
 
 `tests/pruefung.js` lädt alle Skripte in einer Sandbox und prüft Ladereihenfolge und
 Versionsparameter, Syntax, die Fall-Dossiers (Pflichtfelder, reale Vorbilder), den
-Showdown-Baukasten, den Fall-Generator, die Tages-Challenge, den Speicherdienst und
-**ungenutzten Code** (Funktionen, Konstanten, Methoden, HTML-IDs, CSS-Klassen). Wer
-einen neuen Fehler findet, ergänzt dort eine Gruppe.
+Showdown-Baukasten, den Fall-Generator, die Tages-Challenge, den Speicherdienst,
+die Profile (Platz, gleichzeitige Änderungen, volle Liste – mit einem Speicher-Double
+statt textdb), **ungenutzten Code** (Funktionen, Konstanten, Methoden, HTML-IDs,
+CSS-Klassen) und die **Commits seit dem 24.09.2026** (nur unter Lasses Namen, keine
+Mitautoren- oder Sitzungszeilen). Wer einen neuen Fehler findet, ergänzt dort eine
+Gruppe.
 
 Vor jedem Push im Browser durchspielen – **in Handy-Breite**, nicht am Desktop, und
 mit eingefügtem Test-Speicher. Die Spiellogik ist aus der Konsole ansteuerbar (`G`,
@@ -164,3 +174,10 @@ Die Browser-Konsole muss dabei leer bleiben.
    (`LasseToenjann <LasseToenjann@users.noreply.github.com>`), mit klaren deutschen
    Commit-Nachrichten, ohne Mitautoren- oder Sitzungszeilen und ohne Werkzeugnamen
    in Commits oder Doku. Keine Pull Requests ohne ausdrückliche Bitte.
+
+**Zu den Commits:** Manche Umgebungen hängen von selbst eine Zeile
+`Co-Authored-By: …` oder `…-Session: https://…` an die Nachricht. Die gehört vor dem
+Commit entfernt; `tests/pruefung.js` meldet sie für alle Commits seit dem
+24.09.2026. Neun ältere Commits vom 02.08.2026 enthalten noch eine Sitzungszeile.
+Das ist **bewusst so gelassen** (Lasses Entscheidung vom 25.09.2026) – die Historie
+dafür nicht umschreiben und nicht force-pushen.
