@@ -46,6 +46,8 @@ Duell 2, Tages-Challenge 3, Klassenraum 2 Einträge, 17 Profile. Alle lesbar.
 | Gegenprobe: Profil-Logik vor v4.7 in einer Kopie | fällt wie erwartet durch („Runden 1" statt 2) |
 | Grenze des Dienstes (Wegwerf-Schlüssel, 25.09.) | bis ~32.200 Zeichen ok, ~32.270 → 500, 33.000 → 414 |
 | Browser v4.8 (Handy-Breite, Test-Speicher direkt aus `tests/test-speicher.js` geladen) | Solo bis Ergebnis; Profil-Screen normal; volle Liste (142 Profile): Hinweis „Profilliste ist voll", neuer Name bekommt Ranglisten-Eintrag, aber kein Profil, Liste unverändert; Duell mit zwei Tabs, beide Profile korrekt; Gast verlässt Lobby nach einem vorigen Duell → Host bekommt „Verbindung verloren"; Gast verlässt mitten im Spiel → Host spielt gegen HYDRA bis zum Ergebnis; Konsole leer |
+| v4.8 live nach dem Push (~50 s) | alle Skripte `?v=4.8`, Korrekturen vorhanden, Solo-Runde und Profil mit Test-Speicher, Konsole leer |
+| Echte Schlüssel nach allen Tests (nur lesend) | Zeichenzahl unverändert – kein Testlauf ist dort gelandet |
 | iPad | von Lasse bestätigt (25.09.) |
 | v4.7 im Browser (24.09.) | Einweisung 1–12, Solo bis Finale, Endlos, Tages-Challenge samt Sperre, Duell mit zwei Tabs, Klassenraum mit drei Tabs inkl. Nachzügler und Auto-Zuteilung, Rangliste, Profil, Überlauf 320/390 px – alles ohne Fehler |
 | v4.7 live nach dem Push | alle Skripte neu, Konsole leer |
