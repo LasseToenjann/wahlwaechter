@@ -91,20 +91,26 @@ Klassisch 1, Endlos 0, Duell 2, Tages-Challenge 3, Klassenraum 2 Einträge,
 `origin` = `https://github.com/LasseToenjann/wahlwaechter` (Privatkonto, ohne
 Bindestrich), Branch `main`, GitHub Pages veröffentlicht direkt. Commits unter
 `LasseToenjann <LasseToenjann@users.noreply.github.com>`, ohne Mitautoren- oder
-Sitzungszeilen. Am 24.09.2026 wurden aus neun älteren Commit-Nachrichten vom
-02.08.2026 Sitzungs-Links entfernt und die Historie neu geschrieben
-(force-push). **Wer noch eine ältere Kopie des Repos hat:**
-`git fetch origin && git reset --hard origin/main` (vorher eigene, ungepushte
-Arbeit sichern).
+Sitzungszeilen.
+
+**Noch offen: Historie bereinigen.** Neun Commit-Nachrichten vom 02.08.2026
+enthalten eine Zeile `…-Session: https://…` mit dem Namen des Werkzeugs – das
+widerspricht Lasses Vorgabe, dass kein Werkzeug als Mitwirkender auftaucht. Das
+Entfernen schreibt die veröffentlichte Historie um und braucht einen Force-Push;
+den gibt es nur mit Lasses ausdrücklicher Freigabe. Vorbereitet ist es, die
+Befehle stehen unten. Die Bereinigung ändert nur Nachrichten, keinen Dateistand.
+Danach muss jede andere Kopie des Repos einmal `git fetch origin && git reset
+--hard origin/main` ausführen (vorher ungepushte Arbeit sichern).
 
 ## Nächste Schritte (Vorschlag)
 
-1. Einmal auf einem echten iPad durchklicken (Einweisung, eine Solo-Runde).
-2. Am 01.10.2026 kurz prüfen, dass die Tages-Challenge startet (erster Tag mit
+1. Lasse entscheidet über die Historien-Bereinigung (siehe „Repo").
+2. Einmal auf einem echten iPad durchklicken (Einweisung, eine Solo-Runde).
+3. Am 01.10.2026 kurz prüfen, dass die Tages-Challenge startet (erster Tag mit
    der neuen Zykluswechsel-Regel).
-3. Wenn die Profil-Zahl Richtung 35 wächst: Profile auf mehrere Schlüssel
+4. Wenn die Profil-Zahl Richtung 35 wächst: Profile auf mehrere Schlüssel
    verteilen (vorher mit Lasse klären, siehe „Offen").
-4. Ideen aus `KONZEPT.md` → „Erweiterungsideen" nur auf Lasses Wunsch.
+5. Ideen aus `KONZEPT.md` → „Erweiterungsideen" nur auf Lasses Wunsch.
 
 ## Befehle
 
@@ -112,5 +118,17 @@ Arbeit sichern).
 node tests/pruefung.js                      # 39 Prüfungen ohne Netz
 python -m http.server 8123                  # lokal spielen: http://localhost:8123
 # im Browser vor dem ersten Klick: Inhalt von tests/test-speicher.js in die Konsole
-git log --format='%B' | grep -iE 'co-authored|-session:'   # muss leer bleiben
+git log --format='%B' | grep -iE 'co-authored|-session:'   # soll leer sein (siehe „Repo")
+```
+
+Historie bereinigen – **nur nach Lasses Freigabe**. Entfernt ausschließlich die
+Sitzungszeile samt der Leerzeile davor; alle anderen Nachrichten bleiben bitgleich,
+Commits vor dem 02.08.2026 behalten ihren Hash:
+
+```bash
+git branch sicherung/vor-bereinigung main
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f \
+  --msg-filter "perl -0pe 's/\n+[A-Za-z]+-Session: [^\n]*\n*\z/\n/'" -- main
+git diff --quiet sicherung/vor-bereinigung main && echo "Dateistand gleich"
+git push --force-with-lease origin main
 ```
