@@ -25,7 +25,8 @@ const Anim = {
      beim Laden (iPadOS schaltet das im laufenden Betrieb um). */
   reduced: false,
 
-  STEP_MS: 35,      // Versatz zwischen zwei gestaffelten Elementen
+  // Der Versatz zwischen zwei Elementen steht in style.css (--step, 35 ms);
+  // stagger() überschreibt ihn nur, wenn ein eigener Takt übergeben wird.
   STEP_MAX: 14,     // ab hier kein weiterer Versatz (lange Listen)
 
   init() {
@@ -94,13 +95,6 @@ const Anim = {
     el.classList.remove("stamp");
     void el.offsetWidth;
     el.classList.add("stamp");
-  },
-
-  shake(el) {
-    if (!el || this.reduced) return;
-    el.classList.remove("shake");
-    void el.offsetWidth;
-    el.classList.add("shake");
   },
 
   /* Kurzes Aufleuchten eines Panels (Treffer / Schaden) */

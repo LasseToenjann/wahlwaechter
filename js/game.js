@@ -1,9 +1,9 @@
 "use strict";
 /* =========================================================================
-   WAHLWÄCHTER – Spiellogik (v3)
+   WAHLWÄCHTER – Spiellogik
    Solo (Klassisch / Endlos mit Fall-Generator), Tages-Challenge,
-   Online-Duell mit konfigurierbaren Regeln + Showdown-Budget,
-   Klassenraum (bis 30), Fall-Auswertung, Profile, globale Ranglisten.
+   Online-Duell mit Lobby und Showdown, Klassenraum (bis 30) mit Showdown,
+   Fall-Auswertung, Profile, globale Ranglisten pro Modus.
    ========================================================================= */
 
 /* ---------- Kurz-Helfer ---------- */
@@ -200,11 +200,15 @@ function buildShift(s) {
    Bereinigt wird deshalb schon hier und sichtbar im Feld: Was dort steht,
    steht spaeter genauso in der Rangliste. Wuerde erst beim Senden gefiltert,
    saehe man den eigenen Namen nachher anders als eingetippt. */
-function getPlayerName() {
-  const el = $("player-name");
+function cleanName(raw) {
   // Der Rueckfall greift nur, wenn jemand eine alte index.html im Cache hat
   // und js/tdb.js deshalb fehlt - dann soll der Start trotzdem klappen.
-  const name = (typeof TDB !== "undefined" ? TDB.sauber(el.value) : el.value).trim();
+  return (typeof TDB !== "undefined" ? TDB.sauber(raw) : String(raw)).trim();
+}
+
+function getPlayerName() {
+  const el = $("player-name");
+  const name = cleanName(el.value);
   if (name !== el.value.trim()) el.value = name;
   if (!name) {
     el.style.borderColor = "var(--red)";
@@ -302,12 +306,34 @@ function startSolo(variant) {
 const DAILY_CASES = 10;
 const DAILY_HANDWRITTEN = 6;    // Rest kommt aus dem Generator
 const DAILY_TIMER = 38;
+/* Erster Zyklus (Woche ab 01.10.2026), in dem der Zykluswechsel den Vortag
+   berücksichtigt. Frühere Zyklen bleiben unverändert: Sonst bekäme, wer nach
+   einer Aktualisierung spielt, einen anderen Satz als alle, die am selben Tag
+   schon gespielt haben – und die Tagesrangliste wäre nicht mehr vergleichbar. */
+const DAILY_SEAM_FROM_CYCLE = 2961;
 
 function dailySeed(dateStr) {
-  const str = "wahlwaechter-" + (dateStr || todayStr());
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (Math.imul(h, 31) + str.charCodeAt(i)) >>> 0;
-  return h;
+  return strHash("wahlwaechter-" + (dateStr || todayStr()));
+}
+
+/* Reihenfolge eines Zyklus – pro Zyklus neu gemischt, aber für alle gleich.
+   Weil jeder Zyklus frei neu mischt, könnte sein erster Tag Fälle vom letzten
+   Tag des vorigen Zyklus enthalten. Solche Fälle tauschen deshalb mit einem
+   späteren Tag desselben Zyklus. Getauscht wird nur innerhalb der benutzten
+   Plätze: Welche Fälle im Zyklus drankommen, bleibt gleich, nur ihr Tag
+   ändert sich. */
+function dailyCycleOrder(cycle, perCycle) {
+  const N = DAILY_HANDWRITTEN;
+  const order = seededShuffle(DATA.cases, mulberry32((cycle * 2654435761) >>> 0));
+  if (cycle < DAILY_SEAM_FROM_CYCLE) return order;
+  const prev = seededShuffle(DATA.cases, mulberry32(((cycle - 1) * 2654435761) >>> 0));
+  const yesterday = new Set(prev.slice((perCycle - 1) * N, perCycle * N).map(c => c.id));
+  for (let i = 0; i < N; i++) {
+    if (!yesterday.has(order[i].id)) continue;
+    const j = order.findIndex((c, k) => k >= N && k < perCycle * N && !yesterday.has(c.id));
+    if (j >= 0) [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
 }
 
 function buildDailyDeck(seed, dayNr) {
@@ -317,8 +343,7 @@ function buildDailyDeck(seed, dayNr) {
   const cycle = Math.floor(dayNr / perCycle);
   const slot = dayNr % perCycle;
 
-  // Reihenfolge des Zyklus – pro Zyklus neu gemischt, aber für alle gleich
-  const order = seededShuffle(pool, mulberry32((cycle * 2654435761) >>> 0));
+  const order = dailyCycleOrder(cycle, perCycle);
   const hand = order.slice(slot * DAILY_HANDWRITTEN, slot * DAILY_HANDWRITTEN + DAILY_HANDWRITTEN);
 
   const fresh = [];
@@ -921,13 +946,13 @@ function huntResolve(pickedIdx) {
     G.correct++;
     const timeB = Math.round(timeLeft) * S.timeBonusPerSec;
     const energyB = G.boss.energy * S.energyLeftBonus;
-    gained = 300 + timeB + energyB;
-    lines.push("Volltreffer: +300");
+    gained = S.huntHit + timeB + energyB;
+    lines.push(`Volltreffer: +${S.huntHit}`);
     lines.push(`Zeitbonus (${Math.round(timeLeft)}s übrig): +${timeB}`);
     if (energyB) lines.push(`⚡ Restenergie (${G.boss.energy}): +${energyB}`);
     G.score += gained;
   } else {
-    const dmg = applyIndexDamage(15);
+    const dmg = applyIndexDamage(S.huntMissDamage);
     lines.push(pickedIdx === null ? "⏱️ Zeit abgelaufen – der Fake blieb unentdeckt." : "Daneben – der echte Beitrag wurde markiert, der Fake blieb online.");
     lines.push(`🏛️ Demokratie-Index: −${dmg}`);
   }
@@ -1087,7 +1112,6 @@ function showReviewDetail(h, i) {
 /* =========================================================================
    RANGLISTE – lokal + global
    ========================================================================= */
-const BOARD_BASE = "https://textdb.online/";
 const BOARD_KEYS = {
   klassisch: "wahlwaechter_kl_x7k2m9",
   endlos:    "wahlwaechter_el_x7k2m9",
@@ -1123,13 +1147,6 @@ function tdbWrite(key, obj) { return TDB.schreib(key, obj); }
 async function fetchModeBoard(mode) {
   const data = await tdbRead(BOARD_KEYS[mode]);
   return data && Array.isArray(data.scores) ? data.scores.map(unpackEntry) : [];
-}
-
-async function fetchGlobalBoard(mode) {
-  if (mode && mode !== "alle") return fetchModeBoard(mode);
-  const lists = await Promise.all(Object.keys(BOARD_KEYS).map(m => fetchModeBoard(m).catch(() => null)));
-  if (lists.every(l => l === null)) throw new Error("offline");
-  return lists.flatMap(l => l || []);
 }
 
 /* Trägt das Ergebnis ein – oder aktualisiert es, falls es schon dort steht.
@@ -1173,8 +1190,23 @@ function makeBoardEntry() {
   };
 }
 
-/* ---------- Profil-Statistik (global) ---------- */
-async function updateProfile(mutate) {
+/* ---------- Profil-Statistik (global) ----------
+   Am Duell-Ende kommen zwei Änderungen fast gleichzeitig (Runde +1, dann
+   Sieg/Niederlage +1). Liefen beide parallel, läsen sie denselben alten Stand
+   und die zweite überschriebe die erste. Deshalb laufen die Änderungen eines
+   Geräts nacheinander. Die Kontrolle prüft die Zähler selbst, nicht nur das
+   Datum: Das Datum steht auch dann auf „heute", wenn ein fremder Schreib-
+   vorgang die Änderung gerade wieder überschrieben hat. */
+const PROFILE_COUNTERS = ["g", "w", "l", "d", "c", "t", "bs"];
+let profileQueue = Promise.resolve();
+
+function updateProfile(mutate) {
+  const run = profileQueue.then(() => updateProfileNow(mutate));
+  profileQueue = run.catch(() => false);
+  return run;
+}
+
+async function updateProfileNow(mutate) {
   const name = myName || "Anonym";
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
@@ -1184,10 +1216,13 @@ async function updateProfile(mutate) {
       if (!p) { p = { n: name, g: 0, w: 0, l: 0, d: 0, bs: 0, c: 0, t: 0 }; list.push(p); }
       mutate(p);
       p.u = todayStr();
+      const want = Object.assign({}, p);
       await tdbWrite(PROFILE_KEY, { profiles: list.slice(0, 120) });
       const check = (await tdbRead(PROFILE_KEY)) || {};
       const mine = (check.profiles || []).find(x => x.n === name);
-      if (mine && mine.u === todayStr()) return true;
+      // ">=" statt "===": Namensgleiche teilen sich ein Profil und dürfen
+      // gleichzeitig hochzählen.
+      if (mine && PROFILE_COUNTERS.every(f => (mine[f] || 0) >= (want[f] || 0))) return true;
     } catch (e) { /* retry */ }
     await new Promise(r => setTimeout(r, 400 + Math.random() * 1600));
   }
@@ -1197,7 +1232,6 @@ async function updateProfile(mutate) {
 function saveResult(syncElId) {
   if (G.resultSaved) return;
   G.resultSaved = true;
-  const entry = makeBoardEntry();
 
   // Profil-Statistik immer aktualisieren
   const acc = { correct: G.correct, total: G.total, best: G.finalScore };
@@ -1235,7 +1269,14 @@ function syncBoardChips() {
     c.classList.toggle("active", c.dataset.filter === boardFilter));
 }
 
+/* Wer schnell zwischen den Filtern wechselt, startet mehrere Abrufe. Nur der
+   zuletzt gestartete darf die Liste füllen – sonst überschreibt eine späte
+   Antwort für „Klassisch" die gerade gewählte Duell-Liste. */
+let boardRequest = 0;
+
 async function renderBoard() {
+  const req = ++boardRequest;
+  const filter = boardFilter;
   showScreen("screen-board");
   const sync = $("board-sync");
   const list = $("board-list");
@@ -1245,8 +1286,12 @@ async function renderBoard() {
 
   let entries = [];
   let global = true;
-  try { entries = await fetchGlobalBoard(boardFilter); }
+  try { entries = await fetchModeBoard(filter); }
   catch (e) { global = false; }
+  // Im Duell zählt nicht nur die Punktzahl, sondern auch die Bilanz.
+  const bilanz = filter === "duell" ? await fetchDuelRecords() : null;
+  if (req !== boardRequest) return;
+
   const local = loadLocalBoard();
   local.forEach(le => { if (!entries.some(e => e.id === le.id)) entries.push(le); });
   entries = entries.map(e => Object.assign({}, e, { mode: normMode(e.mode) }));
@@ -1257,19 +1302,16 @@ async function renderBoard() {
   sync.classList.toggle("sync-fail", !global);
 
   const filtered = entries
-    .filter(e => e.mode === boardFilter)
-    .filter(e => boardFilter !== "tages" || e.date === todayStr())
+    .filter(e => e.mode === filter)
+    .filter(e => filter !== "tages" || e.date === todayStr())
     .sort((a, b) => b.score - a.score)
     .slice(0, 25);
-
-  // Im Duell zählt nicht nur die Punktzahl, sondern auch die Bilanz.
-  const bilanz = boardFilter === "duell" ? await fetchDuelRecords() : null;
 
   if (!filtered.length) {
     list.innerHTML = `<div class="board-empty">Noch keine Einträge in dieser Kategorie. Spiel eine Runde – dann steht dein Name hier.</div>`;
   } else {
     list.innerHTML = filtered.map((e, i) => {
-      const meta = boardFilter === "duell"
+      const meta = filter === "duell"
         ? duelMeta(bilanz && bilanz[e.name], e)
         : `${MODE_ICON[e.mode] || ""} ${esc(MODE_LABEL[e.mode] || e.mode || "")}${e.extra ? " · " + esc(e.extra) : ""} · ${e.acc} % · Index ${e.index} · ${esc(e.date || "")}`;
       return `
@@ -1307,7 +1349,7 @@ function duelMeta(p, e) {
 
 /* ---------- Profil-Screen ---------- */
 async function renderProfile() {
-  const name = ($("player-name").value.trim()) || myName || localStorage.getItem("ww_name") || "";
+  const name = cleanName($("player-name").value) || myName || localStorage.getItem("ww_name") || "";
   showScreen("screen-profile");
   const sync = $("profile-sync");
   sync.className = "board-sync";
@@ -1726,7 +1768,7 @@ function startClassGame(seed, cfg) {
     roomCode: ClassNet.code,
     cfg: { cases: cfg.cases || 10, timer: cfg.timer || 35, showdown: !!cfg.showdown },
     myBuild: null, assigned: false, donorGid: null, donorName: null,
-    waitStart: 0, stagger: 0, finished: false, bonusPts: 0, bonusCounted: 0, bonusClosed: false, bonusDeadline: 0,
+    waitStart: 0, stagger: 0, finished: false, bonusPts: 0, bonusCounted: 0, bonusDeadline: 0,
     pullSeenAt: 0, pulled: false, wasPulled: false,
   };
   const { deck, sections } = buildMixedDeck(seed, { cases: G.class.cfg.cases, timer: G.class.cfg.timer, hard: 0 }, "KLASSENRAUM " + ClassNet.code);
@@ -1922,17 +1964,18 @@ function classReportFinal() {
 
 /* Bonus, wenn der eigene Fake beim Gegenüber unentdeckt geblieben ist.
    Wird erst nach dem eigenen Rundenende ausgewertet (das Gegenüber ist
-   oft später fertig) – notfalls nach Ablauf der Wartefrist ohne Urteil.
-   Kommt später noch jemand dazu (in seltenen Fällen bekommen zwei denselben
-   Fake), wird die Differenz nachgezahlt – deshalb bonusCounted. */
+   oft später fertig). Bis zur Wartefrist wird auf alle Urteile gewartet,
+   damit der Bonus in einem Schritt kommt; danach wird ausgezahlt, was
+   vorliegt. Wer den Fake erst später bekommt (ein hereingeholter
+   Nachzügler, oder in seltenen Fällen zwei Personen denselben Fake), zählt
+   trotzdem noch – die Differenz wird nachgezahlt, deshalb bonusCounted. */
 function classFakeBonus(st) {
   const cl = G && G.variant === "klasse" ? G.class : null;
-  if (!cl || !cl.myBuild || !cl.finished || cl.bonusClosed) return;
+  if (!cl || !cl.myBuild || !cl.finished) return;
   const victims = ((st && st.players) || []).filter(p => p.ta === ClassNet.gid);
   const expired = Date.now() > cl.bonusDeadline;
   const pending = victims.some(p => p.hr == null);
   if (!expired && (pending || !victims.length)) return;
-  if (expired) cl.bonusClosed = true;
 
   const missed = victims.filter(p => p.hr === 0).length;
   if (missed <= cl.bonusCounted) return;
@@ -2040,7 +2083,7 @@ function init() {
   $("btn-tut-next").addEventListener("click", () => Tutorial.next());
   $("btn-tut-back").addEventListener("click", () => Tutorial.back());
   $("btn-tut-skip").addEventListener("click", () => Tutorial.skip());
-  $("player-name").addEventListener("change", (e) => checkProfileKnown(e.target.value.trim()));
+  $("player-name").addEventListener("change", (e) => checkProfileKnown(cleanName(e.target.value)));
   $("net-banner").addEventListener("click", () => $("net-banner").classList.add("hidden"));
   refreshFirstTimeCard();
   checkProfileKnown(myName);

@@ -653,8 +653,8 @@ Tutorial.steps = [
         if (!found) wrap.children[picked].classList.add("flagged-wrong");
         tutReveal(host, found,
           found ? "GEFUNDEN ✓" : "NICHT GEFUNDEN ✗",
-          found ? ["Volltreffer: +300", "Zeitbonus + Restenergie kommen dazu"]
-                : ["Der Fake blieb online.", "🏛️ Demokratie-Index: −15"],
+          found ? [`Volltreffer: +${DATA.scoring.huntHit}`, "Zeitbonus + Restenergie kommen dazu"]
+                : ["Der Fake blieb online.", `🏛️ Demokratie-Index: −${DATA.scoring.huntMissDamage}`],
           "Im Duell und im Klassenraum bekommst du hier den Fake einer anderen Person – und deiner landet bei jemand anderem. Bleibt dein Fake unentdeckt, gibt es Bonuspunkte. Im Solo-Finale baut HYDRA den Fake selbst.",
           null);
         Tutorial.unlock("Das war die komplette Spielmechanik. Es fehlt nur noch: <b>wo</b> du das alles spielen kannst.");

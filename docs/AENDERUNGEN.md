@@ -1,5 +1,89 @@
 # Änderungsverlauf
 
+## v4.7 – Fehlerprüfung, Aufräumen, Prüfungen im Repo (24.09.2026)
+
+Alle Modi wurden im Browser mit Test-Speicher durchgespielt (Einweisung, Solo
+klassisch bis ins Finale, Endlos, Tages-Challenge samt Sperre, Duell mit zwei Tabs,
+Klassenraum mit drei Tabs inklusive Nachzügler-Einzug, Rangliste, Profil, Überlauf
+bei 320 und 390 px). Dabei fielen vier Fehler und eine Kleinigkeit auf, die es
+schon vorher gab.
+
+**Behobene Fehler**
+
+- **Profile verloren Zähler.** Am Duell-Ende laufen zwei Profil-Änderungen fast
+  gleichzeitig (Runde +1, dann Sieg/Niederlage). Beide lasen denselben alten Stand,
+  die zweite überschrieb die erste. Die Kontrolle danach prüfte nur, ob das Profil
+  „heute" geändert wurde – das stimmte auch dann. Im Test stand beim Verlierer nach
+  dem Duell „0 Runden gespielt". Jetzt laufen die Änderungen eines Geräts
+  nacheinander, und die Kontrolle vergleicht die Zähler selbst. Nachtest: beide
+  Profile mit „Runden 1" und richtiger Bilanz.
+- **Klassenraum-Bonus ging bei späten Opfern verloren.** Die Auswertung schloss
+  150 s nach der eigenen Abgabe endgültig ab. Bekam ein hereingeholter Nachzügler
+  den Fake erst danach und übersah ihn, meldete die Auswertung „unentdeckt
+  geblieben" – Bonus: 0. Jetzt wird nach der Frist nicht mehr gewartet, späte
+  Treffer werden aber nachgezahlt.
+- **Tages-Challenge wiederholte Fälle vom Vortag.** v4.4 versprach „0
+  Wiederholungen vom Vortag". Das galt innerhalb eines siebentägigen Zyklus, nicht
+  am Zykluswechsel: Jeder Zyklus mischt neu, ohne auf den letzten Tag des vorigen
+  zu achten. Nachgemessen über 730 Tage: an 67 von 105 Zykluswechseln, zusammen 89
+  Fälle. Jetzt tauschen solche Fälle mit einem späteren Tag desselben Zyklus – 0
+  Wiederholungen. **Die Korrektur greift erst ab dem Zyklus, der am 01.10.2026
+  beginnt**; alle Sätze bis einschließlich 30.09.2026 sind unverändert (per
+  Fingerabdruck geprüft). Sonst hätte das Update den Satz des laufenden Tages
+  geändert, und wer danach spielt, hätte andere Fälle bekommen als die, die schon
+  gespielt hatten. Die frühere Angabe „häufigster Fall 5× in 30 Tagen" galt nur für
+  ein bestimmtes Fenster; über jedes beliebige 30-Tage-Fenster sind es höchstens 6×.
+- **Rangliste zeigte bei schnellem Filterwechsel die falsche Liste.** Traf die
+  Antwort eines älteren Abrufs zuletzt ein, überschrieb sie die gerade gewählte
+  Liste. Nur noch der zuletzt gestartete Abruf darf anzeigen.
+- Kleiner: Profil-Screen und Erstspieler-Erkennung suchten mit dem unbereinigten
+  Namen aus dem Eingabefeld. Mit `+` oder `%` im Namen wurde das eigene Profil
+  nicht gefunden. Beide bereinigen jetzt wie beim Spielstart (`cleanName`).
+
+**Aufgeräumt (ungenutzter und veralteter Code)**
+
+- `game.js`: tote Konstante `BOARD_BASE`, der Zweig für den abgeschafften Filter
+  „Alle" (`fetchGlobalBoard`), eine ungenutzte Variable in `saveResult`, eine zweite
+  Kopie der Hash-Funktion in `dailySeed` (Ergebnis bitgleich), veralteter Kopf
+  „Spiellogik (v3)".
+- `classroom.js` und `net.js`: eigene Kopien der Dienst-Adresse entfernt, beide
+  nutzen `TDB.BASE`. Veralteter Kommentar „API unverändert zu vorher" (aus der
+  WebRTC-Zeit) korrigiert.
+- `anim.js`: ungenutztes `Anim.shake()` und `STEP_MS` (der Takt steht in der CSS).
+- `style.css`: verwaiste Klassen `.btn-more`, `.profile-subhead`, `.shake` und
+  `.bracket-player` (noch aus dem K.-o.-Turnier); `.btn-tournament` heißt jetzt
+  `.btn-classroom`. `index.html`: unbenutzte ID `conn-steps`.
+- `data.js`: Das nie benutzte `bossPointsBase: 200` stand im Widerspruch zu den fest
+  im Code stehenden 300 Punkten fürs Finale. Ersetzt durch `huntHit: 300` und
+  `huntMissDamage: 15`, die Spiel und Einweisung jetzt beide lesen – die Zahlen im
+  Spiel sind unverändert.
+- In-Game-Hilfe und Spielanleitung: Raum-Codes enthalten weder O und 0 **noch I und
+  1** (vorher nur O/0 genannt). Konzept: Dilemma-Namen an das Spiel angeglichen
+  („Deal mit den Plattformen", „Pakt mit dem Journalismus" ergänzt).
+- Cache-Version `?v=4.7`, `sitemap.xml` neu datiert.
+
+**Prüfungen im Repo**
+
+- Neu `tests/pruefung.js`: 39 Prüfungen ohne Netz in unter einer Sekunde –
+  Ladereihenfolge und `?v=`, Syntax, Fall-Dossiers, Showdown-Baukasten, Generator,
+  Tages-Challenge (inkl. Fingerabdrücke fester Tage), Speicherdienst und
+  ungenutzter Code. Vorher gab es nur Prüfskripte außerhalb des Repos, die mit der
+  jeweiligen Sitzung verschwanden.
+- Neu `tests/test-speicher.js`: ersetzt textdb beim Durchspielen im Browser durch
+  den `localStorage` der Test-Adresse, damit Testläufe nicht in der echten
+  Rangliste landen.
+
+**Doku neu geordnet** – nach dem Muster der übrigen Projekte: `AGENTS.md` ist die
+gemeinsame Arbeitsanleitung für alle Werkzeuge (vorher in `CLAUDE.md`, das jetzt nur
+noch dorthin verweist), `HANDOVER.md` hält den Stand. `docs/TECHNIK.md`:
+Ladereihenfolge um `tdb.js` ergänzt (fehlte), neues Kapitel „Testen", Grenzen der
+Profil-Größe und der Spiel-Timer in Hintergrund-Tabs.
+
+**Geprüft, aber nicht geändert:** die echten textdb-Schlüssel (nur lesend) –
+Rangliste Klassisch 1, Duell 2, Tages-Challenge 3, Klassenraum 2 Einträge, Endlos
+leer, 17 Profile. Alle lesbar.
+
+
 ## v4.6 – Der Speicherdienst verschluckt Zeichen (und hätte Ranglisten gelöscht)
 
 Beim Nachbessern des Schwesterprojekts fiel ein Fehler auf, der hier genauso

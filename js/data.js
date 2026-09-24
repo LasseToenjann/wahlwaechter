@@ -20,7 +20,8 @@ const DATA = {
     dmgRealFlagged: 6,        // Echtes gekennzeichnet
     dmgTimeout: 8,
     finalMultiplier: (index) => 0.5 + Math.max(0, index) / 200,
-    bossPointsBase: 200,      // Boss/Showdown: Basis, x2-Logik im Code
+    huntHit: 300,             // Fake im Finale/Showdown gefunden (plus Zeit- und Energiebonus)
+    huntMissDamage: 15,       // Fake im Finale/Showdown übersehen
   },
 
   weeks: [

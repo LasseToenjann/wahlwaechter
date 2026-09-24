@@ -32,10 +32,10 @@ Alles, was man wissen muss, um am Code weiterzuarbeiten. Spielregeln stehen in d
 Ladereihenfolge der Skripte (wichtig, weil ohne Modulsystem gearbeitet wird):
 
 ```
-anim.js → rng.js → data.js → net.js → gen.js → classroom.js → tutorial.js → game.js
+anim.js → rng.js → data.js → tdb.js → net.js → gen.js → classroom.js → tutorial.js → game.js
 ```
 
-`game.js` startet auf `DOMContentLoaded` mit `init()`.
+`game.js` startet auf `DOMContentLoaded` mit `init()`. `tests/pruefung.js` prüft die Reihenfolge und dass alle Verweise denselben Versionsparameter `?v=` tragen – der muss bei jeder Änderung an CSS oder JS hochgezählt werden, sonst liefern GitHub Pages und die iPads die alte Fassung aus.
 
 ## Mobile zuerst
 
@@ -69,14 +69,16 @@ Beide Breiten müssen ohne Treffer durchlaufen. Häufigste Ursachen in der Verga
 | `js/anim.js` | `Anim` – Animations-Helfer (Staffelung, Puls, Hochzählen, Stempel, Reihenfolge) |
 | `js/rng.js` | `mulberry32` (deterministischer RNG), `seededShuffle`, `randomSeed`, `randomRoomCode` |
 | `js/data.js` | Alle Inhalte: `cases`, `realRefs`, `weeks`, `ranks`, `tools`, `dilemmas`, `sabotage`, `feedReals`, `gen`, `scoring`, `endless` |
-| `js/gen.js` | `randomBuild` (budgetkonformer Bauplan), `craftFake` (Bauplan → Fake-Karte mit Beweislage), `generateCase` (Endlos-Generator) |
-| `js/tdb.js` | `TDB` – Lesen und Schreiben auf textdb.online für alle drei Netzteile |
+| `js/gen.js` | `randomBuild` (budgetkonformer Bauplan), `craftFake` (Bauplan → Fake-Karte mit Beweislage), `generateCase` (Generator für Endlos und Tages-Challenge) |
+| `js/tdb.js` | `TDB` – Lesen und Schreiben auf textdb.online für Rangliste/Profile, Duell und Klassenraum |
 | `js/net.js` | `Net` – Online-Duell über zwei Postfächer |
 | `js/classroom.js` | `ClassNet` – Klassenraum, bis 30 Spieler:innen auf einem Raum-Key |
 | `js/tutorial.js` | `Tutorial` – interaktive Einweisung mit eigenen Übungsfällen |
 | `js/game.js` | Spiellogik, Screens, Timer, Punkte, Ranglisten, Profile, Verdrahtung |
 | `sitemap.xml` | eine einzige URL – mehr gibt es nicht (siehe unten) |
 | `robots.txt` | liegt bereit, wirkt im Projektpfad aber nicht (siehe unten) |
+| `tests/pruefung.js` | Prüfungen ohne Netz (siehe [Testen](#testen)) |
+| `tests/test-speicher.js` | ersetzt textdb beim Prüfen im Browser, damit keine echten Daten entstehen |
 
 ## Spielzustand (`G`)
 
@@ -128,14 +130,17 @@ Der Showdown-Baukasten liefert pro Format/Thema jeweils eine „schmutzige" und 
 
 ## Netzwerk
 
-Beides läuft über **textdb.online**, einen kostenlosen öffentlichen Key-Value-Speicher:
+Rangliste, Profile, Duell und Klassenraum laufen über **textdb.online**, einen kostenlosen öffentlichen Key-Value-Speicher:
 
 - **Lesen:** `GET https://textdb.online/<key>?t=<zeitstempel>` (der Zeitstempel umgeht den Cache)
 - **Schreiben:** `GET https://textdb.online/update/?key=<key>&value=<urlencoded JSON>`
   Schreiben per GET ist Absicht: kein CORS-Preflight, funktioniert überall.
 
-Beides läuft über **`js/tdb.js`**. Rangliste, Duell und Klassenraum hatten vorher
-je eine eigene Kopie davon — mit denselben zwei Fehlern.
+Beides läuft ausschließlich über **`js/tdb.js`**. Rangliste, Duell und Klassenraum
+hatten früher je eine eigene Kopie davon — mit denselben zwei Fehlern. Einzige
+Ausnahme ist das `bye` beim Schließen der Seite (`Net._sayBye`): Es braucht
+`keepalive` und darf nicht abgebrochen werden, baut seinen Wert aber ebenfalls mit
+`TDB.baueWert()`.
 
 ### Der Dienst dekodiert zweimal
 
@@ -248,7 +253,7 @@ Damit die Klasse nicht auf Einzelne wartet, werden Nachzügler aus den Fällen g
 
 Wird der Schwellwert nie erreicht (z. B. viele haben den Tab geschlossen), wird niemand herausgeholt – der Auto-Fill verhindert Downtime dann allein.
 
-Der **Bonus für unentdeckte Fakes** (`classFakeBonus`) wird erst nach dem eigenen Rundenende ausgewertet, weil das Gegenüber oft später fertig ist. Nach `CLASS_BONUS_WAIT_MS` (150 s) wird auch ohne dessen Urteil abgeschlossen, damit die Auswertung nicht hängt. Kommt später noch ein zweites Opfer dazu (seltener Rennfall), zahlt `bonusCounted` die Differenz nach.
+Der **Bonus für unentdeckte Fakes** (`classFakeBonus`, +200 je Person) wird erst nach dem eigenen Rundenende ausgewertet, weil das Gegenüber oft später fertig ist. Bis `CLASS_BONUS_WAIT_MS` (150 s nach der eigenen Abgabe) wird auf alle Urteile gewartet, damit der Bonus in einem Schritt kommt; danach wird ausgezahlt, was vorliegt. Wer den Fake erst später bekommt – ein hereingeholter Nachzügler, oder in seltenen Fällen eine zweite Person –, zählt trotzdem noch: `bonusCounted` merkt sich, was schon gezahlt ist, und zahlt die Differenz nach. Bis v4.6 schloss die Frist die Auswertung endgültig ab; späte Opfer brachten dann keinen Bonus, obwohl die Auswertung „unentdeckt geblieben" meldete.
 
 ## Tages-Challenge
 
@@ -256,16 +261,19 @@ Zwei Anforderungen zugleich: Der Fallsatz muss für alle Spieler:innen eines Tag
 
 - **Datum:** `todayStr()` formatiert über `Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" })`. Vorher lief alles über `toISOString()`, also UTC – die Challenge wechselte dadurch um 01:00 bzw. 02:00 Uhr statt um Mitternacht. Dasselbe Datum steuert die Ein-Versuch-Sperre und die Datumsangabe der Ranglisten-Einträge.
 - **Seed:** hängt nur am Datum, also bekommen alle denselben Satz.
-- **Handgeschriebener Teil (6 Fälle):** feste Rotation durch den ganzen Bestand. Innerhalb eines Zyklus (⌊47/6⌋ = 7 Tage) kommt kein Fall zweimal; jeder Zyklus mischt die Reihenfolge neu.
-- **Generierter Teil (4 Fälle):** derselbe `generateCase()` wie im Endlosmodus, gespeist aus dem Tages-Seed. Diese Fälle hat noch nie jemand gesehen.
+- **Handgeschriebener Teil (6 Fälle):** feste Rotation durch den ganzen Bestand. Innerhalb eines Zyklus (⌊47/6⌋ = 7 Tage) kommt kein Fall zweimal; jeder Zyklus mischt die Reihenfolge neu (`dailyCycleOrder`).
+- **Zykluswechsel:** Weil jeder Zyklus frei neu mischt, konnte sein erster Tag Fälle vom letzten Tag des vorigen enthalten. Solche Fälle tauschen seit dem Zyklus ab 01.10.2026 (`DAILY_SEAM_FROM_CYCLE`) mit einem späteren Tag desselben Zyklus. Welche Fälle im Zyklus drankommen, bleibt gleich. Frühere Zyklen sind absichtlich unverändert, damit ein Update nie den Satz des laufenden Tages ändert.
+- **Generierter Teil (4 Fälle):** derselbe `generateCase()` wie im Endlosmodus, gespeist aus dem Tages-Seed. Diese Fälle hat noch nie jemand gesehen. Ihre ID enthält einen Zähler pro Seite und ist deshalb nicht auf allen Geräten gleich – der Inhalt schon.
 
-Gemessen über 30 Tage – vorher wurde jeden Tag frei aus allen 47 gezogen:
+Gemessen mit `tests/pruefung.js` bzw. über 730 Tage ab 01.10.2026:
 
-| | vorher | jetzt |
-|---|---|---|
-| Fälle vom Vortag wiederholt | 2–4 von 10 | **0** |
-| häufigster Fall in 30 Tagen | 11× | **5×** |
-| Tage mit komplett neuem Satz | – | **alle** (dank generierter Fälle) |
+| | bis v4.3 | v4.4 – v4.6 | ab v4.7 |
+|---|---|---|---|
+| Fälle vom Vortag wiederholt | 2–4 von 10, täglich | an 67 von 105 Zykluswechseln, zusammen 89 Fälle | **0** |
+| häufigster Fall in einem 30-Tage-Fenster | 11× | 6× | **6×** (ein Fenster berührt bis zu 6 Zyklen) |
+| Tage mit komplett neuem Satz | – | alle (dank generierter Fälle) | alle |
+
+**Wer an `buildDailyDeck`, an der Rotation oder an `DATA.cases` etwas ändert, ändert die Sätze künftiger – und womöglich des laufenden – Tages.** `tests/pruefung.js` hält deshalb Fingerabdrücke fester Tage fest und schlägt an, sobald sich einer ändert. Auch ein neuer Fall verschiebt die Rotation; dann die Fingerabdrücke bewusst neu setzen und den Wechsel so legen, dass er nicht mitten in einen Tag fällt, an dem schon gespielt wurde.
 
 ## Einweisung (`tutorial.js`)
 
@@ -299,6 +307,10 @@ Schlüssel (öffentlich schreibbar – für ein Schulprojekt vertretbar):
 | Klassenräume | `wahlwaechter_class_<code>` |
 
 Pro Modus werden maximal 30 Einträge gehalten, Profile maximal 120; bei Überlauf fallen die schlechtesten bzw. ältesten heraus. Schreibzugriffe laufen überall über Lesen → Mergen → Schreiben → Verifizieren mit Wiederholungen. Ohne Internet greift ein `localStorage`-Fallback (`ww_board_v1`).
+
+**Profil-Änderungen eines Geräts laufen nacheinander** (`updateProfile` reiht in `profileQueue` ein). Am Duell-Ende kommen zwei Änderungen fast gleichzeitig – Runde +1 aus `saveResult` und Sieg/Niederlage aus `showDuelResult`. Parallel lasen beide denselben alten Stand, die zweite überschrieb die erste, und die Kontrolle danach prüfte nur, ob das Profil „heute" geändert wurde. Im Test stand beim Verlierer nach einem Duell „0 Runden gespielt". Jetzt vergleicht die Kontrolle die Zähler (`g w l d c t bs`) mit dem, was geschrieben werden sollte, und wiederholt sonst. Gegen Schreibvorgänge *anderer* Geräte, die nach der Kontrolle eintreffen, hilft das nicht – ohne echte Transaktionen beim Dienst bleibt das ein Best-Effort-Verfahren.
+
+**Die Rangliste zeigt nur die Antwort des zuletzt gestarteten Abrufs** (`boardRequest`). Vorher konnte bei schnellem Filterwechsel eine späte Antwort die gerade gewählte Liste überschreiben.
 
 **Es gibt bewusst keinen Filter „Alle" mehr.** Die Modi haben verschiedene Fallzahlen, Timer und Multiplikatoren – eine gemeinsame Liste hätte Zahlen nebeneinandergestellt, die nichts miteinander zu tun haben. Standardfilter ist „Klassisch".
 
@@ -349,22 +361,37 @@ Meldungen am unteren Rand (`netBanner(text, art)`) sind eine Karte mit farbigem 
 3. **Stale-Timeout 90 s statt 15 s**, weil Browser Hintergrund-Tabs massiv drosseln. Kurzes Wegwischen der App darf ein Duell nicht beenden.
 4. **Fälle fiktiv, Techniken real.** Jede Auflösung nennt das reale Vorbild; das FIKTIV-Badge steht in jedem Dossier. Generierte Fälle sind in der Auflösung als solche gekennzeichnet.
 5. **Profile identifizieren sich nur über den Namen.** Namensgleiche teilen sich ein Profil – bewusst simpel gehalten.
-6. **Die gültige Live-URL ist `https://lassetoenjann.github.io/wahlwaechter/`.** Das GitHub-Konto wurde umbenannt; die alte `lasse-toenjann.github.io`-Adresse ist tot. Wer sie noch irgendwo findet (Links, git-remote), sollte sie ersetzen.
+6. **Die gültige Live-URL ist `https://lassetoenjann.github.io/wahlwaechter/`**, das Repo liegt unter `LasseToenjann/wahlwaechter` (Privatkonto, ohne Bindestrich). Die alte Adresse `lasse-toenjann.github.io/wahlwaechter/` ist tot – `lasse-toenjann` mit Bindestrich ist Lasses Geschäftskonto und hat mit diesem Projekt nichts zu tun. Das lokale `git remote` zeigt bereits auf die neue Adresse.
+7. **Spielzahlen stehen in `js/data.js`.** Auch die Werte des Finales (`DATA.scoring.huntHit` = 300, `huntMissDamage` = 15) – die Einweisung zeigt dieselben Zahlen an. Bis v4.6 standen sie fest im Code, während in den Daten ein nie benutztes `bossPointsBase: 200` stand.
 
 ## Testen
 
-Es gibt keine Test-Suite im Repo (bewusst: kein Build, keine Abhängigkeiten). Für Änderungen an der Spiellogik haben sich Playwright-Skripte bewährt, die gegen einen lokalen Server laufen und textdb per Route-Handler durch einen In-Memory-Speicher ersetzen – damit lassen sich Duell und Klassenraum mit mehreren Tabs komplett durchspielen, ohne echte Daten anzufassen.
+Zwei Stufen, beide ohne Abhängigkeiten:
 
-Sinnvolle Prüfungen vor einem Push:
+**1. `node tests/pruefung.js`** – läuft ohne Netz in unter einer Sekunde und endet mit Rückgabewert 1, sobald etwas scheitert. Das Skript lädt alle Spielskripte in einer Node-Sandbox (Attrappen für `window`, `document`, `localStorage`; ein `fetch` dort bricht absichtlich ab) und prüft:
+
+| Gruppe | Was |
+|---|---|
+| Skripte | Ladereihenfolge, gleicher `?v=` überall, keine verwaiste Datei in `js/`, Syntax |
+| Fall-Dossiers | eindeutige IDs, Pflichtfelder, alle vier Beweiskanäle, reales Vorbild zu jedem Fall, Übungsfälle der Einweisung getrennt |
+| Showdown-Baukasten | Kanal und Kosten je Tarnung, nie alle Spuren tarnbar, die zwei stärksten passen nicht ins Budget, 300 Zufallsbaupläne |
+| Fall-Generator | 500 erzeugte Fälle vollständig, keine offenen Platzhalter, Mischung echt/Fake |
+| Tages-Challenge | gleicher Satz für alle, Fingerabdrücke fester Tage, 730 Tage ohne Vortags-Wiederholung, Häufigkeit, deutsche Zeit |
+| Speicherdienst | kein `+`/`%` hinaus, übersteht die doppelte Dekodierung, Reparatur von `1e 27`, Unlesbares ist nicht leer |
+| Ungenutzter Code | Funktionen, Konstanten und Methoden ohne Verwendung, HTML-IDs ohne Bezug, `$("…")` ohne Element, CSS-Klassen ohne Verwendung |
+
+Wer einen neuen Fehler findet, ergänzt dort eine Gruppe.
+
+**2. Durchspielen im Browser** – lokaler Server, Handy-Breite, und **vor dem ersten Klick `tests/test-speicher.js` in die Konsole einfügen.** Der Test-Speicher ersetzt textdb durch den `localStorage` der Test-Adresse und bildet die doppelte Dekodierung nach. Mehrere Tabs derselben Adresse teilen ihn; so lassen sich Duell (zwei Tabs) und Klassenraum (drei Tabs) komplett durchspielen, ohne echte Daten anzufassen. Die Spiellogik ist aus der Konsole steuerbar (`G`, `DATA`, `Net`, `ClassNet`, `Tutorial`, `currentCase()`, `judge()`, `nextCase()` sind global) – damit lassen sich lange Runden in Sekunden durchspielen.
 
 ```bash
-node --check js/*.js              # Syntax
-python -m http.server 8123        # dann alle Modi einmal durchklicken
+node tests/pruefung.js            # Prüfungen ohne Netz
+python -m http.server 8123        # dann http://localhost:8123, Test-Speicher einfügen
 ```
 
-Mindestens abdecken: Solo klassisch **bis ins Boss-Finale** (dazu muss man richtig antworten – sonst endet der Lauf vorher in der Vertrauenskrise), Endlos, Tages-Challenge, Duell mit Showdown, Klassenraum mit Showdown (inklusive des Falls, dass jemand nicht abgibt), Einweisung von vorn bis hinten.
+Mindestens abdecken: Einweisung von vorn bis hinten, Solo klassisch **bis ins Boss-Finale** (dazu muss man richtig antworten – sonst endet der Lauf vorher in der Vertrauenskrise), Endlos, Tages-Challenge samt Sperre, Duell mit Showdown (danach beide Profile: Runden **und** Bilanz), Klassenraum mit Showdown (jemand gibt nicht ab, jemand bleibt in den Fällen hängen), Rangliste mit schnellem Filterwechsel, Überlauf bei 320 und 390 px.
 
-**Den ausgelieferten Stand prüfen.** GitHub Pages cacht JavaScript rund 10 Minuten – wer die Live-Seite im Browser kontrolliert, muss vorher hart neu laden. Aus der Entwicklungsumgebung heraus ist `github.io` durch die Netz-Richtlinie gesperrt; dieselbe Prüfung geht gegen eine lokale Kopie des ausgelieferten Dateistands:
+**Den ausgelieferten Stand prüfen.** GitHub Pages cacht JavaScript rund 10 Minuten – wer die Live-Seite im Browser kontrolliert, muss vorher hart neu laden. In manchen Entwicklungsumgebungen (Cloud-Sitzungen) ist `github.io` durch die Netz-Richtlinie gesperrt; dieselbe Prüfung geht dann gegen eine lokale Kopie des ausgelieferten Dateistands:
 
 ```bash
 git archive origin/main | tar -x -C /tmp/livecopy
@@ -373,7 +400,7 @@ cd /tmp/livecopy && python -m http.server 8124
 
 ## Erweitern
 
-**Neuen Fall hinzufügen:** Objekt in `DATA.cases` ergänzen, Eintrag in `DATA.realRefs` mit demselben `id`. Sonst nichts – Decks werden aus `week` gebaut.
+**Neuen Fall hinzufügen:** Objekt in `DATA.cases` ergänzen, Eintrag in `DATA.realRefs` mit demselben `id`. Decks werden aus `week` gebaut. Aber: Ein neuer Fall verschiebt die Rotation der Tages-Challenge – `tests/pruefung.js` meldet dann geänderte Fingerabdrücke. Den Fall deshalb abends nach Unterrichtsschluss hochladen (nicht an einem Tag, an dem gerade gespielt wird), die Fingerabdrücke bewusst neu setzen und in `docs/AENDERUNGEN.md` vermerken, ab wann die neuen Sätze gelten.
 
 **Neues Dilemma:** Objekt in `DATA.dilemmas`; die Effekte in `chooseDilemma` unterstützen `energyPerWeek`, `timerPlus`, `freeProbe`, `damageShield`, `flagPenaltyPlus`, `indexNow`.
 
@@ -404,3 +431,5 @@ Nicht ausschließen sollte man `css/` und `js/`: Google rendert die Seite vor de
 - Die Zuteilung im Klassenraum-Showdown ist ein **Best-Effort-Verfahren**: In seltenen Fällen (viele Abgaben in derselben Sekunde) kann ein Fake an zwei Personen gehen. Das ist unschädlich – niemand bekommt je den eigenen, und niemand wartet.
 - Ranglisten sind öffentlich beschreibbar. Für ein Schulprojekt vertretbar, für einen echten Wettbewerb nicht.
 - Der Klassenraum-Zustand ist **ein** JSON-Wert in einer URL. Deshalb sind die Feldnamen so kurz. Wer Felder ergänzt, sollte das im Blick behalten.
+- **Dasselbe gilt für die Profile.** Alle Profile stehen in einem Wert, der beim Schreiben in der Adresse steckt. Gemessen am 24.09.2026 (nur lesend): 17 Profile ergeben 1.355 Zeichen JSON, URL-kodiert 2.803 Zeichen – rund 165 Zeichen pro Profil. Die Obergrenze des Dienstes ist nicht genau bekannt; nach früherer Beobachtung liegt sie bei etwa 7.500 Zeichen Adresslänge (nicht erneut gemessen). Dann wäre bei grob 40–45 Profilen Schluss, lange vor der Kappung bei 120. Ist die Grenze erreicht, scheitern Profil-Schreibvorgänge (drei Versuche, dann aufgegeben); gelöscht wird dabei nichts. Abhilfe wäre, die Profile auf mehrere Schlüssel zu verteilen – die Kappung zu senken würde dagegen echte Profile löschen und braucht Lasses Zustimmung. `TDB.schreib` warnt in der Konsole ab 7.000 Zeichen JSON.
+- **Spiel-Timer zählen pro Takt, nicht nach der Uhr.** In einem verborgenen Tab drosselt der Browser die Takte, der Timer läuft dann langsamer. Im Unterricht egal (das iPad pausiert die Seite ohnehin), beim Testen mit mehreren Tabs aber auffällig: Die Fake-Werkstatt eines Hintergrund-Tabs läuft nicht nach 75 s ab.

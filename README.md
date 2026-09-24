@@ -18,7 +18,7 @@ Keine Installation, keine Anmeldung, kein Konto. Website öffnen, Namen eintippe
 | **spielen und verstehen, wie es geht** | Im Spiel: **🎓 Einweisung** (interaktiv, ca. 5 Min) · zum Nachschlagen: [docs/SPIELANLEITUNG.md](docs/SPIELANLEITUNG.md) |
 | **das Spiel im Unterricht einsetzen** | [docs/SPIELANLEITUNG.md → Für Lehrkräfte](docs/SPIELANLEITUNG.md#für-lehrkräfte-und-kursleitung) |
 | **wissen, warum das Spiel so gebaut ist** (Abgabe-Dokument) | [KONZEPT.md](KONZEPT.md) |
-| **am Code arbeiten** | [CLAUDE.md](CLAUDE.md) für Arbeitsweise und Stand · [docs/TECHNIK.md](docs/TECHNIK.md) für die Architektur |
+| **am Code arbeiten** | [AGENTS.md](AGENTS.md) für die Arbeitsweise · [HANDOVER.md](HANDOVER.md) für den aktuellen Stand · [docs/TECHNIK.md](docs/TECHNIK.md) für die Architektur |
 | **sehen, was sich geändert hat** | [docs/AENDERUNGEN.md](docs/AENDERUNGEN.md) |
 
 ## Was das Spiel kann
@@ -60,6 +60,8 @@ python -m http.server 8123     # im Projektordner
 Alternativ jeder andere statische Server (`npx serve`, VS-Code-Live-Server, …).
 Solo, Endlos, Tages-Challenge und die Einweisung laufen **offline**. Für Duell, Klassenraum, Rangliste und Profil wird Internet gebraucht.
 
+**Prüfen:** `node tests/pruefung.js` (ohne Netz, unter einer Sekunde). Wer lokal durchspielt, fügt vorher `tests/test-speicher.js` in die Browser-Konsole ein – sonst landet der Testlauf in der echten Rangliste. Einzelheiten in [AGENTS.md](AGENTS.md#prüfen).
+
 ## Veröffentlichen (GitHub Pages, kostenlos)
 
 1. Repository auf [github.com](https://github.com) anlegen (z. B. `wahlwaechter`, „Public")
@@ -72,17 +74,23 @@ Solo, Endlos, Tages-Challenge und die Einweisung laufen **offline**. Für Duell,
 ```
 index.html            alle Screens
 css/style.css         „Lagezentrum"-Design
+assets/favicon.svg    Symbol (auch für die Google-Suche)
 js/anim.js            Animations-System (Konzept „Lagezentrum")
 js/rng.js             deterministischer Zufall (Mulberry32), Raum-Codes
-js/data.js            Fall-Dossiers, Dilemmas, Showdown-Baukasten (alles fiktiv)
-js/gen.js             Fall-Generator + Fake-Baukasten (craftFake / randomBuild)
+js/data.js            Fall-Dossiers, Dilemmas, Showdown-Baukasten, Spielzahlen (alles fiktiv)
+js/tdb.js             Speicherdienst: Lesen/Schreiben auf textdb.online für alle Netzteile
 js/net.js             Online-Duell (HTTP-Relay, Postfach-Prinzip)
+js/gen.js             Fall-Generator + Fake-Baukasten (craftFake / randomBuild)
 js/classroom.js       Klassenraum-Netzwerk (bis 30 Spieler:innen auf einem Raum-Key)
 js/tutorial.js        interaktive Einweisung (eigene Übungsfälle)
 js/game.js            Spiellogik, State-Machine, Ranglisten, Profile
-CLAUDE.md             Arbeitsanleitung: Projekt, Konventionen, Teststrategie, Stand
+tests/pruefung.js     Prüfungen ohne Netz (node tests/pruefung.js)
+tests/test-speicher.js  ersetzt textdb beim Durchspielen im Browser
+AGENTS.md             Arbeitsanleitung für alle Werkzeuge (CLAUDE.md verweist dorthin)
+HANDOVER.md           aktueller Stand, offene Punkte, nächste Schritte
 KONZEPT.md            Spielkonzept (Abgabe-Dokument)
 docs/                 Spielanleitung, Technik-Doku, Änderungsverlauf
+robots.txt, sitemap.xml  für Suchmaschinen (siehe docs/TECHNIK.md)
 ```
 
 Details zur Architektur, zu den Netzwerk-Protokollen und zum Erweitern: [docs/TECHNIK.md](docs/TECHNIK.md).

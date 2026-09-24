@@ -165,7 +165,7 @@ Schicht für Schicht weniger Zeit, weniger Energie, subtilere Fälle. **Ab Schic
 ### 📅 Tages-Challenge
 Jeden Tag ein neuer, **für alle identischer** Fallsatz. **Ein Versuch pro Tag und Gerät.** Der fairste Klassenvergleich – eigene Tages-Rangliste („Heute").
 
-Der Wechsel passiert **um Mitternacht deutscher Zeit**. Und die Challenge wiederholt sich nicht: Sechs Fälle laufen in fester Rotation durch den Bestand (kein Fall zweimal innerhalb einer Woche), vier weitere werden jeden Tag **frisch erzeugt** – die hat vorher noch nie jemand gesehen.
+Der Wechsel passiert **um Mitternacht deutscher Zeit**. Und die Challenge wiederholt sich nicht: Sechs Fälle laufen in fester Rotation durch den Bestand (kein Fall zweimal innerhalb eines siebentägigen Durchgangs und nie an zwei Tagen hintereinander), vier weitere werden jeden Tag **frisch erzeugt** – die hat vorher noch nie jemand gesehen.
 
 ### ⚔️ Online-Duell 1 vs 1
 Wer den Raum erstellt, ist **Host**. Der Raum-Code (5 Zeichen) geht an die Gegenspielerin oder den Gegenspieler; sobald sie beitritt, landen beide in der **Lobby**: Dort stehen beide Namen, der Host stellt die Regeln ein – Fallzahl (6/10/14), Tempo (45/35/24 s), Schwierigkeit (gemischt / nur schwere Fälle), Showdown an/aus – und jede Änderung ist beim Gegenüber sofort zu sehen. Losgehen kann es erst, wenn der Host auf **Duell starten** drückt.
@@ -218,7 +218,7 @@ Nach dem Start kann niemand mehr beitreten – erst alle sammeln, dann starten.
 Sie erscheint nur, wenn du auf diesem Gerät noch nicht gespielt hast und es zu deinem Namen noch kein Profil gibt. Du kannst sie jederzeit über **🎓 Einweisung** im Hauptmenü starten.
 
 **„Kein offener Raum mit diesem Code gefunden."**
-Der Code ist 5 Zeichen lang und gilt beim Duell ca. 15 Minuten, im Klassenraum 2 Stunden. Tippfehler? Der Buchstabe O und die Ziffer 0 kommen in Codes nicht vor.
+Der Code ist 5 Zeichen lang und gilt beim Duell ca. 15 Minuten, im Klassenraum 2 Stunden. Tippfehler? Die Buchstaben O und I sowie die Ziffern 0 und 1 kommen in Codes nicht vor – sie sind zu leicht zu verwechseln.
 
 **„Diese Runde ist schon gestartet."**
 Im Klassenraum kann nach dem Start niemand mehr beitreten. Der Host öffnet einen neuen Raum.
@@ -230,10 +230,10 @@ Höchstens 60 Sekunden – danach baut HYDRA automatisch einen Fake für dich. D
 Dann war der Großteil der Klasse schon im Showdown und die 45-Sekunden-Frist ist abgelaufen. Das ist Absicht: So wartet niemand auf Einzelne. Deine restlichen Fälle entfallen, der Showdown zählt normal.
 
 **Ich finde meine Klassenraum-Runde nicht in der Rangliste.**
-Klassenraum-Ergebnisse stehen in der Rangliste unter dem Filter „Klassenraum" – jeder Modus hat seine eigene Liste, weil die Punktzahlen zwischen den Modi nicht vergleichbar sind. Wenn der Showdown gespielt wurde, kann der Eintrag noch einen Moment brauchen: Der Bonus für einen unentdeckt gebliebenen Fake wird erst verrechnet, wenn das Gegenüber sein Urteil gefällt hat – der Eintrag aktualisiert sich dann von selbst.
+Klassenraum-Ergebnisse stehen in der Rangliste unter dem Filter „Klassenraum" – jeder Modus hat seine eigene Liste, weil die Punktzahlen zwischen den Modi nicht vergleichbar sind. Wenn der Showdown gespielt wurde, kann der Eintrag noch einen Moment brauchen: Der Bonus für einen unentdeckt gebliebenen Fake wird erst verrechnet, wenn das Gegenüber sein Urteil gefällt hat – der Eintrag aktualisiert sich dann von selbst. Das gilt auch, wenn dein Fake erst spät bei jemandem landet (etwa bei einem hereingeholten Nachzügler), solange du die Auswertung noch offen hast.
 
 **Bekomme ich in der Tages-Challenge jeden Tag wirklich neue Fälle?**
-Ja. Ein Teil des Satzes wird täglich neu erzeugt, der Rest rotiert so durch die handgeschriebenen Fälle, dass sich innerhalb einer Woche keiner wiederholt. Der Wechsel ist um Mitternacht deutscher Zeit.
+Ja. Ein Teil des Satzes wird täglich neu erzeugt, der Rest rotiert so durch die handgeschriebenen Fälle, dass innerhalb eines siebentägigen Durchgangs keiner doppelt kommt und nie derselbe Fall an zwei Tagen hintereinander. Der Wechsel ist um Mitternacht deutscher Zeit.
 
 **Die Rangliste zeigt „Offline".**
 Der Spielserver ist gerade nicht erreichbar. Dein Ergebnis wird lokal gespeichert und die Rangliste zeigt nur die Einträge dieses Geräts.

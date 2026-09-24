@@ -407,8 +407,8 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 .conn-steps li.done::before { content: "●"; color: var(--green); }
 
 /* ---------- Klassenraum & bunte Menü-Buttons ---------- */
-.btn-tournament { background: linear-gradient(180deg, #5b2a86, #45206a); border-color: #8a4dc8; color: #f0e4ff; }
-.btn-tournament small { color: #cdb2ec; }
+.btn-classroom { background: linear-gradient(180deg, #5b2a86, #45206a); border-color: #8a4dc8; color: #f0e4ff; }
+.btn-classroom small { color: #cdb2ec; }
 .btn-daily { background: linear-gradient(180deg, #1c6e46, #14522f); border-color: #34a06a; color: #dcffe9; }
 .btn-daily small { color: #a5e8c1; }
 .t-name-pill {
@@ -445,10 +445,7 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 
 /* ---------- Profil ---------- */
 .profile-card { margin: 10px 0 18px; }
-.btn-more { width: 100%; margin-top: 12px; font-size: .9rem; padding: 10px 20px; color: var(--muted); }
-.btn-more:hover:not(:disabled) { color: var(--cyan); border-color: var(--cyan-dim); }
 .profile-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
-.profile-subhead { margin-top: 8px; }
 
 /* ---------- Sonstiges ---------- */
 .linklike { background: none; border: none; color: var(--muted); text-decoration: underline; cursor: pointer; font-family: inherit; font-size: inherit; padding: 0; }
@@ -626,7 +623,6 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 @keyframes flash-good { 0% { box-shadow: 0 0 0 0 rgba(67,217,139,.55); } 100% { box-shadow: 0 0 0 22px rgba(67,217,139,0); } }
 @keyframes flash-bad  { 0% { box-shadow: 0 0 0 0 rgba(255,93,108,.55); } 100% { box-shadow: 0 0 0 22px rgba(255,93,108,0); } }
 
-.shake { animation: shake 380ms var(--ease-out); }
 @keyframes shake {
   20% { transform: translateX(-5px); } 40% { transform: translateX(5px); }
   60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
@@ -708,7 +704,7 @@ input[type="text"]:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px 
 }
 
 /* ---------- Touch & Tablet ---------- */
-button, .btn, .tool-btn, .mini-tool, .chip, .bracket-player, .mode-card, .dilemma-card, .build-card { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button, .btn, .tool-btn, .mini-tool, .chip, .mode-card, .dilemma-card, .build-card { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .timerbar.sticky { position: sticky; top: calc(6px + env(safe-area-inset-top)); z-index: 20; box-shadow: 0 4px 14px rgba(0,0,0,.45); }
 .mini-tool { min-height: 40px; }
 .tool-btn { min-height: 52px; }

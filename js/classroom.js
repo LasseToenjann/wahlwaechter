@@ -10,7 +10,6 @@
    ========================================================================= */
 
 const ClassNet = {
-  BASE: "https://textdb.online/",
   MAX_PLAYERS: 30,
   POLL_MS: 2600,
   POLL_FAST_MS: 1300,   // Showdown: Zuteilungen müssen schnell sichtbar sein

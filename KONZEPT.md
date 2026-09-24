@@ -91,7 +91,8 @@ Nach Woche 1 und Woche 2 bietet das Ministerium je **eine von drei zufälligen A
 | Massen-Scan-KI | +3 Energie/Woche | −10 Index (anlasslose Überwachung) |
 | Automatische Vorab-Sperrung | Timer +10 s pro Fall | −12 Index (Löschung ohne Richtervorbehalt) |
 | Transparenz-Offensive | +8 Index | −1 Energie/Woche (Offenlegung kostet Ressourcen) |
-| Kooperation mit Plattformen | 1 Gratis-Prüfung pro Fall | −6 Index (Datenweitergabe an Konzerne) |
+| Deal mit den Plattformen | 1 Gratis-Prüfung pro Fall | −6 Index (Datenweitergabe an Konzerne) |
+| Pakt mit dem Journalismus | +5 Index sofort, +1 Energie/Woche | Kennzeichnungs-Fehlurteile kosten 2 Index mehr |
 | Bürger:innen-Beirat | Fehlurteile kosten 3 Index weniger | −1 Energie/Woche (Beteiligung ist langsam) |
 | Verzicht (immer wählbar) | +4 Index (Selbstbeschränkung schafft Vertrauen) | kein Bonus |
 

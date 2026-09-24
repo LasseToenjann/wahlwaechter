@@ -8,9 +8,9 @@
 
    Jeder Raum hat zwei "Postfächer" (Host->Gast und Gast->Host). Jede Seite
    schreibt ausschließlich in ihr eigenes Postfach und liest das des Gegners
-   im Sekundentakt. Reines HTTPS -> funktioniert überall, wo die Website lädt.
+   alle 1,8 s. Reines HTTPS -> funktioniert überall, wo die Website lädt.
 
-   Öffentliche API (unverändert zu vorher):
+   Öffentliche API:
      createRoom(), joinRoom(code), send(type, payload), close()
      Callbacks: onRoomReady, onConnected, onMessage, onDropped, onJoinFailed, onStatus
    ========================================================================= */
@@ -27,7 +27,6 @@ const Net = {
   onJoinFailed: null,   // (reason) Beitritt gescheitert (falscher Code etc.)
   onStatus: null,       // (text)   Fortschritts-Feedback für die Lobby
 
-  _BASE: "https://textdb.online/",
   _POLL_MS: 1800,       // Lese-Intervall Gegner-Postfach
   _BEAT_MS: 5000,       // eigenes Lebenszeichen spätestens alle 5 s
   // Großzügig, weil Browser Hintergrund-Tabs auf ~1 Timer/Minute drosseln
@@ -242,7 +241,7 @@ const Net = {
     // Bewusst nicht über TDB.schreib: das braucht keepalive und darf nicht
     // abgebrochen werden. Den Wert baut trotzdem TDB, damit auch dieser Weg
     // ohne "+" und "%" hinausgeht.
-    const url = this._BASE + "update/?key=" + this._myKey() +
+    const url = TDB.BASE + "update/?key=" + this._myKey() +
       "&value=" + encodeURIComponent(TDB.baueWert(this._myState({ bye: true })));
     try { fetch(url, { keepalive: true }); } catch (e) {}
   },
